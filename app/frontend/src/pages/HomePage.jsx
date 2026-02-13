@@ -16,6 +16,11 @@ function formatDateTime(value) {
   return `${day}, ${time}`;
 }
 
+function formatPrice(value) {
+  if (typeof value !== "number") return "";
+  return new Intl.NumberFormat("ru-RU").format(value);
+}
+
 export default function HomePage() {
   const [site, setSite] = useState(null);
   const [services, setServices] = useState([]);
@@ -60,6 +65,11 @@ export default function HomePage() {
   }
 
   const heroImage = site?.home_image ? toMediaUrl(site.home_image) : "";
+  const nextGroupEvent = schedule.find((item) => !item.is_individual);
+  const contactLink = site?.contacts?.telegram || site?.contacts?.phone || "#";
+  const totalPractices = services.length;
+  const groupPractices = grouped.group.length;
+  const visibleSchedule = schedule.slice(0, 8);
 
   return (
     <div className="page-home">
@@ -72,12 +82,42 @@ export default function HomePage() {
         }}
       >
         <div className="hero-content">
-          <p className="hero-brand">{site?.brand}</p>
-          <h1>{site?.tagline}</h1>
-          <p>{site?.subline}</p>
-          <a href="#services" className="btn-main">
-            Смотреть услуги
-          </a>
+          <div className="hero-topline">
+            <p className="hero-brand">{site?.brand}</p>
+            <a href={contactLink} target="_blank" rel="noreferrer" className="hero-contact">
+              Связаться
+            </a>
+          </div>
+
+          <div className="hero-panel">
+            <p className="hero-kicker">Студия звукотерапии и телесных практик</p>
+            <h1>{site?.tagline}</h1>
+            <p>{site?.subline}</p>
+
+            <div className="hero-actions">
+              <a href="#services" className="btn-main">
+                Смотреть услуги
+              </a>
+              <a href="#schedule" className="btn-ghost">
+                Ближайшие события
+              </a>
+            </div>
+
+            <div className="hero-stats">
+              <div>
+                <span>{totalPractices}</span>
+                <p>практик в каталоге</p>
+              </div>
+              <div>
+                <span>{groupPractices}</span>
+                <p>групповых форматов</p>
+              </div>
+              <div>
+                <span>{nextGroupEvent ? formatDateTime(nextGroupEvent.start_time) : "Актуализируется"}</span>
+                <p>ближайший старт</p>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -92,12 +132,16 @@ export default function HomePage() {
           <div className="service-grid">
             {grouped.group.map((service) => (
               <article key={service.slug} className="service-card">
+                <div className="service-card-top">
+                  <p className="service-badge">{service.category_label || "Практика"}</p>
+                  <p className="service-format">Группа + индивидуально</p>
+                </div>
                 <h4>{service.title}</h4>
                 <p>{service.teaser}</p>
                 <div className="service-meta">
                   <span>{service.duration}</span>
                   {service.pricing?.group?.price_per_person ? (
-                    <span>от {service.pricing.group.price_per_person} руб.</span>
+                    <span>от {formatPrice(service.pricing.group.price_per_person)} руб.</span>
                   ) : null}
                 </div>
                 <Link to={`/services/${service.slug}`} className="btn-ghost">
@@ -111,11 +155,15 @@ export default function HomePage() {
           <div className="service-grid">
             {grouped.individual.map((service) => (
               <article key={service.slug} className="service-card">
+                <div className="service-card-top">
+                  <p className="service-badge">{service.category_label || "Практика"}</p>
+                  <p className="service-format">Индивидуально</p>
+                </div>
                 <h4>{service.title}</h4>
                 <p>{service.teaser}</p>
                 <div className="service-meta">
                   <span>{service.duration}</span>
-                  {service.pricing?.fixed?.price ? <span>{service.pricing.fixed.price} руб.</span> : null}
+                  {service.pricing?.fixed?.price ? <span>{formatPrice(service.pricing.fixed.price)} руб.</span> : null}
                 </div>
                 <Link to={`/services/${service.slug}`} className="btn-ghost">
                   Открыть услугу
@@ -125,13 +173,13 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="section schedule-block">
+        <section id="schedule" className="section schedule-block">
           <div className="section-head">
             <h2>РАСПИСАНИЕ</h2>
             <p>Текущие события и доступные места</p>
           </div>
           <div className="schedule-list">
-            {schedule.map((item) => (
+            {visibleSchedule.map((item) => (
               <article key={item.id} className="schedule-item">
                 <div>
                   <h4>{item.service_title}</h4>
@@ -153,7 +201,7 @@ export default function HomePage() {
                     </a>
                   ) : (
                     <>
-                      <span>
+                      <span className={item.available_spots > 0 ? "spots-open" : "spots-closed"}>
                         Мест: {item.available_spots}/{item.max_participants}
                       </span>
                       <Link to={`/services/${item.service_slug}`} className="btn-main small">

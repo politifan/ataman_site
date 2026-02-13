@@ -10,6 +10,11 @@ function formatDateTime(value) {
   }).format(date);
 }
 
+function formatPrice(value) {
+  if (typeof value !== "number") return "";
+  return new Intl.NumberFormat("ru-RU").format(value);
+}
+
 const initialForm = {
   name: "",
   phone: "",
@@ -45,6 +50,9 @@ export default function ServicePage() {
 
   const selectedEvent = useMemo(() => {
     return schedule.find((item) => !item.is_individual && item.available_spots > 0) || null;
+  }, [schedule]);
+  const nextEvents = useMemo(() => {
+    return schedule.filter((item) => !item.is_individual).slice(0, 4);
   }, [schedule]);
 
   async function handleSubmit(event) {
@@ -163,35 +171,56 @@ export default function ServicePage() {
           <aside className="service-side">
             <div className="side-card">
               <h3>ДЕТАЛИ</h3>
-              <p>
-                <strong>Длительность:</strong> {service.duration}
-              </p>
+              <div className="detail-row">
+                <span>Длительность</span>
+                <strong>{service.duration || "По запросу"}</strong>
+              </div>
               {service.pricing?.group ? (
-                <p>
-                  <strong>Группа:</strong> {service.pricing.group.price_per_person} руб.
-                </p>
+                <div className="detail-row">
+                  <span>Группа</span>
+                  <strong>{formatPrice(service.pricing.group.price_per_person)} руб.</strong>
+                </div>
               ) : null}
               {service.pricing?.individual ? (
-                <p>
-                  <strong>Индивидуально:</strong> {service.pricing.individual.price} руб.
-                </p>
+                <div className="detail-row">
+                  <span>Индивидуально</span>
+                  <strong>{formatPrice(service.pricing.individual.price)} руб.</strong>
+                </div>
               ) : null}
               {service.pricing?.fixed ? (
-                <p>
-                  <strong>Стоимость:</strong> {service.pricing.fixed.price} руб.
-                </p>
+                <div className="detail-row">
+                  <span>Стоимость</span>
+                  <strong>{formatPrice(service.pricing.fixed.price)} руб.</strong>
+                </div>
               ) : null}
               {service.age_restriction ? (
-                <p>
-                  <strong>Возраст:</strong> {service.age_restriction}
-                </p>
+                <div className="detail-row">
+                  <span>Возраст</span>
+                  <strong>{service.age_restriction}</strong>
+                </div>
               ) : null}
             </div>
+
+            {nextEvents.length ? (
+              <div className="side-card">
+                <h3>БЛИЖАЙШИЕ ДАТЫ</h3>
+                <div className="event-list">
+                  {nextEvents.map((item) => (
+                    <div key={item.id} className="event-list-item">
+                      <p>{formatDateTime(item.start_time)}</p>
+                      <span>
+                        Мест: {item.available_spots}/{item.max_participants}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             {!service.is_draft && selectedEvent ? (
               <form className="side-card booking-form" onSubmit={handleSubmit}>
                 <h3>ЗАПИСЬ ОНЛАЙН</h3>
-                <p className="muted">Ближайшее событие: {formatDateTime(selectedEvent.start_time)}</p>
+                <p className="muted">Ближайшая группа: {formatDateTime(selectedEvent.start_time)}</p>
                 <input
                   value={form.name}
                   onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
@@ -258,8 +287,8 @@ export default function ServicePage() {
               <div className="side-card">
                 <h3>ЗАПИСЬ</h3>
                 <p>
-                  Для этой услуги используется индивидуальная запись через администратора или контент в стадии
-                  подготовки.
+                  Для этой услуги запись проходит через администратора. Напишите в Telegram или позвоните для
+                  согласования удобного времени.
                 </p>
               </div>
             )}

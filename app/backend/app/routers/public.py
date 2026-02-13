@@ -62,7 +62,28 @@ def _serialize_site(settings_rows: list[Setting]) -> SiteResponse:
 
 
 def _service_to_public(service: Service) -> ServicePublic:
-    return ServicePublic.model_validate(service)
+    payload = {
+        "id": service.id,
+        "slug": service.slug,
+        "title": service.title,
+        "category": service.category,
+        "category_label": service.category_label,
+        "format_mode": service.format_mode,
+        "teaser": service.teaser,
+        "duration": service.duration,
+        "pricing": service.pricing or {},
+        "about": service.about or [],
+        "suitable_for": service.suitable_for or [],
+        "host": service.host or {},
+        "important": service.important or [],
+        "dress_code": service.dress_code or [],
+        "contraindications": service.contraindications or [],
+        "media": service.media or [],
+        "age_restriction": service.age_restriction,
+        "is_draft": bool(service.is_draft),
+        "is_active": bool(service.is_active),
+    }
+    return ServicePublic.model_validate(payload)
 
 
 def _schedule_to_public(event: ScheduleEvent) -> SchedulePublic:

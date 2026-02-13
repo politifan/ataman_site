@@ -21,6 +21,19 @@ function formatPrice(value) {
   return new Intl.NumberFormat("ru-RU").format(value);
 }
 
+function getServicePrice(service) {
+  if (service?.pricing?.group?.price_per_person) {
+    return `от ${formatPrice(service.pricing.group.price_per_person)} руб.`;
+  }
+  if (service?.pricing?.fixed?.price) {
+    return `${formatPrice(service.pricing.fixed.price)} руб.`;
+  }
+  if (service?.pricing?.individual?.price) {
+    return `${formatPrice(service.pricing.individual.price)} руб.`;
+  }
+  return "По запросу";
+}
+
 export default function HomePage() {
   const [site, setSite] = useState(null);
   const [services, setServices] = useState([]);
@@ -57,11 +70,11 @@ export default function HomePage() {
   }, [services]);
 
   if (loading) {
-    return <div className="state-page">Загрузка...</div>;
+    return <div className="state-page home-state">Загрузка...</div>;
   }
 
   if (error) {
-    return <div className="state-page">Ошибка: {error}</div>;
+    return <div className="state-page home-state">Ошибка: {error}</div>;
   }
 
   const heroImage = site?.home_image ? toMediaUrl(site.home_image) : "";
@@ -72,141 +85,144 @@ export default function HomePage() {
   const visibleSchedule = schedule.slice(0, 8);
 
   return (
-    <div className="page-home">
+    <div className="page-home home-shell">
       <header
-        className="hero"
+        className="home-hero"
         style={{
           backgroundImage: heroImage
-            ? `linear-gradient(180deg, rgba(13, 21, 58, 0.55), rgba(13, 21, 58, 0.75)), url("${heroImage}")`
-            : "linear-gradient(180deg, #1b245c, #0f1848)"
+            ? `linear-gradient(135deg, rgba(9, 17, 46, 0.73), rgba(11, 25, 59, 0.8)), url("${heroImage}")`
+            : "linear-gradient(135deg, #07102c 0%, #0d1f4c 65%, #102a60 100%)"
         }}
       >
-        <div className="hero-content">
-          <div className="hero-topline">
-            <p className="hero-brand">{site?.brand}</p>
-            <a href={contactLink} target="_blank" rel="noreferrer" className="hero-contact">
-              Связаться
-            </a>
-          </div>
-
-          <div className="hero-panel">
-            <p className="hero-kicker">Студия звукотерапии и телесных практик</p>
-            <h1>{site?.tagline}</h1>
-            <p>{site?.subline}</p>
-
-            <div className="hero-actions">
-              <a href="#services" className="btn-main">
-                Смотреть услуги
-              </a>
-              <a href="#schedule" className="btn-ghost">
-                Ближайшие события
+        <div className="container home-hero-wrap">
+          <nav className="home-nav">
+            <p>{site?.brand}</p>
+            <div className="home-nav-links">
+              <a href="#services">Услуги</a>
+              <a href="#schedule">Расписание</a>
+              <a href={contactLink} target="_blank" rel="noreferrer" className="home-contact-btn">
+                Контакты
               </a>
             </div>
+          </nav>
 
-            <div className="hero-stats">
-              <div>
-                <span>{totalPractices}</span>
-                <p>практик в каталоге</p>
+          <div className="home-hero-grid">
+            <div className="home-hero-copy">
+              <p className="home-kicker">Sound Therapy Studio</p>
+              <h1>{site?.tagline}</h1>
+              <p>{site?.subline}</p>
+              <div className="home-actions">
+                <a href="#services" className="home-btn home-btn-primary">
+                  Выбрать практику
+                </a>
+                <a href="#schedule" className="home-btn home-btn-soft">
+                  Смотреть даты
+                </a>
               </div>
-              <div>
-                <span>{groupPractices}</span>
-                <p>групповых форматов</p>
-              </div>
-              <div>
-                <span>{nextGroupEvent ? formatDateTime(nextGroupEvent.start_time) : "Актуализируется"}</span>
-                <p>ближайший старт</p>
+            </div>
+
+            <div className="home-hero-side">
+              <article className="home-next-event">
+                <p>Ближайший групповой старт</p>
+                <h3>{nextGroupEvent ? nextGroupEvent.service_title : "Расписание обновляется"}</h3>
+                <span>{nextGroupEvent ? formatDateTime(nextGroupEvent.start_time) : "Следите за анонсами"}</span>
+              </article>
+
+              <div className="home-stats-grid">
+                <article>
+                  <h4>{totalPractices}</h4>
+                  <p>практик в каталоге</p>
+                </article>
+                <article>
+                  <h4>{groupPractices}</h4>
+                  <p>групповых форматов</p>
+                </article>
+                <article>
+                  <h4>{schedule.length}</h4>
+                  <p>событий в расписании</p>
+                </article>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container">
-        <section id="services" className="section">
-          <div className="section-head">
-            <h2>УСЛУГИ</h2>
-            <p>Доступен групповой и индивидуальный формат</p>
+      <main className="container home-main">
+        <section id="services" className="home-section">
+          <div className="home-section-head">
+            <p>Каталог</p>
+            <h2>Услуги студии</h2>
+            <span>Выберите формат, который подходит вашему состоянию и запросу.</span>
           </div>
 
-          <h3 className="category-title">ЗВУКОТЕРАПИЯ / ТЕЛЕСНО-ТРАНСФОРМАЦИОННЫЕ ПРАКТИКИ</h3>
-          <div className="service-grid">
-            {grouped.group.map((service) => (
-              <article key={service.slug} className="service-card">
-                <div className="service-card-top">
-                  <p className="service-badge">{service.category_label || "Практика"}</p>
-                  <p className="service-format">Группа + индивидуально</p>
-                </div>
-                <h4>{service.title}</h4>
-                <p>{service.teaser}</p>
-                <div className="service-meta">
-                  <span>{service.duration}</span>
-                  {service.pricing?.group?.price_per_person ? (
-                    <span>от {formatPrice(service.pricing.group.price_per_person)} руб.</span>
-                  ) : null}
-                </div>
-                <Link to={`/services/${service.slug}`} className="btn-ghost">
-                  Открыть услугу
-                </Link>
-              </article>
-            ))}
+          <div className="home-service-block">
+            <div className="home-category-head">
+              <h3>Групповые и комбинированные форматы</h3>
+              <p>Практики в пространстве студии с поддержкой ведущего.</p>
+            </div>
+            <div className="home-service-grid">
+              {grouped.group.map((service) => (
+                <article key={service.slug} className="home-service-card">
+                  <p className="home-service-badge">{service.category_label || "Практика"}</p>
+                  <h4>{service.title}</h4>
+                  <p>{service.teaser}</p>
+                  <div className="home-service-meta">
+                    <span>{service.duration || "Время по согласованию"}</span>
+                    <strong>{getServicePrice(service)}</strong>
+                  </div>
+                  <Link to={`/services/${service.slug}`}>Открыть услугу</Link>
+                </article>
+              ))}
+            </div>
           </div>
 
-          <h3 className="category-title">ТОЛЬКО ИНДИВИДУАЛЬНЫЕ ПРАКТИКИ</h3>
-          <div className="service-grid">
-            {grouped.individual.map((service) => (
-              <article key={service.slug} className="service-card">
-                <div className="service-card-top">
-                  <p className="service-badge">{service.category_label || "Практика"}</p>
-                  <p className="service-format">Индивидуально</p>
-                </div>
-                <h4>{service.title}</h4>
-                <p>{service.teaser}</p>
-                <div className="service-meta">
-                  <span>{service.duration}</span>
-                  {service.pricing?.fixed?.price ? <span>{formatPrice(service.pricing.fixed.price)} руб.</span> : null}
-                </div>
-                <Link to={`/services/${service.slug}`} className="btn-ghost">
-                  Открыть услугу
-                </Link>
-              </article>
-            ))}
+          <div className="home-service-block">
+            <div className="home-category-head">
+              <h3>Индивидуальные практики</h3>
+              <p>Персональные сессии в более глубоком, камерном формате.</p>
+            </div>
+            <div className="home-service-grid">
+              {grouped.individual.map((service) => (
+                <article key={service.slug} className="home-service-card">
+                  <p className="home-service-badge">{service.category_label || "Практика"}</p>
+                  <h4>{service.title}</h4>
+                  <p>{service.teaser}</p>
+                  <div className="home-service-meta">
+                    <span>{service.duration || "Время по согласованию"}</span>
+                    <strong>{getServicePrice(service)}</strong>
+                  </div>
+                  <Link to={`/services/${service.slug}`}>Открыть услугу</Link>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
-        <section id="schedule" className="section schedule-block">
-          <div className="section-head">
-            <h2>РАСПИСАНИЕ</h2>
-            <p>Текущие события и доступные места</p>
+        <section id="schedule" className="home-section home-schedule-section">
+          <div className="home-section-head">
+            <p>Календарь</p>
+            <h2>Ближайшее расписание</h2>
+            <span>Актуальные даты, свободные места и быстрый переход к записи.</span>
           </div>
-          <div className="schedule-list">
+
+          <div className="home-schedule-list">
             {visibleSchedule.map((item) => (
-              <article key={item.id} className="schedule-item">
-                <div>
+              <article key={item.id} className="home-schedule-card">
+                <div className="home-schedule-main">
                   <h4>{item.service_title}</h4>
-                  {item.is_individual ? (
-                    <p>Индивидуальный формат по согласованию</p>
-                  ) : (
-                    <p>{formatDateTime(item.start_time)}</p>
-                  )}
+                  <p>{item.is_individual ? "Индивидуальный формат по согласованию" : formatDateTime(item.start_time)}</p>
                 </div>
-                <div className="schedule-right">
+                <div className="home-schedule-side">
                   {item.is_individual ? (
-                    <a
-                      href={site?.contacts?.telegram || "#"}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn-main small"
-                    >
-                      Telegram
+                    <a href={contactLink} target="_blank" rel="noreferrer">
+                      Написать в Telegram
                     </a>
                   ) : (
                     <>
-                      <span className={item.available_spots > 0 ? "spots-open" : "spots-closed"}>
+                      <span className={item.available_spots > 0 ? "open" : "closed"}>
                         Мест: {item.available_spots}/{item.max_participants}
                       </span>
-                      <Link to={`/services/${item.service_slug}`} className="btn-main small">
-                        Записаться
-                      </Link>
+                      <Link to={`/services/${item.service_slug}`}>Записаться</Link>
                     </>
                   )}
                 </div>

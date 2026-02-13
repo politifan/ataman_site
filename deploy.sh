@@ -11,6 +11,13 @@ cd "$APP_DIR"
 
 source "$VENV_ACTIVATE"
 
+# Load backend env vars into shell environment for init scripts.
+if [ -f "$APP_DIR/app/backend/.env" ]; then
+  set -a
+  source "$APP_DIR/app/backend/.env"
+  set +a
+fi
+
 # Backend dependencies
 python -m pip install --upgrade pip
 python -m pip install -r app/backend/requirements.txt

@@ -5,7 +5,7 @@ set -euo pipefail
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
 VENV_ACTIVATE="/var/www/u3115521/data/venv/bin/activate"
 RESTART_FILE="${APP_DIR}/passenger_wsgi.py"
-BUILD_FRONTEND="${BUILD_FRONTEND:-0}"
+BUILD_FRONTEND="${BUILD_FRONTEND:-1}"
 
 cd "$APP_DIR"
 

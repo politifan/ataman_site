@@ -93,6 +93,31 @@ a {
   font-weight: 700;
 }
 
+@media (min-width: 981px) {
+  .mystic-header-wrap {
+    min-height: 90px;
+    gap: 1.3rem;
+  }
+
+  .mystic-header-brand {
+    font-size: 1.02rem;
+    letter-spacing: 0.2em;
+  }
+
+  .mystic-header-nav {
+    gap: 1.18rem;
+  }
+
+  .mystic-header-nav a {
+    font-size: 1.03rem;
+  }
+
+  .mystic-header-cta {
+    padding: 0.58rem 1.18rem;
+    font-size: 0.96rem;
+  }
+}
+
 .mystic-state {
   background: #060d24;
   color: #f2f8ff;
@@ -542,57 +567,6 @@ a {
   display: block;
   color: rgba(227, 238, 255, 0.82);
   max-width: 760px;
-}
-
-.mystic-icons-ribbon {
-  margin-top: 0.95rem;
-  display: flex;
-  gap: 0.56rem;
-  overflow-x: auto;
-  padding-bottom: 0.3rem;
-  scrollbar-width: thin;
-}
-
-.mystic-icon-badge {
-  border-radius: 12px;
-  border: 1px solid rgba(227, 238, 255, 0.18);
-  background: linear-gradient(145deg, rgba(11, 27, 68, 0.86), rgba(15, 35, 84, 0.76));
-  padding: 0.42rem;
-  display: grid;
-  gap: 0.3rem;
-  min-width: 150px;
-  max-width: 150px;
-}
-
-.mystic-icon-badge-media {
-  border-radius: 9px;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 12% 14%, rgba(255, 228, 173, 0.3), transparent 46%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
-  border: 1px solid rgba(227, 238, 255, 0.22);
-  min-height: 56px;
-  display: grid;
-  place-items: center;
-  padding: 0.3rem;
-}
-
-.mystic-icon-badge-media img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-  mix-blend-mode: multiply;
-  filter: contrast(1.08) saturate(0.86);
-}
-
-.mystic-icon-badge p {
-  margin: 0;
-  text-align: center;
-  color: #ffe9b9;
-  font-family: "Cormorant Garamond", serif;
-  font-size: 0.86rem;
-  line-height: 1.12;
 }
 
 .mystic-service-group {
@@ -1294,10 +1268,6 @@ a {
 }
 
 @media (max-width: 980px) {
-  .mystic-icons-ribbon {
-    gap: 0.48rem;
-  }
-
   .mystic-symbol-dharma {
     width: 104px;
     height: 104px;
@@ -1448,10 +1418,6 @@ a {
 
   .mystic-gallery-grid {
     grid-template-columns: 1fr;
-  }
-
-  .mystic-icons-ribbon {
-    gap: 0.44rem;
   }
 
   .mystic-gallery-frame.is-collapsed {

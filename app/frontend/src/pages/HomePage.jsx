@@ -109,15 +109,6 @@ const RITUAL_PATH = [
   }
 ];
 
-const ICON_ITEMS = [
-  { path: "ikonki/gruppovaya_praktika.png", title: "Групповая практика" },
-  { path: "ikonki/individualnaya_sessiya.png", title: "Индивидуальная сессия" },
-  { path: "ikonki/prodolzhitelnost.png", title: "Продолжительность" },
-  { path: "ikonki/praktika_podhodit_vam_esli.png", title: "Кому подходит" },
-  { path: "ikonki/vazhno.png", title: "Важно" },
-  { path: "ikonki/forma_odezhdy.png", title: "Форма одежды" }
-];
-
 function formatDateTime(value) {
   const date = new Date(value);
   const day = new Intl.DateTimeFormat("ru-RU", {
@@ -631,17 +622,6 @@ export default function HomePage() {
             <p>Каталог практик</p>
             <h2>Программы для восстановления и внутренней настройки</h2>
             <span>Каждая практика работает с разными состояниями: от стресса и усталости до глубокой перезагрузки.</span>
-          </div>
-
-          <div className="mystic-icons-ribbon">
-            {ICON_ITEMS.map((item) => (
-              <article key={item.path} className="mystic-icon-badge">
-                <div className="mystic-icon-badge-media">
-                  <img src={toMediaUrl(item.path)} alt={item.title} loading="lazy" />
-                </div>
-                <p>{item.title}</p>
-              </article>
-            ))}
           </div>
 
           <div className="mystic-service-tabs" role="tablist" aria-label="Форматы услуг">

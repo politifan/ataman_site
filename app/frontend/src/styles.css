@@ -438,12 +438,40 @@ a {
   margin-top: 0.9rem;
   padding: 1.8rem 1rem 2.8rem;
   border-radius: 24px 24px 0 0;
+  overflow: hidden;
+  isolation: isolate;
   background:
-    radial-gradient(circle at 92% 4%, rgba(255, 215, 145, 0.1), transparent 26%),
-    radial-gradient(circle at 8% 18%, rgba(102, 184, 255, 0.12), transparent 32%),
-    linear-gradient(180deg, rgba(8, 18, 49, 0.86), rgba(7, 16, 44, 0.96));
+    radial-gradient(circle at 88% 6%, rgba(255, 218, 149, 0.16), transparent 30%),
+    radial-gradient(circle at 10% 14%, rgba(104, 191, 255, 0.18), transparent 34%),
+    radial-gradient(circle at 48% 120%, rgba(101, 150, 255, 0.14), transparent 42%),
+    linear-gradient(180deg, rgba(9, 21, 56, 0.9), rgba(6, 15, 44, 0.98));
   border: 1px solid rgba(227, 238, 255, 0.14);
   box-shadow: 0 -20px 48px rgba(4, 9, 28, 0.36);
+}
+
+.mystic-main::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    repeating-linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.02) 0 2px,
+      rgba(255, 255, 255, 0) 2px 16px
+    ),
+    radial-gradient(circle at 22% 56%, rgba(167, 216, 255, 0.09), transparent 32%),
+    radial-gradient(circle at 84% 72%, rgba(255, 219, 164, 0.09), transparent 30%);
+  pointer-events: none;
+}
+
+.mystic-main::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(6, 14, 40, 0), rgba(6, 14, 40, 0.22));
+  pointer-events: none;
 }
 
 .mystic-section {
@@ -514,6 +542,53 @@ a {
   display: block;
   color: rgba(227, 238, 255, 0.82);
   max-width: 760px;
+}
+
+.mystic-icons-ribbon {
+  margin-top: 0.95rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.mystic-icon-badge {
+  border-radius: 14px;
+  border: 1px solid rgba(227, 238, 255, 0.18);
+  background: linear-gradient(145deg, rgba(11, 27, 68, 0.86), rgba(15, 35, 84, 0.76));
+  padding: 0.52rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.mystic-icon-badge-media {
+  border-radius: 10px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 14%, rgba(255, 228, 173, 0.3), transparent 46%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(227, 238, 255, 0.22);
+  min-height: 84px;
+  display: grid;
+  place-items: center;
+  padding: 0.3rem;
+}
+
+.mystic-icon-badge-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  mix-blend-mode: multiply;
+  filter: contrast(1.08) saturate(0.86);
+}
+
+.mystic-icon-badge p {
+  margin: 0;
+  text-align: center;
+  color: #ffe9b9;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.02rem;
+  line-height: 1.1;
 }
 
 .mystic-service-group {
@@ -1157,6 +1232,10 @@ a {
 }
 
 @media (max-width: 980px) {
+  .mystic-icons-ribbon {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .mystic-symbol-dharma {
     width: 104px;
     height: 104px;
@@ -1290,6 +1369,10 @@ a {
   }
 
   .mystic-gallery-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mystic-icons-ribbon {
     grid-template-columns: 1fr;
   }
 

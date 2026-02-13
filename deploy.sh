@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ===== configure for your hosting =====
-APP_DIR="/var/www/u3115521/data/www/test.spiritualst.ru"
-VENV_ACTIVATE="/var/www/u3115521/data/venv/bin/activate"
+# Auto-detect project root from script location
+APP_DIR="$(cd "$(dirname "$0")" && pwd)"
+VENV_ACTIVATE="${APP_DIR}/.venv/bin/activate"
 RESTART_FILE="${APP_DIR}/passenger_wsgi.py"
 BUILD_FRONTEND="${BUILD_FRONTEND:-0}"
-# ======================================
 
 cd "$APP_DIR"
 

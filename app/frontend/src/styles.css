@@ -383,17 +383,18 @@ a {
 }
 
 .mystic-ritual-line {
-  margin-top: 1.1rem;
+  margin-top: 1.2rem;
   display: flex;
-  gap: 0.44rem;
+  gap: 0.56rem;
   flex-wrap: wrap;
 }
 
 .mystic-ritual-line span {
   border: 1px solid rgba(236, 244, 255, 0.25);
   border-radius: 999px;
-  padding: 0.24rem 0.62rem;
-  font-size: 0.75rem;
+  padding: 0.38rem 0.88rem;
+  font-size: 0.92rem;
+  font-weight: 700;
   color: rgba(236, 244, 255, 0.84);
 }
 
@@ -1436,7 +1437,14 @@ a {
   }
 
   .mystic-ritual-line {
-    display: none;
+    margin-top: 1rem;
+    gap: 0.45rem;
+  }
+
+  .mystic-ritual-line span {
+    padding: 0.28rem 0.64rem;
+    font-size: 0.82rem;
+    font-weight: 600;
   }
 
   .mystic-metrics {

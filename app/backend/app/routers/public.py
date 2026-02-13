@@ -148,14 +148,17 @@ def list_services(
     include_drafts: bool = False,
     db: Session = Depends(get_db_session),
 ) -> list[ServicePublic]:
-    query = select(Service).where(Service.is_active.is_(True))
-    if not include_drafts:
-        query = query.where(Service.is_draft.is_(False))
-    if format_mode:
-        query = query.where(Service.format_mode == format_mode)
-    query = query.order_by(Service.id.asc())
-    services = db.scalars(query).all()
-    return [_service_to_public(item) for item in services]
+    try:
+        query = select(Service).where(Service.is_active.is_(True))
+        if not include_drafts:
+            query = query.where(Service.is_draft.is_(False))
+        if format_mode:
+            query = query.where(Service.format_mode == format_mode)
+        query = query.order_by(Service.id.asc())
+        services = db.scalars(query).all()
+        return [_service_to_public(item) for item in services]
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"/api/services failed: {type(exc).__name__}: {exc}") from exc
 
 
 @router.get("/services/{slug}", response_model=ServicePublic)

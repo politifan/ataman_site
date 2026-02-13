@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   adminCreateSchedule,
   adminDeleteSchedule,
@@ -43,10 +43,17 @@ export default function AdminSchedulePage() {
   const [services, setServices] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [editingId, setEditingId] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("cards");
+  const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
 
   async function load() {
+    setLoading(true);
     try {
       const [events, svc] = await Promise.all([adminListSchedule(), adminListServices()]);
       setRows(events);
@@ -54,6 +61,8 @@ export default function AdminSchedulePage() {
       setError("");
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -61,12 +70,54 @@ export default function AdminSchedulePage() {
     load();
   }, []);
 
-  function resetForm() {
-    setEditingId(null);
-    setForm(initialForm);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return rows.filter((row) => {
+      if (typeFilter === "group" && row.is_individual) return false;
+      if (typeFilter === "individual" && !row.is_individual) return false;
+      if (statusFilter === "active" && !row.is_active) return false;
+      if (statusFilter === "inactive" && row.is_active) return false;
+      if (!q) return true;
+      return [row.service_title, row.service_slug]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(q));
+    });
+  }, [rows, query, typeFilter, statusFilter]);
+
+  const stats = useMemo(() => {
+    const active = rows.filter((row) => row.is_active).length;
+    const individual = rows.filter((row) => row.is_individual).length;
+    const avgLoad = rows.length
+      ? Math.round(
+          (rows.reduce(
+            (acc, row) => acc + row.current_participants / Math.max(1, row.max_participants),
+            0
+          ) /
+            rows.length) *
+            100
+        )
+      : 0;
+    return {
+      total: rows.length,
+      active,
+      individual,
+      avgLoad
+    };
+  }, [rows]);
+
+  function resetFilters() {
+    setQuery("");
+    setTypeFilter("all");
+    setStatusFilter("all");
   }
 
-  function editRow(row) {
+  function openCreate() {
+    setEditingId(null);
+    setForm(initialForm);
+    setModalOpen(true);
+  }
+
+  function openEdit(row) {
     setEditingId(row.id);
     setForm({
       service_id: String(row.service_id),
@@ -77,6 +128,13 @@ export default function AdminSchedulePage() {
       is_individual: row.is_individual,
       is_active: row.is_active
     });
+    setModalOpen(true);
+  }
+
+  function closeModal() {
+    setModalOpen(false);
+    setEditingId(null);
+    setForm(initialForm);
   }
 
   async function save(event) {
@@ -93,7 +151,7 @@ export default function AdminSchedulePage() {
         setMessage("Событие создано.");
       }
       await load();
-      resetForm();
+      closeModal();
     } catch (err) {
       setError(err.message);
     }
@@ -105,7 +163,7 @@ export default function AdminSchedulePage() {
       await adminDeleteSchedule(id);
       setMessage("Событие удалено.");
       await load();
-      if (editingId === id) resetForm();
+      if (editingId === id) closeModal();
     } catch (err) {
       setError(err.message);
     }
@@ -114,118 +172,225 @@ export default function AdminSchedulePage() {
   return (
     <section>
       <header className="admin-head">
-        <h1>Расписание</h1>
-        <button className="btn-main small" type="button" onClick={resetForm}>
+        <div>
+          <h1>Расписание</h1>
+          <p className="muted">Показано: {filtered.length} из {rows.length}</p>
+        </div>
+        <button className="btn-main small" type="button" onClick={openCreate}>
           Новое событие
         </button>
       </header>
+
+      <div className="admin-toolbar">
+        <input
+          className="admin-filter-input"
+          placeholder="Поиск: услуга / slug"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
+          <option value="all">Все типы</option>
+          <option value="group">Групповые</option>
+          <option value="individual">Индивидуальные</option>
+        </select>
+        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+          <option value="all">Все статусы</option>
+          <option value="active">Только активные</option>
+          <option value="inactive">Только неактивные</option>
+        </select>
+        <div className="admin-view-toggle">
+          <button
+            type="button"
+            className={viewMode === "cards" ? "is-active" : ""}
+            onClick={() => setViewMode("cards")}
+          >
+            Карточки
+          </button>
+          <button
+            type="button"
+            className={viewMode === "table" ? "is-active" : ""}
+            onClick={() => setViewMode("table")}
+          >
+            Таблица
+          </button>
+        </div>
+        <button type="button" className="admin-ghost-btn" onClick={resetFilters}>
+          Сбросить
+        </button>
+      </div>
+
+      <div className="admin-kpi-grid">
+        <article className="admin-kpi-card">
+          <p>Всего событий</p>
+          <strong>{stats.total}</strong>
+        </article>
+        <article className="admin-kpi-card">
+          <p>Активные</p>
+          <strong>{stats.active}</strong>
+        </article>
+        <article className="admin-kpi-card">
+          <p>Индивидуальные</p>
+          <strong>{stats.individual}</strong>
+        </article>
+        <article className="admin-kpi-card">
+          <p>Средняя загрузка</p>
+          <strong>{stats.avgLoad}%</strong>
+        </article>
+      </div>
+
       {error ? <p className="err">{error}</p> : null}
       {message ? <p className="ok">{message}</p> : null}
+      {loading ? <p className="muted">Загрузка...</p> : null}
+      {!loading && filtered.length === 0 ? (
+        <div className="admin-empty">
+          <h3>Событий по фильтру не найдено</h3>
+          <p>Измените фильтры, чтобы увидеть данные.</p>
+        </div>
+      ) : null}
 
-      <div className="admin-grid">
+      {!loading && filtered.length > 0 && viewMode === "table" ? (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Услуга</th>
+                <th>Начало</th>
+                <th>Конец</th>
+                <th>Места</th>
+                <th>Тип</th>
+                <th>Статус</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((row) => (
+                <tr key={row.id}>
+                  <td>{row.id}</td>
+                  <td>{row.service_title || row.service_slug}</td>
+                  <td>{new Date(row.start_time).toLocaleString("ru-RU")}</td>
+                  <td>{new Date(row.end_time).toLocaleString("ru-RU")}</td>
+                  <td>{row.current_participants}/{row.max_participants}</td>
+                  <td>{row.is_individual ? "Индивидуальное" : "Групповое"}</td>
+                  <td>{row.is_active ? "Активно" : "Скрыто"}</td>
+                  <td className="admin-actions-inline">
+                    <button type="button" onClick={() => openEdit(row)}>Ред.</button>
+                    <button type="button" className="danger" onClick={() => remove(row.id)}>Удал.</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+
+      {!loading && filtered.length > 0 && viewMode === "cards" ? (
         <div className="admin-list">
-          {rows.map((row) => (
+          {filtered.map((row) => (
             <article key={row.id} className="admin-list-item">
               <div>
                 <strong>{row.service_title || row.service_slug}</strong>
                 <p>
-                  {new Date(row.start_time).toLocaleString("ru-RU")} -{" "}
-                  {new Date(row.end_time).toLocaleString("ru-RU")}
+                  {new Date(row.start_time).toLocaleString("ru-RU")} - {new Date(row.end_time).toLocaleString("ru-RU")}
                 </p>
                 <p>
-                  {row.current_participants}/{row.max_participants} {row.is_individual ? "• индивидуально" : ""}
+                  {row.current_participants}/{row.max_participants} • {row.is_individual ? "индивидуально" : "группа"} • {row.is_active ? "активно" : "скрыто"}
                 </p>
+                <div className="admin-progress">
+                  <span
+                    style={{
+                      width: `${Math.round(
+                        (row.current_participants / Math.max(1, row.max_participants)) * 100
+                      )}%`
+                    }}
+                  />
+                </div>
               </div>
               <div className="admin-actions">
-                <button type="button" onClick={() => editRow(row)}>
-                  Ред.
-                </button>
-                <button className="danger" type="button" onClick={() => remove(row.id)}>
-                  Удал.
-                </button>
+                <button type="button" onClick={() => openEdit(row)}>Ред.</button>
+                <button className="danger" type="button" onClick={() => remove(row.id)}>Удал.</button>
               </div>
             </article>
           ))}
         </div>
+      ) : null}
 
-        <form className="admin-form" onSubmit={save}>
-          <h2>{editingId ? `Редактирование #${editingId}` : "Создание события"}</h2>
-          <label>
-            Услуга
-            <select
-              value={form.service_id}
-              onChange={(event) => setForm((prev) => ({ ...prev, service_id: event.target.value }))}
-              required
-            >
-              <option value="">Выберите услугу</option>
-              {services.map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.title}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Старт
-            <input
-              type="datetime-local"
-              value={form.start_time}
-              onChange={(event) => setForm((prev) => ({ ...prev, start_time: event.target.value }))}
-              required
-            />
-          </label>
-          <label>
-            Конец
-            <input
-              type="datetime-local"
-              value={form.end_time}
-              onChange={(event) => setForm((prev) => ({ ...prev, end_time: event.target.value }))}
-              required
-            />
-          </label>
-          <label>
-            Макс. участников
-            <input
-              type="number"
-              min={1}
-              value={form.max_participants}
-              onChange={(event) =>
-                setForm((prev) => ({ ...prev, max_participants: Number(event.target.value) }))
-              }
-            />
-          </label>
-          <label>
-            Текущих участников
-            <input
-              type="number"
-              min={0}
-              value={form.current_participants}
-              onChange={(event) =>
-                setForm((prev) => ({ ...prev, current_participants: Number(event.target.value) }))
-              }
-            />
-          </label>
-          <label className="inline">
-            <input
-              type="checkbox"
-              checked={form.is_individual}
-              onChange={(event) => setForm((prev) => ({ ...prev, is_individual: event.target.checked }))}
-            />
-            Индивидуальное
-          </label>
-          <label className="inline">
-            <input
-              type="checkbox"
-              checked={form.is_active}
-              onChange={(event) => setForm((prev) => ({ ...prev, is_active: event.target.checked }))}
-            />
-            Active
-          </label>
-          <button className="btn-main" type="submit">
-            Сохранить
-          </button>
-        </form>
-      </div>
+      {modalOpen ? (
+        <div className="admin-modal" onClick={closeModal}>
+          <div className="admin-modal-panel" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="admin-modal-close" onClick={closeModal} aria-label="Закрыть">×</button>
+            <form className="admin-form" onSubmit={save}>
+              <h2>{editingId ? `Редактирование #${editingId}` : "Создание события"}</h2>
+              <label>
+                Услуга
+                <select
+                  value={form.service_id}
+                  onChange={(event) => setForm((prev) => ({ ...prev, service_id: event.target.value }))}
+                  required
+                >
+                  <option value="">Выберите услугу</option>
+                  {services.map((service) => (
+                    <option key={service.id} value={service.id}>{service.title}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Старт
+                <input
+                  type="datetime-local"
+                  value={form.start_time}
+                  onChange={(event) => setForm((prev) => ({ ...prev, start_time: event.target.value }))}
+                  required
+                />
+              </label>
+              <label>
+                Конец
+                <input
+                  type="datetime-local"
+                  value={form.end_time}
+                  onChange={(event) => setForm((prev) => ({ ...prev, end_time: event.target.value }))}
+                  required
+                />
+              </label>
+              <label>
+                Макс. участников
+                <input
+                  type="number"
+                  min={1}
+                  value={form.max_participants}
+                  onChange={(event) => setForm((prev) => ({ ...prev, max_participants: Number(event.target.value) }))}
+                />
+              </label>
+              <label>
+                Текущих участников
+                <input
+                  type="number"
+                  min={0}
+                  value={form.current_participants}
+                  onChange={(event) => setForm((prev) => ({ ...prev, current_participants: Number(event.target.value) }))}
+                />
+              </label>
+              <label className="inline">
+                <input
+                  type="checkbox"
+                  checked={form.is_individual}
+                  onChange={(event) => setForm((prev) => ({ ...prev, is_individual: event.target.checked }))}
+                />
+                Индивидуальное
+              </label>
+              <label className="inline">
+                <input
+                  type="checkbox"
+                  checked={form.is_active}
+                  onChange={(event) => setForm((prev) => ({ ...prev, is_active: event.target.checked }))}
+                />
+                Active
+              </label>
+              <button className="btn-main" type="submit">Сохранить</button>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

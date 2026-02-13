@@ -1,10 +1,30 @@
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { getAdminToken, setAdminToken } from "../api";
 
 export default function AdminLayout() {
   const [token, setToken] = useState(getAdminToken());
   const [saved, setSaved] = useState(false);
+  const location = useLocation();
+
+  const currentPage = useMemo(() => {
+    if (location.pathname.includes("/admin/schedule")) {
+      return {
+        title: "Управление расписанием",
+        description: "Создавайте события, контролируйте занятость и публикуйте актуальные даты."
+      };
+    }
+    if (location.pathname.includes("/admin/gallery")) {
+      return {
+        title: "Управление галереей",
+        description: "Добавляйте визуальный контент, сортируйте категории и управляйте отображением."
+      };
+    }
+    return {
+      title: "Управление услугами",
+      description: "Редактируйте карточки практик, описание, формат и медиа-контент."
+    };
+  }, [location.pathname]);
 
   const masked = useMemo(() => {
     if (!token) return "not set";
@@ -21,13 +41,17 @@ export default function AdminLayout() {
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar">
-        <h2>Admin</h2>
+        <h2>Atman Admin</h2>
         <p className="muted">Token: {masked}</p>
-        <nav>
+        <nav className="admin-nav">
           <NavLink to="/admin/services">Услуги</NavLink>
           <NavLink to="/admin/schedule">Расписание</NavLink>
           <NavLink to="/admin/gallery">Галерея</NavLink>
         </nav>
+        <div className="admin-side-note">
+          <p>Рабочий режим</p>
+          <strong>{token ? "Token активен" : "Нужен token"}</strong>
+        </div>
         <div className="admin-token">
           <label htmlFor="admin-token">X-Admin-Token</label>
           <input
@@ -46,6 +70,11 @@ export default function AdminLayout() {
         </Link>
       </aside>
       <main className="admin-main">
+        <header className="admin-main-headline">
+          <p>Панель управления</p>
+          <h1>{currentPage.title}</h1>
+          <span>{currentPage.description}</span>
+        </header>
         <Outlet />
       </main>
     </div>

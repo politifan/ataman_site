@@ -15,6 +15,17 @@ function formatPrice(value) {
   return new Intl.NumberFormat("ru-RU").format(value);
 }
 
+function formatModeLabel(value) {
+  if (value === "individual_only") return "Индивидуальный формат";
+  if (value === "group_and_individual") return "Групповой и индивидуальный формат";
+  return "Формат уточняется";
+}
+
+function getLoadPercent(current, total) {
+  if (!total || total <= 0) return 0;
+  return Math.max(0, Math.min(100, Math.round((current / total) * 100)));
+}
+
 const initialForm = {
   name: "",
   phone: "",
@@ -131,13 +142,22 @@ export default function ServicePage() {
   }
 
   const heroImage = service.media?.[0] ? toMediaUrl(service.media[0]) : "";
+  const hasHost = Boolean(service.host?.name || service.host?.bio);
+  const formatLabel = formatModeLabel(service.format_mode);
 
   return (
     <div className="page-service">
       <div className="container">
-        <Link className="back-link" to="/">
-          ← На главную
-        </Link>
+        <div className="service-top-actions">
+          <Link className="back-link" to="/">
+            ← На главную
+          </Link>
+          <div className="service-top-buttons">
+            <a href="#service-details">О практике</a>
+            <a href="#service-media">Фото</a>
+            <a href="#service-booking">Запись</a>
+          </div>
+        </div>
 
         <header
           className="service-hero"
@@ -154,7 +174,26 @@ export default function ServicePage() {
           </div>
         </header>
 
-        <section className="section service-layout">
+        <section className="service-meta-strip">
+          <div className="service-meta-pill">
+            <span>Формат</span>
+            <strong>{formatLabel}</strong>
+          </div>
+          <div className="service-meta-pill">
+            <span>Длительность</span>
+            <strong>{service.duration || "По согласованию"}</strong>
+          </div>
+          <div className="service-meta-pill">
+            <span>Возраст</span>
+            <strong>{service.age_restriction || "Без ограничений"}</strong>
+          </div>
+          <div className="service-meta-pill">
+            <span>Ближайших дат</span>
+            <strong>{nextEvents.length}</strong>
+          </div>
+        </section>
+
+        <section id="service-details" className="section service-layout">
           <article className="service-main">
             <div className="service-copy-head">
               <h2>О ПРАКТИКЕ</h2>
@@ -177,9 +216,17 @@ export default function ServicePage() {
                 </ul>
               </>
             ) : null}
+
+            {hasHost ? (
+              <div className="service-host-card">
+                <p className="service-host-kicker">Проводник практики</p>
+                {service.host?.name ? <h3>{service.host.name}</h3> : null}
+                {service.host?.bio ? <p>{service.host.bio}</p> : null}
+              </div>
+            ) : null}
           </article>
 
-          <aside className="service-side">
+          <aside id="service-booking" className="service-side">
             <div className="side-card">
               <h3>ДЕТАЛИ</h3>
               <div className="detail-row">
@@ -219,9 +266,16 @@ export default function ServicePage() {
                   {nextEvents.map((item) => (
                     <div key={item.id} className="event-list-item">
                       <p>{formatDateTime(item.start_time)}</p>
-                      <span>
-                        Мест: {item.available_spots}/{item.max_participants}
-                      </span>
+                      <span>Свободно мест: {item.available_spots}</span>
+                      <div className="event-progress">
+                        <div
+                          className="event-progress-bar"
+                          style={{ width: `${getLoadPercent(item.current_participants, item.max_participants)}%` }}
+                        />
+                      </div>
+                      <small>
+                        {item.current_participants}/{item.max_participants} занято
+                      </small>
                     </div>
                   ))}
                 </div>
@@ -266,7 +320,7 @@ export default function ServicePage() {
                     }
                     required
                   />
-                  Политика конфиденциальности
+                  <span>Политика конфиденциальности</span>
                 </label>
                 <label>
                   <input
@@ -277,7 +331,7 @@ export default function ServicePage() {
                     }
                     required
                   />
-                  Согласие на обработку данных
+                  <span>Согласие на обработку данных</span>
                 </label>
                 <label>
                   <input
@@ -286,7 +340,7 @@ export default function ServicePage() {
                     onChange={(event) => setForm((prev) => ({ ...prev, terms: event.target.checked }))}
                     required
                   />
-                  Условия оказания услуг
+                  <span>Условия оказания услуг</span>
                 </label>
                 <button className="btn-main" type="submit" disabled={sending}>
                   {sending ? "Отправка..." : "Отправить заявку"}
@@ -307,8 +361,11 @@ export default function ServicePage() {
         </section>
 
         {service.media?.length ? (
-          <section className="section">
-            <h2>ФОТО</h2>
+          <section id="service-media" className="section service-media-section">
+            <div className="service-section-head">
+              <h2>ФОТО И АТМОСФЕРА</h2>
+              <p>{service.media.length} изображений, кликните для увеличения</p>
+            </div>
             <div className="media-grid">
               {service.media.map((path) => (
                 <figure key={path}>

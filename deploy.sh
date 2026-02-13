@@ -5,6 +5,8 @@ set -euo pipefail
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
 VENV_ACTIVATE="/var/www/u3115521/data/venv/bin/activate"
 RESTART_FILE="${APP_DIR}/passenger_wsgi.py"
+# Keep CLI value (e.g. BUILD_FRONTEND=1 ./deploy.sh) as highest priority.
+CLI_BUILD_FRONTEND="${BUILD_FRONTEND:-}"
 BUILD_FRONTEND="${BUILD_FRONTEND:-1}"
 
 cd "$APP_DIR"
@@ -17,6 +19,13 @@ if [ -f "$APP_DIR/app/backend/.env" ]; then
   source "$APP_DIR/app/backend/.env"
   set +a
 fi
+
+# Re-apply CLI override after loading .env so .env cannot silently disable build.
+if [ -n "$CLI_BUILD_FRONTEND" ]; then
+  BUILD_FRONTEND="$CLI_BUILD_FRONTEND"
+fi
+
+echo "BUILD_FRONTEND=$BUILD_FRONTEND"
 
 # Backend dependencies
 python -m pip install --upgrade pip

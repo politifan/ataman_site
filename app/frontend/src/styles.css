@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;700;800&display=swap");
+
 :root {
   --bg-home: #1b245c;
   --bg-service: #f3efe8;
@@ -34,6 +36,922 @@ a {
   min-height: 100vh;
   display: grid;
   place-items: center;
+}
+
+.mystic-home {
+  background:
+    radial-gradient(circle at 12% 4%, rgba(255, 222, 149, 0.16), transparent 32%),
+    radial-gradient(circle at 90% 10%, rgba(117, 201, 255, 0.14), transparent 28%),
+    #060d24;
+  color: #e8efff;
+}
+
+.mystic-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(12px);
+  background: linear-gradient(180deg, rgba(5, 12, 33, 0.92), rgba(5, 12, 33, 0.74));
+  border-bottom: 1px solid rgba(227, 238, 255, 0.12);
+}
+
+.mystic-header-wrap {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.mystic-header-brand {
+  text-decoration: none;
+  color: #ffe5ab;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.mystic-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.mystic-header-nav a {
+  text-decoration: none;
+  color: rgba(227, 238, 255, 0.9);
+  font-size: 0.88rem;
+}
+
+.mystic-header-cta {
+  text-decoration: none;
+  border: 1px solid rgba(227, 238, 255, 0.28);
+  border-radius: 999px;
+  padding: 0.4rem 0.86rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.mystic-state {
+  background: #060d24;
+  color: #f2f8ff;
+}
+
+.mystic-hero {
+  min-height: 94vh;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.mystic-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(4, 8, 21, 0.2), rgba(4, 8, 21, 0.82)),
+    radial-gradient(circle at 20% 16%, rgba(255, 231, 165, 0.2), transparent 40%);
+}
+
+.mystic-sky {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mystic-nebula {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(34px);
+  opacity: 0.44;
+  animation: mysticNebulaFloat 18s ease-in-out infinite alternate;
+}
+
+.mystic-nebula-a {
+  width: 380px;
+  height: 240px;
+  left: -90px;
+  top: 26%;
+  background: radial-gradient(circle at center, rgba(121, 162, 255, 0.36), transparent 72%);
+}
+
+.mystic-nebula-b {
+  width: 320px;
+  height: 220px;
+  right: -70px;
+  top: 16%;
+  background: radial-gradient(circle at center, rgba(255, 206, 133, 0.28), transparent 72%);
+  animation-duration: 22s;
+}
+
+.mystic-nebula-c {
+  width: 280px;
+  height: 180px;
+  left: 46%;
+  bottom: 8%;
+  background: radial-gradient(circle at center, rgba(150, 224, 255, 0.2), transparent 74%);
+  animation-duration: 25s;
+}
+
+.mystic-star {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: rgba(238, 246, 255, 0.95);
+  box-shadow: 0 0 8px rgba(222, 237, 255, 0.7);
+  animation: mysticTwinkle var(--speed) ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+.mystic-constellation {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: calc(180px * var(--scale));
+  height: calc(150px * var(--scale));
+  opacity: 0.7;
+  animation: mysticDrift var(--duration) ease-in-out infinite alternate;
+}
+
+.mystic-constellation line {
+  stroke: rgba(201, 224, 255, 0.44);
+  stroke-width: 0.8;
+}
+
+.mystic-constellation circle {
+  fill: rgba(255, 244, 196, 0.96);
+}
+
+.mystic-hero-wrap {
+  position: relative;
+  z-index: 1;
+  padding-top: 2rem;
+  padding-bottom: 2.4rem;
+}
+
+.mystic-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mystic-nav p {
+  margin: 0;
+  font-size: 0.84rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #ffe3a7;
+}
+
+.mystic-nav-links {
+  display: flex;
+  gap: 0.86rem;
+  align-items: center;
+}
+
+.mystic-nav-links a {
+  text-decoration: none;
+  color: #ecf4ff;
+  font-size: 0.9rem;
+}
+
+.mystic-contact-btn {
+  border-radius: 999px;
+  border: 1px solid rgba(236, 244, 255, 0.32);
+  padding: 0.44rem 0.88rem;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mystic-hero-grid {
+  min-height: calc(94vh - 82px);
+  display: grid;
+  grid-template-columns: 1.3fr 0.9fr;
+  gap: 1.2rem;
+  align-items: end;
+}
+
+.mystic-hero-copy h1 {
+  margin: 0.5rem 0 0;
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 700;
+  font-size: clamp(2.7rem, 6vw, 5.2rem);
+  line-height: 0.96;
+  letter-spacing: 0.01em;
+  max-width: 820px;
+}
+
+.mystic-hero-copy > p {
+  margin: 1rem 0 0;
+  max-width: 650px;
+  color: rgba(236, 244, 255, 0.88);
+  line-height: 1.64;
+}
+
+.mystic-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.76rem;
+  color: #ffdca3;
+}
+
+.mystic-actions {
+  margin-top: 1.45rem;
+  display: flex;
+  gap: 0.74rem;
+  flex-wrap: wrap;
+}
+
+.mystic-btn {
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.7rem 1.14rem;
+  font-weight: 800;
+  font-size: 0.91rem;
+}
+
+.mystic-btn-primary {
+  color: #162855;
+  background: linear-gradient(135deg, #fceca7, #ffd483);
+}
+
+.mystic-btn-secondary {
+  color: #ecf4ff;
+  border: 1px solid rgba(236, 244, 255, 0.34);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mystic-ritual-line {
+  margin-top: 1.1rem;
+  display: flex;
+  gap: 0.44rem;
+  flex-wrap: wrap;
+}
+
+.mystic-ritual-line span {
+  border: 1px solid rgba(236, 244, 255, 0.25);
+  border-radius: 999px;
+  padding: 0.24rem 0.62rem;
+  font-size: 0.75rem;
+  color: rgba(236, 244, 255, 0.84);
+}
+
+.mystic-orbit {
+  display: grid;
+  gap: 0.66rem;
+}
+
+.mystic-orbit-card {
+  margin: 0;
+  border-radius: 20px;
+  padding: 1rem;
+  border: 1px solid rgba(236, 244, 255, 0.19);
+  background: linear-gradient(145deg, rgba(12, 24, 63, 0.78), rgba(15, 31, 79, 0.7));
+  box-shadow: 0 18px 45px rgba(4, 10, 33, 0.34);
+}
+
+.mystic-orbit-card p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.74rem;
+  color: #ffdf9f;
+}
+
+.mystic-orbit-card h3 {
+  margin: 0.52rem 0 0;
+  font-size: 1.08rem;
+  line-height: 1.34;
+}
+
+.mystic-orbit-card span {
+  display: block;
+  margin-top: 0.4rem;
+  color: rgba(236, 244, 255, 0.86);
+  font-size: 0.9rem;
+}
+
+.mystic-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.56rem;
+}
+
+.mystic-metrics article {
+  border-radius: 14px;
+  padding: 0.65rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(236, 244, 255, 0.14);
+}
+
+.mystic-metrics h4 {
+  margin: 0;
+  color: #ffefc3;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.38rem;
+}
+
+.mystic-metrics p {
+  margin: 0.2rem 0 0;
+  color: rgba(236, 244, 255, 0.8);
+  font-size: 0.74rem;
+}
+
+.mystic-main {
+  position: relative;
+  margin-top: -36px;
+  padding: 1.8rem 1rem 2.8rem;
+  border-radius: 24px 24px 0 0;
+  background:
+    radial-gradient(circle at 92% 4%, rgba(255, 215, 145, 0.1), transparent 26%),
+    radial-gradient(circle at 8% 18%, rgba(102, 184, 255, 0.12), transparent 32%),
+    linear-gradient(180deg, rgba(8, 18, 49, 0.86), rgba(7, 16, 44, 0.96));
+  border: 1px solid rgba(227, 238, 255, 0.14);
+  box-shadow: 0 -20px 48px rgba(4, 9, 28, 0.36);
+}
+
+.mystic-section {
+  padding-top: 2.4rem;
+}
+
+.mystic-space {
+  padding-top: 0.7rem;
+}
+
+.mystic-space-media {
+  min-height: 280px;
+  border-radius: 20px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: end;
+  border: 1px solid rgba(227, 238, 255, 0.18);
+  overflow: hidden;
+}
+
+.mystic-space-copy {
+  width: min(760px, 100%);
+  padding: 1.1rem 1.2rem;
+  background: linear-gradient(180deg, rgba(7, 16, 44, 0.1), rgba(7, 16, 44, 0.86));
+}
+
+.mystic-space-copy p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  color: #ffe0a2;
+}
+
+.mystic-space-copy h2 {
+  margin: 0.5rem 0 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 0.98;
+}
+
+.mystic-space-copy span {
+  margin-top: 0.55rem;
+  display: block;
+  color: rgba(227, 238, 255, 0.86);
+  line-height: 1.56;
+}
+
+.mystic-section-head p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: #ffdca1;
+}
+
+.mystic-section-head h2 {
+  margin: 0.5rem 0 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  line-height: 1;
+  max-width: 880px;
+}
+
+.mystic-section-head span {
+  margin-top: 0.62rem;
+  display: block;
+  color: rgba(227, 238, 255, 0.82);
+  max-width: 760px;
+}
+
+.mystic-service-group {
+  margin-top: 1.5rem;
+}
+
+.mystic-service-group header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 0.9rem;
+  margin-bottom: 0.84rem;
+}
+
+.mystic-service-group h3 {
+  margin: 0;
+  font-size: 1.16rem;
+  color: #fff0c0;
+}
+
+.mystic-service-group header p {
+  margin: 0;
+  color: rgba(227, 238, 255, 0.76);
+  font-size: 0.9rem;
+}
+
+.mystic-service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+  gap: 0.82rem;
+}
+
+.mystic-service-card {
+  border-radius: 18px;
+  border: 1px solid rgba(227, 238, 255, 0.14);
+  background: linear-gradient(150deg, rgba(15, 30, 79, 0.8), rgba(11, 24, 63, 0.72));
+  padding: 1rem;
+  min-height: 265px;
+  display: grid;
+  gap: 0.64rem;
+}
+
+.mystic-service-cover {
+  border-radius: 12px;
+  overflow: hidden;
+  height: 144px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(227, 238, 255, 0.14);
+}
+
+.mystic-service-cover img,
+.mystic-service-cover video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mystic-service-cover-fallback {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 20% 24%, rgba(147, 223, 255, 0.25), rgba(10, 22, 57, 0.75));
+}
+
+.mystic-service-badge {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  color: #ffe0a1;
+}
+
+.mystic-service-card h4 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.mystic-service-card > p {
+  margin: 0;
+  color: rgba(227, 238, 255, 0.84);
+  line-height: 1.48;
+}
+
+.mystic-service-meta {
+  margin-top: auto;
+  padding-top: 0.58rem;
+  border-top: 1px solid rgba(227, 238, 255, 0.12);
+  display: flex;
+  justify-content: space-between;
+  gap: 0.56rem;
+  font-size: 0.83rem;
+}
+
+.mystic-service-meta strong {
+  color: #ffeec0;
+}
+
+.mystic-service-card a {
+  width: fit-content;
+  text-decoration: none;
+  border-radius: 999px;
+  border: 1px solid rgba(227, 238, 255, 0.28);
+  padding: 0.43rem 0.8rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.mystic-gallery {
+  margin-top: 0.6rem;
+}
+
+.mystic-gallery-grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.76rem;
+}
+
+.mystic-gallery-card {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(227, 238, 255, 0.16);
+  min-height: 200px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.mystic-gallery-card img,
+.mystic-gallery-card video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mystic-gallery-overlay {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 0.58rem 0.65rem;
+  background: linear-gradient(180deg, rgba(7, 16, 44, 0.08), rgba(7, 16, 44, 0.88));
+}
+
+.mystic-gallery-overlay small {
+  display: block;
+  margin: 0;
+  color: rgba(227, 238, 255, 0.76);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.64rem;
+}
+
+.mystic-gallery-overlay strong {
+  display: block;
+  margin-top: 0.18rem;
+  font-size: 0.8rem;
+  color: #ffe9b9;
+  line-height: 1.25;
+}
+
+.mystic-gallery-overlay p {
+  margin: 0.18rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.38;
+}
+
+.mystic-gallery-overlay span {
+  margin-top: 0.16rem;
+  display: block;
+  font-size: 0.7rem;
+  letter-spacing: 0.07em;
+  color: rgba(227, 238, 255, 0.74);
+}
+
+.mystic-schedule {
+  margin-top: 0.7rem;
+}
+
+.mystic-path {
+  margin-top: 0.3rem;
+}
+
+.mystic-path-grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.78rem;
+}
+
+.mystic-path-card {
+  border-radius: 16px;
+  border: 1px solid rgba(227, 238, 255, 0.16);
+  background: linear-gradient(145deg, rgba(10, 23, 62, 0.88), rgba(14, 30, 77, 0.72));
+  padding: 0.92rem;
+  box-shadow: inset 0 0 0 1px rgba(255, 223, 164, 0.08);
+}
+
+.mystic-path-card p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 0.72rem;
+  color: #ffdf9f;
+}
+
+.mystic-path-card h3 {
+  margin: 0.5rem 0 0;
+  font-size: 1.04rem;
+  color: #fff2c9;
+}
+
+.mystic-path-card span {
+  margin-top: 0.46rem;
+  display: block;
+  color: rgba(227, 238, 255, 0.84);
+  line-height: 1.52;
+  font-size: 0.9rem;
+}
+
+.mystic-schedule-list {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.66rem;
+}
+
+.mystic-schedule-card {
+  border-radius: 16px;
+  border: 1px solid rgba(227, 238, 255, 0.15);
+  background: rgba(10, 20, 55, 0.82);
+  padding: 0.85rem 0.95rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.mystic-schedule-main h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.mystic-schedule-main p {
+  margin: 0.34rem 0 0;
+  color: rgba(227, 238, 255, 0.84);
+  font-size: 0.9rem;
+}
+
+.mystic-schedule-side {
+  min-width: 170px;
+  display: grid;
+  justify-items: end;
+  align-content: center;
+  gap: 0.4rem;
+}
+
+.mystic-schedule-side span {
+  font-size: 0.82rem;
+}
+
+.mystic-schedule-side span.open {
+  color: #cbffb8;
+}
+
+.mystic-schedule-side span.closed {
+  color: #ffbcbc;
+}
+
+.mystic-schedule-side a {
+  width: fit-content;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid rgba(227, 238, 255, 0.3);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.mystic-reveal {
+  animation: mysticRevealUp 0.8s ease both;
+}
+
+.mystic-contact-btn:hover,
+.mystic-btn:hover,
+.mystic-header-cta:hover,
+.mystic-service-card a:hover,
+.mystic-schedule-side a:hover {
+  transform: translateY(-1px);
+  transition: transform 0.2s ease;
+}
+
+.mystic-footer {
+  margin-top: 2rem;
+  border-top: 1px solid rgba(227, 238, 255, 0.12);
+  background: linear-gradient(180deg, rgba(6, 13, 36, 0.72), rgba(6, 13, 36, 0.95));
+}
+
+.mystic-footer-wrap {
+  padding: 1.5rem 0 1.8rem;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 1rem;
+}
+
+.mystic-footer-col h3,
+.mystic-footer-col h4 {
+  margin: 0;
+  color: #ffe6ae;
+}
+
+.mystic-footer-col h3 {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.4rem;
+}
+
+.mystic-footer-col h4 {
+  font-size: 0.88rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.mystic-footer-col p {
+  margin: 0.5rem 0 0;
+  color: rgba(227, 238, 255, 0.78);
+  max-width: 380px;
+  line-height: 1.56;
+}
+
+.mystic-footer-col a {
+  margin-top: 0.36rem;
+  display: block;
+  color: rgba(227, 238, 255, 0.9);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+@keyframes mysticTwinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes mysticDrift {
+  0% {
+    transform: translateY(0) translateX(0);
+  }
+  100% {
+    transform: translateY(-6px) translateX(8px);
+  }
+}
+
+@keyframes mysticNebulaFloat {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(16px, -10px) scale(1.08);
+  }
+}
+
+@keyframes mysticRevealUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mystic-star,
+  .mystic-constellation,
+  .mystic-nebula,
+  .mystic-reveal {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .mystic-header-wrap {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .mystic-header-nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mystic-hero-grid {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 1rem;
+    min-height: auto;
+    padding-top: 2rem;
+  }
+
+  .mystic-service-group header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mystic-schedule-card {
+    flex-direction: column;
+  }
+
+  .mystic-schedule-side {
+    justify-items: start;
+    min-width: 0;
+  }
+
+  .mystic-path-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mystic-footer-wrap {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .mystic-header {
+    position: static;
+  }
+
+  .mystic-header-wrap {
+    min-height: auto;
+    padding: 0.8rem 0;
+    justify-content: flex-start;
+  }
+
+  .mystic-header-nav {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .mystic-header-cta {
+    margin-left: auto;
+  }
+
+  .mystic-hero {
+    min-height: auto;
+  }
+
+  .mystic-nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
+  }
+
+  .mystic-nav-links {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  .mystic-hero-copy h1 {
+    font-size: clamp(2.2rem, 14vw, 3.8rem);
+  }
+
+  .mystic-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .mystic-btn {
+    text-align: center;
+  }
+
+  .mystic-ritual-line {
+    display: none;
+  }
+
+  .mystic-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .mystic-service-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mystic-main {
+    margin-top: -18px;
+    padding: 1.1rem 0.75rem 2.2rem;
+  }
+
+  .mystic-space-media {
+    min-height: 250px;
+  }
+
+  .mystic-gallery-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mystic-footer-wrap {
+    grid-template-columns: 1fr;
+    gap: 1.1rem;
+  }
 }
 
 .home-shell {

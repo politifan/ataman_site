@@ -101,13 +101,23 @@ def seed_schedule(db, service_by_slug: dict[str, Service]) -> None:
 
 
 def seed_gallery_stub(db) -> None:
+    reference_title = "Референс главной"
+    reference_path = "referens_oformleniya_uslugi_1.png"
+
+    existing_reference = db.query(GalleryItem).filter(GalleryItem.title == reference_title).one_or_none()
+    if existing_reference:
+        existing_reference.image_path = reference_path
+        existing_reference.category = "reference"
+        existing_reference.is_active = True
+        return
+
     if db.query(GalleryItem).count() > 0:
         return
     db.add(
         GalleryItem(
-            title="Референс главной",
+            title=reference_title,
             description="Материал из папки проекта",
-            image_path="Референс оформления услуги (1).png",
+            image_path=reference_path,
             category="reference",
             sort_order=0,
             is_active=True,

@@ -37,15 +37,13 @@ echo "Backend init step done."
 # Optional frontend build (if Node.js exists on server)
 if [ "$BUILD_FRONTEND" = "1" ]; then
   echo "Frontend build enabled. Starting..."
-  # Try to load nvm (common on shared hosting).
-  if [ -s "$HOME/.nvm/nvm.sh" ]; then
-    # shellcheck source=/dev/null
-    source "$HOME/.nvm/nvm.sh"
+  # Avoid "nvm use" in non-interactive shells under set -euo; prefer fixed node bin path.
+  NVM_NODE_BIN=""
+  if [ -d "$HOME/.nvm/versions/node" ]; then
+    NVM_NODE_BIN="$(ls -d "$HOME"/.nvm/versions/node/v*/bin 2>/dev/null | sort -V | tail -n 1 || true)"
   fi
-
-  # Ensure a modern Node is active for Vite builds (Node >= 18, npm >= 8).
-  if command -v nvm >/dev/null 2>&1; then
-    nvm use --lts >/dev/null 2>&1 || nvm install --lts >/dev/null 2>&1
+  if [ -n "$NVM_NODE_BIN" ]; then
+    export PATH="$NVM_NODE_BIN:$PATH"
   fi
 
   if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then

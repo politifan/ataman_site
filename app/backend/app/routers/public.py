@@ -62,6 +62,16 @@ def _serialize_site(settings_rows: list[Setting]) -> SiteResponse:
 
 
 def _service_to_public(service: Service) -> ServicePublic:
+    def as_dict(value: Any) -> dict[str, Any]:
+        if isinstance(value, dict):
+            return value
+        return {}
+
+    def as_list(value: Any) -> list[Any]:
+        if isinstance(value, list):
+            return value
+        return []
+
     payload = {
         "id": service.id,
         "slug": service.slug,
@@ -71,14 +81,14 @@ def _service_to_public(service: Service) -> ServicePublic:
         "format_mode": service.format_mode,
         "teaser": service.teaser,
         "duration": service.duration,
-        "pricing": service.pricing or {},
-        "about": service.about or [],
-        "suitable_for": service.suitable_for or [],
-        "host": service.host or {},
-        "important": service.important or [],
-        "dress_code": service.dress_code or [],
-        "contraindications": service.contraindications or [],
-        "media": service.media or [],
+        "pricing": as_dict(service.pricing),
+        "about": as_list(service.about),
+        "suitable_for": as_list(service.suitable_for),
+        "host": as_dict(service.host),
+        "important": as_list(service.important),
+        "dress_code": as_list(service.dress_code),
+        "contraindications": as_list(service.contraindications),
+        "media": as_list(service.media),
         "age_restriction": service.age_restriction,
         "is_draft": bool(service.is_draft),
         "is_active": bool(service.is_active),

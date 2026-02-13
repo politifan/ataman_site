@@ -24,6 +24,7 @@ fi
 if [ -n "$CLI_BUILD_FRONTEND" ]; then
   BUILD_FRONTEND="$CLI_BUILD_FRONTEND"
 fi
+BUILD_FRONTEND="${BUILD_FRONTEND//$'\r'/}"
 
 echo "BUILD_FRONTEND=$BUILD_FRONTEND"
 
@@ -31,9 +32,11 @@ echo "BUILD_FRONTEND=$BUILD_FRONTEND"
 python -m pip install --upgrade pip
 python -m pip install -r app/backend/requirements.txt
 python app/backend/init_db.py
+echo "Backend init step done."
 
 # Optional frontend build (if Node.js exists on server)
 if [ "$BUILD_FRONTEND" = "1" ]; then
+  echo "Frontend build enabled. Starting..."
   # Try to load nvm (common on shared hosting).
   if [ -s "$HOME/.nvm/nvm.sh" ]; then
     # shellcheck source=/dev/null
@@ -68,6 +71,8 @@ if [ "$BUILD_FRONTEND" = "1" ]; then
     fi
     npm run build
   )
+else
+  echo "Frontend build skipped. BUILD_FRONTEND is not '1' (actual: $BUILD_FRONTEND)."
 fi
 
 # Trigger Passenger restart

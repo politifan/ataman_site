@@ -10,6 +10,14 @@ const STAR_POINTS = Array.from({ length: 72 }, (_, index) => ({
   speed: 3 + (index % 5)
 }));
 
+const SHOOTING_STARS = Array.from({ length: 7 }, (_, index) => ({
+  x: 10 + ((index * 13.5) % 80),
+  y: 8 + ((index * 9.3) % 44),
+  length: 120 + (index % 3) * 45,
+  delay: (index * 2.2).toFixed(2),
+  duration: 6.8 + (index % 4) * 1.3
+}));
+
 const CONSTELLATIONS = [
   {
     id: "orion",
@@ -154,12 +162,81 @@ function isVideoAsset(path = "") {
   return /\.(mp4|mov|webm|m4v)$/i.test(path);
 }
 
+function transliterateToRu(input = "") {
+  const source = String(input);
+  const lower = source.toLowerCase();
+  const patterns = [
+    ["shch", "щ"],
+    ["yo", "ё"],
+    ["zh", "ж"],
+    ["kh", "х"],
+    ["ts", "ц"],
+    ["ch", "ч"],
+    ["sh", "ш"],
+    ["yu", "ю"],
+    ["ya", "я"],
+    ["a", "а"],
+    ["b", "б"],
+    ["v", "в"],
+    ["g", "г"],
+    ["d", "д"],
+    ["e", "е"],
+    ["z", "з"],
+    ["i", "и"],
+    ["j", "й"],
+    ["k", "к"],
+    ["l", "л"],
+    ["m", "м"],
+    ["n", "н"],
+    ["o", "о"],
+    ["p", "п"],
+    ["r", "р"],
+    ["s", "с"],
+    ["t", "т"],
+    ["u", "у"],
+    ["f", "ф"],
+    ["h", "х"],
+    ["c", "к"],
+    ["y", "ы"],
+    ["x", "кс"],
+    ["q", "к"]
+  ];
+
+  let out = "";
+  let idx = 0;
+  while (idx < lower.length) {
+    let replaced = false;
+    for (const [latin, cyr] of patterns) {
+      if (lower.startsWith(latin, idx)) {
+        out += cyr;
+        idx += latin.length;
+        replaced = true;
+        break;
+      }
+    }
+    if (!replaced) {
+      out += source[idx];
+      idx += 1;
+    }
+  }
+  return out.replace(/\s+/g, " ").trim();
+}
+
+function autoRu(value = "") {
+  if (!value) return "";
+  if (/[А-Яа-яЁё]/.test(value)) return value;
+  if (!/^[A-Za-z0-9\s'".,!?()\-_/]+$/.test(value)) return value;
+  const translated = transliterateToRu(value);
+  return translated.charAt(0).toUpperCase() + translated.slice(1);
+}
+
 function prettifyMediaName(path = "") {
   const file = path.split("/").pop() || "";
   const base = file.replace(/\.[^.]+$/, "");
   const cleaned = base.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
   if (!cleaned) return "Без названия";
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  const localized = autoRu(cleaned);
+  return localized.charAt(0).toUpperCase() + localized.slice(1);
 }
 
 function prettifyMediaGroup(path = "") {
@@ -167,7 +244,8 @@ function prettifyMediaGroup(path = "") {
   if (parts.length < 2) return "Общий раздел";
   const group = parts[parts.length - 2];
   const cleaned = group.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  const localized = autoRu(cleaned);
+  return localized.charAt(0).toUpperCase() + localized.slice(1);
 }
 
 function MysticSky() {
@@ -176,6 +254,30 @@ function MysticSky() {
       <div className="mystic-nebula mystic-nebula-a" />
       <div className="mystic-nebula mystic-nebula-b" />
       <div className="mystic-nebula mystic-nebula-c" />
+
+      <div className="mystic-symbol mystic-symbol-dharma">
+        <svg viewBox="0 0 120 120" role="presentation">
+          <circle cx="60" cy="60" r="38" />
+          <circle cx="60" cy="60" r="10" />
+          {[0, 45, 90, 135].map((angle) => (
+            <g key={`dharma-spoke-${angle}`} transform={`rotate(${angle} 60 60)`}>
+              <line x1="60" y1="16" x2="60" y2="104" />
+              <line x1="16" y1="60" x2="104" y2="60" />
+            </g>
+          ))}
+        </svg>
+      </div>
+
+      <div className="mystic-symbol mystic-symbol-lotus">
+        <svg viewBox="0 0 220 120" role="presentation">
+          <ellipse cx="110" cy="74" rx="28" ry="26" />
+          <ellipse cx="72" cy="78" rx="22" ry="20" transform="rotate(-18 72 78)" />
+          <ellipse cx="148" cy="78" rx="22" ry="20" transform="rotate(18 148 78)" />
+          <ellipse cx="42" cy="90" rx="16" ry="14" transform="rotate(-28 42 90)" />
+          <ellipse cx="178" cy="90" rx="16" ry="14" transform="rotate(28 178 90)" />
+          <path d="M40 102 C78 112, 142 112, 180 102" />
+        </svg>
+      </div>
 
       {STAR_POINTS.map((star, index) => (
         <span
@@ -187,6 +289,20 @@ function MysticSky() {
             "--size": `${star.size}px`,
             "--delay": `${star.delay}s`,
             "--speed": `${star.speed}s`
+          }}
+        />
+      ))}
+
+      {SHOOTING_STARS.map((star, index) => (
+        <span
+          key={`shoot-${index}`}
+          className="mystic-shooting-star"
+          style={{
+            "--x": `${star.x}%`,
+            "--y": `${star.y}%`,
+            "--len": `${star.length}px`,
+            "--delay": `${star.delay}s`,
+            "--duration": `${star.duration}s`
           }}
         />
       ))}
@@ -240,9 +356,9 @@ function ServiceCard({ service }) {
           <div className="mystic-service-cover-fallback" />
         )}
       </div>
-      <p className="mystic-service-badge">{service.category_label || "Практика"}</p>
-      <h4>{service.title}</h4>
-      <p>{service.teaser}</p>
+      <p className="mystic-service-badge">{autoRu(service.category_label || "Практика")}</p>
+      <h4>{autoRu(service.title || "")}</h4>
+      <p>{autoRu(service.teaser || "")}</p>
       <div className="mystic-service-meta">
         <span>{service.duration || "Время по согласованию"}</span>
         <strong>{getServicePrice(service)}</strong>
@@ -256,6 +372,8 @@ export default function HomePage() {
   const [site, setSite] = useState(null);
   const [services, setServices] = useState([]);
   const [schedule, setSchedule] = useState([]);
+  const [galleryExpanded, setGalleryExpanded] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -275,6 +393,57 @@ export default function HomePage() {
 
     load();
   }, []);
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.key === "Escape") {
+        setSelectedMedia(null);
+      }
+    }
+
+    if (selectedMedia) {
+      window.addEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [selectedMedia]);
+
+  useEffect(() => {
+    const nodes = Array.from(document.querySelectorAll(".mystic-reveal"));
+    if (!nodes.length) return undefined;
+
+    const variants = [
+      "mystic-reveal-up",
+      "mystic-reveal-right",
+      "mystic-reveal-left",
+      "mystic-reveal-zoom",
+      "mystic-reveal-soft"
+    ];
+
+    nodes.forEach((node, index) => {
+      const variant = variants[index % variants.length];
+      node.classList.add(variant);
+    });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.18, rootMargin: "0px 0px -6% 0px" }
+    );
+
+    nodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, [loading]);
 
   const grouped = useMemo(
     () => ({
@@ -305,8 +474,8 @@ export default function HomePage() {
         seen.add(path);
         list.push({
           path,
-          title: service.title,
-          subtitle: service.category_label || "Практика",
+          title: autoRu(service.title || ""),
+          subtitle: autoRu(service.category_label || "Практика"),
           label: prettifyMediaName(path),
           group: prettifyMediaGroup(path),
           isVideo: isVideoAsset(path)
@@ -487,22 +656,45 @@ export default function HomePage() {
             <span>Реальные кадры пространства и форматов занятий. Всего медиа: {showcaseMedia.length}.</span>
           </div>
 
-          <div className="mystic-gallery-grid">
-            {showcaseMedia.map((item) => (
-              <article key={item.path} className="mystic-gallery-card">
-                {item.isVideo ? (
-                  <video src={toMediaUrl(item.path)} muted loop autoPlay playsInline preload="metadata" />
-                ) : (
-                  <img src={toMediaUrl(item.path)} alt={item.title} loading="lazy" />
-                )}
-                <div className="mystic-gallery-overlay">
-                  <small>{item.group}</small>
-                  <strong>{item.label}</strong>
-                  <p>{item.title}</p>
-                  <span>{item.isVideo ? "Видео" : "Фото"} • {item.subtitle}</span>
-                </div>
-              </article>
-            ))}
+          <div className={`mystic-gallery-frame ${galleryExpanded ? "is-expanded" : "is-collapsed"}`} id="gallery-content">
+            <div className="mystic-gallery-grid">
+              {showcaseMedia.map((item) => (
+                <article key={item.path} className="mystic-gallery-card">
+                  <button
+                    type="button"
+                    className="mystic-gallery-open"
+                    onClick={() => setSelectedMedia(item)}
+                    aria-label={`Открыть: ${item.label}`}
+                  >
+                    {item.isVideo ? (
+                      <video src={toMediaUrl(item.path)} muted loop autoPlay playsInline preload="metadata" />
+                    ) : (
+                      <img src={toMediaUrl(item.path)} alt={item.title} loading="lazy" />
+                    )}
+                    <div className="mystic-gallery-overlay">
+                      <small>{item.group}</small>
+                      <p>{item.title}</p>
+                      <span>{item.isVideo ? "Видео" : "Фото"} • {item.subtitle}</span>
+                    </div>
+                  </button>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="mystic-gallery-toggle-wrap">
+            <button
+              type="button"
+              className="mystic-gallery-toggle"
+              aria-expanded={galleryExpanded}
+              aria-controls="gallery-content"
+              onClick={() => setGalleryExpanded((value) => !value)}
+            >
+              <span>{galleryExpanded ? "Свернуть галерею" : "Развернуть галерею"}</span>
+              <i aria-hidden="true" className={galleryExpanded ? "is-open" : ""}>
+                ⌄
+              </i>
+            </button>
           </div>
         </section>
 
@@ -517,7 +709,7 @@ export default function HomePage() {
             {visibleSchedule.map((item) => (
               <article key={item.id} className="mystic-schedule-card">
                 <div className="mystic-schedule-main">
-                  <h4>{item.service_title}</h4>
+                  <h4>{autoRu(item.service_title || "")}</h4>
                   <p>{item.is_individual ? "Индивидуальный формат по согласованию" : formatDateTime(item.start_time)}</p>
                 </div>
 
@@ -540,6 +732,28 @@ export default function HomePage() {
           </div>
         </section>
       </main>
+
+      {selectedMedia ? (
+        <div className="mystic-lightbox" role="dialog" aria-modal="true" onClick={() => setSelectedMedia(null)}>
+          <div className="mystic-lightbox-panel" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="mystic-lightbox-close" onClick={() => setSelectedMedia(null)} aria-label="Закрыть">
+              ×
+            </button>
+            <div className="mystic-lightbox-media">
+              {selectedMedia.isVideo ? (
+                <video src={toMediaUrl(selectedMedia.path)} controls autoPlay playsInline preload="metadata" />
+              ) : (
+                <img src={toMediaUrl(selectedMedia.path)} alt={selectedMedia.title} loading="eager" />
+              )}
+            </div>
+            <div className="mystic-lightbox-meta">
+              <small>{selectedMedia.group}</small>
+              <p>{selectedMedia.title}</p>
+              <span>{selectedMedia.isVideo ? "Видео" : "Фото"} • {selectedMedia.subtitle}</span>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <footer className="mystic-footer">
         <div className="container mystic-footer-wrap">

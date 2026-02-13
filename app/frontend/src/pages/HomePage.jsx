@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getSchedule, getServices, getSite, toMediaUrl } from "../api";
 
 const STAR_POINTS = Array.from({ length: 72 }, (_, index) => ({
@@ -383,6 +383,11 @@ export default function HomePage() {
   const [schedule, setSchedule] = useState([]);
   const [galleryExpanded, setGalleryExpanded] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
+  const [showAllGroupServices, setShowAllGroupServices] = useState(false);
+  const [showAllIndividualServices, setShowAllIndividualServices] = useState(false);
+  const [activeServiceTab, setActiveServiceTab] = useState("group");
+  const servicePanelRef = useRef(null);
+  const tabScrollReadyRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -454,6 +459,17 @@ export default function HomePage() {
     return () => observer.disconnect();
   }, [loading]);
 
+  useEffect(() => {
+    if (!tabScrollReadyRef.current) {
+      tabScrollReadyRef.current = true;
+      return;
+    }
+    if (!servicePanelRef.current) return;
+    if (!window.matchMedia("(max-width: 980px)").matches) return;
+    const y = servicePanelRef.current.getBoundingClientRect().top + window.scrollY - 92;
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+  }, [activeServiceTab]);
+
   const grouped = useMemo(
     () => ({
       group: services.filter((item) => item.format_mode === "group_and_individual"),
@@ -461,6 +477,8 @@ export default function HomePage() {
     }),
     [services]
   );
+  const groupPreview = showAllGroupServices ? grouped.group : grouped.group.slice(0, 4);
+  const individualPreview = showAllIndividualServices ? grouped.individual : grouped.individual.slice(0, 4);
   const showcaseMedia = useMemo(() => {
     const seen = new Set();
     const list = [];
@@ -626,29 +644,74 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="mystic-service-group">
-            <header>
-              <h3>Групповые и комбинированные форматы</h3>
-              <p>Поддерживающая атмосфера и мягкое погружение в практику.</p>
-            </header>
-            <div className="mystic-service-grid">
-              {grouped.group.map((service) => (
-                <ServiceCard key={service.slug} service={service} />
-              ))}
-            </div>
+          <div className="mystic-service-tabs" role="tablist" aria-label="Форматы услуг">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeServiceTab === "group"}
+              className={`mystic-service-tab ${activeServiceTab === "group" ? "is-active" : ""}`}
+              onClick={() => setActiveServiceTab("group")}
+            >
+              Групповые и комбинированные
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeServiceTab === "individual"}
+              className={`mystic-service-tab ${activeServiceTab === "individual" ? "is-active" : ""}`}
+              onClick={() => setActiveServiceTab("individual")}
+            >
+              Индивидуальные
+            </button>
           </div>
 
-          <div className="mystic-service-group">
-            <header>
-              <h3>Индивидуальные форматы</h3>
-              <p>Точечная работа с личным запросом и более глубоким сопровождением.</p>
-            </header>
-            <div className="mystic-service-grid">
-              {grouped.individual.map((service) => (
-                <ServiceCard key={service.slug} service={service} />
-              ))}
+          {activeServiceTab === "group" ? (
+            <div ref={servicePanelRef} className="mystic-service-group" role="tabpanel">
+              <header>
+                <h3>Групповые и комбинированные форматы</h3>
+                <p>Поддерживающая атмосфера и мягкое погружение в практику.</p>
+              </header>
+              <div className="mystic-service-grid">
+                {groupPreview.map((service) => (
+                  <ServiceCard key={service.slug} service={service} />
+                ))}
+              </div>
+              {grouped.group.length > 4 ? (
+                <div className="mystic-service-toggle-wrap">
+                  <button
+                    type="button"
+                    className="mystic-service-toggle"
+                    onClick={() => setShowAllGroupServices((value) => !value)}
+                  >
+                    {showAllGroupServices ? "Свернуть список" : `Показать все (${grouped.group.length})`}
+                  </button>
+                </div>
+              ) : null}
             </div>
-          </div>
+          ) : (
+            <div ref={servicePanelRef} className="mystic-service-group" role="tabpanel">
+              <header>
+                <h3>Индивидуальные форматы</h3>
+                <p>Точечная работа с личным запросом и более глубоким сопровождением.</p>
+              </header>
+              <div className="mystic-service-grid">
+                {individualPreview.map((service) => (
+                  <ServiceCard key={service.slug} service={service} />
+                ))}
+              </div>
+              {grouped.individual.length > 4 ? (
+                <div className="mystic-service-toggle-wrap">
+                  <button
+                    type="button"
+                    className="mystic-service-toggle"
+                    onClick={() => setShowAllIndividualServices((value) => !value)}
+                  >
+                    {showAllIndividualServices ? "Свернуть список" : `Показать все (${grouped.individual.length})`}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          )}
         </section>
 
         <section className="mystic-section mystic-path mystic-reveal" style={{ animationDelay: "60ms" }}>

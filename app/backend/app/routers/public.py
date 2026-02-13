@@ -6,6 +6,7 @@ from decimal import Decimal
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
@@ -142,12 +143,12 @@ def get_site(db: Session = Depends(get_db_session)) -> SiteResponse:
     return _serialize_site(rows)
 
 
-@router.get("/services", response_model=list[ServicePublic])
+@router.get("/services")
 def list_services(
     format_mode: str | None = Query(default=None, pattern="^(group_and_individual|individual_only)$"),
     include_drafts: bool = False,
     db: Session = Depends(get_db_session),
-) -> list[ServicePublic]:
+) -> JSONResponse:
     try:
         query = select(Service).where(Service.is_active.is_(True))
         if not include_drafts:
@@ -156,7 +157,8 @@ def list_services(
             query = query.where(Service.format_mode == format_mode)
         query = query.order_by(Service.id.asc())
         services = db.scalars(query).all()
-        return [_service_to_public(item) for item in services]
+        data = [_service_to_public(item).model_dump(mode="json") for item in services]
+        return JSONResponse(data)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"/api/services failed: {type(exc).__name__}: {exc}") from exc
 

@@ -12,12 +12,14 @@ async function request(path, options = {}) {
 
   if (!response.ok) {
     let message = `Request failed: ${response.status}`;
-    try {
-      const payload = await response.json();
-      message = payload.detail || payload.message || message;
-    } catch (_) {
-      const text = await response.text();
-      if (text) message = text;
+    const raw = await response.text();
+    if (raw) {
+      try {
+        const payload = JSON.parse(raw);
+        message = payload.detail || payload.message || message;
+      } catch (_) {
+        message = raw;
+      }
     }
     throw new Error(message);
   }

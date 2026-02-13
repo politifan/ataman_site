@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .config import settings
+from .db import Base, engine
 from .routers.admin import router as admin_router
 from .routers.payments import router as payments_router
 from .routers.public import router as public_router
@@ -34,6 +35,9 @@ def create_app() -> FastAPI:
     app.include_router(public_router)
     app.include_router(payments_router)
     app.include_router(admin_router)
+
+    # Local DB bootstrap (SQLite or any DB URL): create tables if missing.
+    Base.metadata.create_all(bind=engine)
     return app
 
 

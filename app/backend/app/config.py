@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 @dataclass(frozen=True)
@@ -15,10 +17,7 @@ class Settings:
     app_debug: bool = os.getenv("APP_DEBUG", "1") in {"1", "true", "True"}
     cors_origins: str = os.getenv("CORS_ORIGINS", "*")
 
-    database_url: str = os.getenv(
-        "DATABASE_URL",
-        "mysql+pymysql://root:root@127.0.0.1:3306/atman_site?charset=utf8mb4",
-    )
+    database_url: str = os.getenv("DATABASE_URL", f"sqlite:///{(BASE_DIR / 'data' / 'site.db').as_posix()}")
 
     media_root: str = os.getenv("MEDIA_ROOT", "../../Сайт Атман")
 

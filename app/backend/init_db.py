@@ -1,0 +1,28 @@
+from __future__ import annotations
+
+from app.db import Base, SessionLocal, engine
+from app.models import Service
+from seed_from_json import seed_gallery_stub, seed_schedule, seed_services, seed_site
+
+
+def main() -> None:
+    Base.metadata.create_all(bind=engine)
+
+    db = SessionLocal()
+    try:
+        has_data = db.query(Service).count() > 0
+        if not has_data:
+            seed_site(db)
+            service_map = seed_services(db)
+            seed_schedule(db, service_map)
+            seed_gallery_stub(db)
+            db.commit()
+            print("Database initialized and seeded.")
+        else:
+            print("Database initialized. Seed skipped (services already exist).")
+    finally:
+        db.close()
+
+
+if __name__ == "__main__":
+    main()

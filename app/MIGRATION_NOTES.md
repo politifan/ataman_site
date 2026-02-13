@@ -33,7 +33,7 @@
 ## Что перенесено в этой итерации (`app/`)
 
 ## Backend (`app/backend`)
-- FastAPI API на SQLAlchemy/MySQL:
+- FastAPI API на SQLAlchemy + локальной SQLite:
   - `GET /api/site`
   - `GET /api/services`
   - `GET /api/services/{slug}`
@@ -61,7 +61,7 @@
   - хранение статусов платежа в SQL,
   - webhook-обработка статусов,
   - ручная проверка статуса платежа.
-- Добавлены Alembic миграции и скрипт первичного наполнения БД (`seed_from_json.py`).
+- Добавлен автосоздание таблиц при старте приложения и скрипт первичного наполнения БД (`init_db.py`, `seed_from_json.py`).
 
 ## Frontend (`app/frontend`)
 - React + Router.

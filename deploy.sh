@@ -15,6 +15,7 @@ source "$VENV_ACTIVATE"
 # Backend dependencies
 python -m pip install --upgrade pip
 python -m pip install -r app/backend/requirements.txt
+python app/backend/init_db.py
 
 # Optional frontend build (if Node.js exists on server)
 if [ "$BUILD_FRONTEND" = "1" ]; then

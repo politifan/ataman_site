@@ -1,6 +1,6 @@
 # Atman Migration Start (`app/`)
 
-Основа переноса с `PHP` на `Python + FastAPI + React` с переходом на `MySQL + Alembic` и платежным контуром `ЮKassa`.
+Основа переноса с `PHP` на `Python + FastAPI + React` с локальной БД `SQLite` и платежным контуром `ЮKassa`.
 
 ## Структура
 - `backend/` — API и данные.
@@ -14,8 +14,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-alembic upgrade head
-python seed_from_json.py --reset
+python init_db.py
 uvicorn main:app --reload --port 8000
 ```
 
@@ -30,9 +29,8 @@ npm run dev
 Для изменения API-адреса используйте переменную `VITE_API_BASE`.
 Админка доступна по маршруту `http://localhost:5173/admin` (используется `X-Admin-Token`).
 
-## Команды Alembic
+При необходимости принудительно переинициализировать данные:
 ```bash
 cd app/backend
-alembic upgrade head
-alembic downgrade -1
+python seed_from_json.py --reset
 ```

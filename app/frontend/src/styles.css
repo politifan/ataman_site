@@ -2225,105 +2225,137 @@ a {
 }
 
 .page-service {
-  background: var(--bg-service);
-  color: var(--txt-base);
+  background:
+    radial-gradient(circle at 12% 6%, rgba(255, 220, 156, 0.16), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgba(121, 202, 255, 0.14), transparent 30%),
+    #070f2b;
+  color: #e8efff;
   min-height: 100vh;
   padding-bottom: 3rem;
 }
 
 .back-link {
   display: inline-block;
-  margin: 1.3rem 0 1rem;
-  color: var(--txt-title);
+  margin: 1.2rem 0 1rem;
+  color: #ffe8b2;
   text-decoration: none;
   font-weight: 700;
+  border: 1px solid rgba(231, 240, 255, 0.24);
+  border-radius: 999px;
+  padding: 0.38rem 0.74rem;
 }
 
 .service-hero {
-  min-height: 320px;
-  border-radius: 24px;
+  min-height: 360px;
+  border-radius: 26px;
   background-size: cover;
   background-position: center;
   display: flex;
   align-items: flex-end;
-  padding: 1.5rem;
+  padding: 1.8rem;
   color: #fffdf2;
+  border: 1px solid rgba(227, 238, 255, 0.16);
+  box-shadow: 0 26px 60px rgba(2, 8, 26, 0.44);
 }
 
 .service-hero h1 {
   margin: 0.35rem 0;
-  font-size: clamp(1.6rem, 3.4vw, 2.7rem);
-  line-height: 1.12;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.02;
+  font-family: "Cormorant Garamond", serif;
 }
 
 .service-hero p {
   margin: 0.2rem 0 0;
-  max-width: 760px;
+  max-width: 720px;
+  color: rgba(244, 249, 255, 0.88);
 }
 
 .service-category {
   margin: 0;
-  letter-spacing: 0.08em;
-  font-size: 0.84rem;
-  opacity: 0.95;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  color: #ffe3a6;
 }
 
 .service-layout {
   display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 1.2rem;
+  grid-template-columns: 1fr 340px;
+  gap: 1rem;
   align-items: start;
 }
 
 .service-main {
-  background: #fff;
-  border-radius: 18px;
-  padding: 1.25rem;
+  background: linear-gradient(160deg, rgba(13, 26, 69, 0.9), rgba(9, 20, 54, 0.85));
+  border-radius: 20px;
+  padding: 1.2rem;
+  border: 1px solid rgba(227, 238, 255, 0.16);
+}
+
+.service-copy-head {
+  margin: 1.1rem 0 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.52rem;
+}
+
+.service-copy-head img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 0.18rem;
 }
 
 .service-main h2 {
-  margin: 1.1rem 0 0.65rem;
-  font-size: 1.05rem;
-  color: var(--txt-title);
+  margin: 0;
+  font-size: 1.08rem;
+  color: #ffe8b6;
+  letter-spacing: 0.05em;
 }
 
-.service-main h2:first-child {
+.service-main .service-copy-head:first-child {
   margin-top: 0;
 }
 
 .service-main p {
   margin: 0.45rem 0;
-  line-height: 1.65;
+  line-height: 1.62;
+  color: rgba(228, 239, 255, 0.88);
 }
 
 .service-main ul {
   margin: 0;
   padding-left: 1.1rem;
   display: grid;
-  gap: 0.35rem;
+  gap: 0.42rem;
+  color: rgba(228, 239, 255, 0.9);
 }
 
 .service-side {
   display: grid;
-  gap: 1rem;
+  gap: 0.8rem;
 }
 
 .side-card {
-  background: #fff;
+  background: linear-gradient(160deg, rgba(13, 26, 69, 0.9), rgba(9, 20, 54, 0.85));
   border-radius: 18px;
   padding: 1rem;
-  border: 1px solid #d7e2ef;
+  border: 1px solid rgba(227, 238, 255, 0.16);
 }
 
 .side-card h3 {
-  margin: 0 0 0.75rem;
-  color: var(--txt-title);
-  font-size: 0.96rem;
-  letter-spacing: 0.06em;
+  margin: 0 0 0.65rem;
+  color: #ffe8b6;
+  font-size: 0.9rem;
+  letter-spacing: 0.09em;
 }
 
 .side-card p {
   margin: 0.42rem 0;
+  color: rgba(228, 239, 255, 0.84);
 }
 
 .detail-row {
@@ -2331,7 +2363,7 @@ a {
   justify-content: space-between;
   gap: 0.8rem;
   padding: 0.56rem 0;
-  border-top: 1px solid #e8eef5;
+  border-top: 1px solid rgba(227, 238, 255, 0.14);
   font-size: 0.94rem;
 }
 
@@ -2341,11 +2373,11 @@ a {
 }
 
 .detail-row span {
-  color: #5f748a;
+  color: rgba(227, 238, 255, 0.74);
 }
 
 .detail-row strong {
-  color: #2a4f79;
+  color: #fff0c4;
   text-align: right;
 }
 
@@ -2355,15 +2387,15 @@ a {
 }
 
 .event-list-item {
-  border: 1px solid #e1e9f3;
+  border: 1px solid rgba(227, 238, 255, 0.14);
   border-radius: 12px;
   padding: 0.6rem 0.7rem;
-  background: #f8fbff;
+  background: rgba(7, 18, 48, 0.6);
 }
 
 .event-list-item p {
   margin: 0;
-  color: #2b4e77;
+  color: #fff0c4;
   font-weight: 700;
   font-size: 0.9rem;
 }
@@ -2371,7 +2403,7 @@ a {
 .event-list-item span {
   display: block;
   margin-top: 0.25rem;
-  color: #5d7897;
+  color: rgba(227, 238, 255, 0.78);
   font-size: 0.84rem;
 }
 
@@ -2383,20 +2415,23 @@ a {
 .booking-form input,
 .booking-form textarea {
   width: 100%;
-  border: 1px solid #d3dce7;
+  border: 1px solid rgba(227, 238, 255, 0.2);
   border-radius: 10px;
   padding: 0.56rem 0.7rem;
   font: inherit;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e9f2ff;
 }
 
 .booking-form label {
   display: flex;
   gap: 0.45rem;
   font-size: 0.82rem;
+  color: rgba(227, 238, 255, 0.8);
 }
 
 .booking-form .muted {
-  color: #8494a8;
+  color: rgba(227, 238, 255, 0.66);
   font-size: 0.9rem;
 }
 
@@ -2420,7 +2455,16 @@ a {
   margin: 0;
   border-radius: 14px;
   overflow: hidden;
-  background: #dfe7f0;
+  background: rgba(9, 20, 52, 0.86);
+  border: 1px solid rgba(227, 238, 255, 0.14);
+}
+
+.service-media-open {
+  all: unset;
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: zoom-in;
 }
 
 .media-grid img {
@@ -2428,6 +2472,54 @@ a {
   height: 100%;
   min-height: 180px;
   object-fit: cover;
+  display: block;
+  transition: transform 280ms ease;
+}
+
+.service-media-open:hover img {
+  transform: scale(1.03);
+}
+
+.service-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(3, 8, 22, 0.86);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.service-lightbox-panel {
+  width: min(1040px, 100%);
+  max-height: calc(100vh - 2rem);
+  border-radius: 16px;
+  overflow: auto;
+  border: 1px solid rgba(227, 238, 255, 0.22);
+  background: rgba(8, 18, 48, 0.95);
+  position: relative;
+}
+
+.service-lightbox-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(227, 238, 255, 0.32);
+  background: rgba(8, 18, 48, 0.92);
+  color: #f2f7ff;
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.service-lightbox-panel img {
+  width: 100%;
+  max-height: calc(100vh - 2rem);
+  object-fit: contain;
   display: block;
 }
 
@@ -2480,14 +2572,17 @@ a {
   min-height: 100vh;
   display: grid;
   grid-template-columns: 280px 1fr;
-  background: #eef2f7;
-  color: #203045;
+  background:
+    radial-gradient(circle at 90% 10%, rgba(120, 200, 255, 0.1), transparent 28%),
+    radial-gradient(circle at 8% 12%, rgba(255, 223, 153, 0.1), transparent 32%),
+    #070f2b;
+  color: #dbe8ff;
 }
 
 .admin-sidebar {
   padding: 1rem;
-  border-right: 1px solid #d4ddeb;
-  background: #fff;
+  border-right: 1px solid rgba(226, 237, 255, 0.16);
+  background: linear-gradient(180deg, rgba(8, 18, 48, 0.95), rgba(7, 16, 42, 0.95));
   position: sticky;
   top: 0;
   height: 100vh;
@@ -2496,6 +2591,9 @@ a {
 
 .admin-sidebar h2 {
   margin: 0 0 0.5rem;
+  color: #ffe8b2;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.55rem;
 }
 
 .admin-sidebar nav {
@@ -2508,12 +2606,15 @@ a {
   text-decoration: none;
   padding: 0.45rem 0.65rem;
   border-radius: 10px;
-  color: #36567d;
+  color: rgba(228, 239, 255, 0.88);
   font-weight: 700;
+  border: 1px solid transparent;
 }
 
 .admin-sidebar nav a.active {
-  background: #dbe9ff;
+  background: rgba(255, 228, 166, 0.15);
+  border-color: rgba(255, 228, 166, 0.35);
+  color: #ffe8b2;
 }
 
 .admin-token {
@@ -2524,10 +2625,12 @@ a {
 
 .admin-token input {
   width: 100%;
-  border: 1px solid #c4d0df;
+  border: 1px solid rgba(228, 239, 255, 0.2);
   border-radius: 10px;
   padding: 0.5rem;
   font: inherit;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e8f2ff;
 }
 
 .admin-main {
@@ -2544,7 +2647,9 @@ a {
 
 .admin-head h1 {
   margin: 0;
-  color: #2a4f79;
+  color: #ffe8b2;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 2rem;
 }
 
 .admin-grid {
@@ -2560,9 +2665,9 @@ a {
 }
 
 .admin-list-item {
-  background: #fff;
+  background: linear-gradient(160deg, rgba(12, 26, 67, 0.9), rgba(9, 20, 54, 0.85));
   border-radius: 14px;
-  border: 1px solid #d6e2f1;
+  border: 1px solid rgba(227, 238, 255, 0.14);
   padding: 0.8rem;
   display: flex;
   justify-content: space-between;
@@ -2571,8 +2676,12 @@ a {
 
 .admin-list-item p {
   margin: 0.3rem 0 0;
-  color: #607d9f;
+  color: rgba(227, 238, 255, 0.72);
   font-size: 0.88rem;
+}
+
+.admin-list-item strong {
+  color: #f4e8bf;
 }
 
 .admin-actions {
@@ -2581,9 +2690,9 @@ a {
 }
 
 .admin-actions button {
-  border: 1px solid #bfd3eb;
-  background: #fff;
-  color: #24466d;
+  border: 1px solid rgba(227, 238, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8f2ff;
   border-radius: 8px;
   cursor: pointer;
   padding: 0.25rem 0.5rem;
@@ -2595,8 +2704,8 @@ a {
 }
 
 .admin-form {
-  background: #fff;
-  border: 1px solid #d6e2f1;
+  background: linear-gradient(160deg, rgba(12, 26, 67, 0.9), rgba(9, 20, 54, 0.85));
+  border: 1px solid rgba(227, 238, 255, 0.14);
   border-radius: 16px;
   padding: 1rem;
   display: grid;
@@ -2605,14 +2714,14 @@ a {
 
 .admin-form h2 {
   margin: 0 0 0.35rem;
-  color: #2a4f79;
+  color: #ffe8b2;
 }
 
 .admin-form label {
   display: grid;
   gap: 0.3rem;
   font-size: 0.9rem;
-  color: #35567d;
+  color: rgba(227, 238, 255, 0.85);
 }
 
 .admin-form label.inline {
@@ -2625,10 +2734,12 @@ a {
 .admin-form select,
 .admin-form textarea {
   width: 100%;
-  border: 1px solid #c7d5e8;
+  border: 1px solid rgba(227, 238, 255, 0.22);
   border-radius: 10px;
   padding: 0.48rem 0.58rem;
   font: inherit;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e9f3ff;
 }
 
 .admin-thumb {
@@ -2637,13 +2748,26 @@ a {
   height: 78px;
   border-radius: 9px;
   overflow: hidden;
-  background: #d9e5f4;
+  background: rgba(227, 238, 255, 0.1);
+  border: 1px solid rgba(227, 238, 255, 0.18);
 }
 
 .admin-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.admin-shell .muted {
+  color: rgba(227, 238, 255, 0.7);
+}
+
+.admin-shell .ok {
+  color: #9ff0bc;
+}
+
+.admin-shell .err {
+  color: #ffb3b3;
 }
 
 @media (max-width: 980px) {
@@ -2655,7 +2779,7 @@ a {
     position: static;
     height: auto;
     border-right: 0;
-    border-bottom: 1px solid #d4ddeb;
+    border-bottom: 1px solid rgba(227, 238, 255, 0.16);
   }
 
   .admin-grid {

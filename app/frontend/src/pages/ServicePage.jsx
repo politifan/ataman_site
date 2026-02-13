@@ -25,6 +25,29 @@ const initialForm = {
   terms: false
 };
 
+const INFO_ICONS = {
+  suitable: "ikonki/praktika_podhodit_vam_esli.png",
+  important: "ikonki/vazhno.png",
+  dress: "ikonki/forma_odezhdy.png"
+};
+
+function InfoList({ title, items, icon }) {
+  if (!items?.length) return null;
+  return (
+    <>
+      <div className="service-copy-head">
+        {icon ? <img src={toMediaUrl(icon)} alt="" aria-hidden="true" /> : null}
+        <h2>{title}</h2>
+      </div>
+      <ul>
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
 export default function ServicePage() {
   const { slug } = useParams();
   const [service, setService] = useState(null);
@@ -33,6 +56,7 @@ export default function ServicePage() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [selectedMedia, setSelectedMedia] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -47,6 +71,20 @@ export default function ServicePage() {
     }
     load();
   }, [slug]);
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.key === "Escape") setSelectedMedia("");
+    }
+    if (selectedMedia) {
+      window.addEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [selectedMedia]);
 
   const selectedEvent = useMemo(() => {
     return schedule.find((item) => !item.is_individual && item.available_spots > 0) || null;
@@ -118,43 +156,16 @@ export default function ServicePage() {
 
         <section className="section service-layout">
           <article className="service-main">
-            <h2>О ПРАКТИКЕ</h2>
+            <div className="service-copy-head">
+              <h2>О ПРАКТИКЕ</h2>
+            </div>
             {service.about?.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}
 
-            {service.suitable_for?.length ? (
-              <>
-                <h2>ПРАКТИКА ПОДОЙДЕТ, ЕСЛИ</h2>
-                <ul>
-                  {service.suitable_for.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </>
-            ) : null}
-
-            {service.important?.length ? (
-              <>
-                <h2>ВАЖНО</h2>
-                <ul>
-                  {service.important.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </>
-            ) : null}
-
-            {service.dress_code?.length ? (
-              <>
-                <h2>ФОРМА ОДЕЖДЫ</h2>
-                <ul>
-                  {service.dress_code.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </>
-            ) : null}
+            <InfoList title="ПРАКТИКА ПОДОЙДЕТ, ЕСЛИ" items={service.suitable_for} icon={INFO_ICONS.suitable} />
+            <InfoList title="ВАЖНО" items={service.important} icon={INFO_ICONS.important} />
+            <InfoList title="ФОРМА ОДЕЖДЫ" items={service.dress_code} icon={INFO_ICONS.dress} />
 
             {service.contraindications?.length ? (
               <>
@@ -301,13 +312,31 @@ export default function ServicePage() {
             <div className="media-grid">
               {service.media.map((path) => (
                 <figure key={path}>
-                  <img src={toMediaUrl(path)} alt={service.title} loading="lazy" />
+                  <button
+                    type="button"
+                    className="service-media-open"
+                    onClick={() => setSelectedMedia(path)}
+                    aria-label="Открыть изображение"
+                  >
+                    <img src={toMediaUrl(path)} alt={service.title} loading="lazy" />
+                  </button>
                 </figure>
               ))}
             </div>
           </section>
         ) : null}
       </div>
+
+      {selectedMedia ? (
+        <div className="service-lightbox" role="dialog" aria-modal="true" onClick={() => setSelectedMedia("")}>
+          <div className="service-lightbox-panel" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="service-lightbox-close" onClick={() => setSelectedMedia("")} aria-label="Закрыть">
+              ×
+            </button>
+            <img src={toMediaUrl(selectedMedia)} alt={service.title} loading="eager" />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

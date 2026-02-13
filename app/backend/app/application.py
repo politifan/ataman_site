@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import settings
@@ -50,6 +51,24 @@ def create_app() -> FastAPI:
     media_root = _resolve_media_root(settings.media_root)
     if media_root:
         app.mount("/media", StaticFiles(directory=str(media_root)), name="media")
+
+    frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+    if frontend_dist.exists():
+        app.mount("/assets", StaticFiles(directory=str(frontend_dist / "assets")), name="frontend-assets")
+
+        @app.get("/", include_in_schema=False)
+        def frontend_index() -> FileResponse:
+            return FileResponse(str(frontend_dist / "index.html"))
+    else:
+        @app.get("/", include_in_schema=False)
+        def root_stub() -> JSONResponse:
+            return JSONResponse(
+                {
+                    "ok": True,
+                    "message": "Backend is running. Frontend build not found.",
+                    "next": "Build frontend to app/frontend/dist and redeploy.",
+                }
+            )
 
     app.include_router(public_router)
     app.include_router(payments_router)

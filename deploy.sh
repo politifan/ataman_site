@@ -25,6 +25,19 @@ python app/backend/init_db.py
 
 # Optional frontend build (if Node.js exists on server)
 if [ "$BUILD_FRONTEND" = "1" ]; then
+  # Try to load nvm if npm is not in PATH (common on shared hosting).
+  if ! command -v npm >/dev/null 2>&1; then
+    if [ -s "$HOME/.nvm/nvm.sh" ]; then
+      # shellcheck source=/dev/null
+      source "$HOME/.nvm/nvm.sh"
+    fi
+  fi
+
+  # Ensure a modern Node is active for Vite builds.
+  if command -v nvm >/dev/null 2>&1; then
+    nvm use --lts >/dev/null 2>&1 || nvm install --lts >/dev/null 2>&1
+  fi
+
   if command -v npm >/dev/null 2>&1; then
     (cd app/frontend && npm ci && npm run build)
   else

@@ -13,6 +13,25 @@ from .routers.payments import router as payments_router
 from .routers.public import router as public_router
 
 
+def _resolve_media_root(raw_path: str) -> Path | None:
+    candidate = Path(raw_path)
+    if candidate.is_absolute():
+        return candidate if candidate.exists() else None
+
+    here = Path(__file__).resolve()
+    search_roots = [
+        here.parent,          # app/backend/app
+        here.parent.parent,   # app/backend
+        here.parent.parent.parent,  # app
+        here.parent.parent.parent.parent,  # project root
+    ]
+    for root in search_roots:
+        resolved = (root / candidate).resolve()
+        if resolved.exists():
+            return resolved
+    return None
+
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
@@ -28,8 +47,8 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    media_root = (Path(__file__).resolve().parent / settings.media_root).resolve()
-    if media_root.exists():
+    media_root = _resolve_media_root(settings.media_root)
+    if media_root:
         app.mount("/media", StaticFiles(directory=str(media_root)), name="media")
 
     app.include_router(public_router)

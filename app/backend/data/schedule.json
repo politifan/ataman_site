@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "service_slug": "gong-bowls-meditation",
+    "start_time": "2026-02-20T18:30:00+03:00",
+    "end_time": "2026-02-20T19:30:00+03:00",
+    "max_participants": 12,
+    "current_participants": 5,
+    "is_individual": false,
+    "is_active": true
+  },
+  {
+    "id": 2,
+    "service_slug": "soundhealing-drum",
+    "start_time": "2026-02-22T19:00:00+03:00",
+    "end_time": "2026-02-22T20:00:00+03:00",
+    "max_participants": 12,
+    "current_participants": 9,
+    "is_individual": false,
+    "is_active": true
+  },
+  {
+    "id": 3,
+    "service_slug": "nail-standing",
+    "start_time": "2026-02-24T18:00:00+03:00",
+    "end_time": "2026-02-24T19:00:00+03:00",
+    "max_participants": 5,
+    "current_participants": 1,
+    "is_individual": false,
+    "is_active": true
+  },
+  {
+    "id": 4,
+    "service_slug": "chakra-path",
+    "start_time": "2026-02-26T19:00:00+03:00",
+    "end_time": "2026-02-26T20:20:00+03:00",
+    "max_participants": 12,
+    "current_participants": 7,
+    "is_individual": false,
+    "is_active": true
+  },
+  {
+    "id": 5,
+    "service_slug": "leela-game",
+    "start_time": "2026-03-01T12:00:00+03:00",
+    "end_time": "2026-03-01T15:00:00+03:00",
+    "max_participants": 5,
+    "current_participants": 3,
+    "is_individual": false,
+    "is_active": true
+  },
+  {
+    "id": 6,
+    "service_slug": "gong-hammocks-meditation",
+    "start_time": "2026-03-02T00:00:00+03:00",
+    "end_time": "2026-03-02T00:00:00+03:00",
+    "max_participants": 4,
+    "current_participants": 0,
+    "is_individual": true,
+    "is_active": true
+  },
+  {
+    "id": 7,
+    "service_slug": "vibro-bath-crystal-bowls",
+    "start_time": "2026-03-03T00:00:00+03:00",
+    "end_time": "2026-03-03T00:00:00+03:00",
+    "max_participants": 1,
+    "current_participants": 0,
+    "is_individual": true,
+    "is_active": true
+  },
+  {
+    "id": 8,
+    "service_slug": "systemic-constellations",
+    "start_time": "2026-03-05T00:00:00+03:00",
+    "end_time": "2026-03-05T00:00:00+03:00",
+    "max_participants": 1,
+    "current_participants": 0,
+    "is_individual": true,
+    "is_active": true
+  }
+]

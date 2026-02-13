@@ -1,0 +1,20 @@
+{
+  "brand": "СТУДИЯ АТМАН",
+  "tagline": "Живое пространство для тех, кто устал от стресса и спешки, хочет восстановить внутренний баланс и почувствовать вкус жизни.",
+  "subline": "Гонг-медитации, лила, гвоздестояние и другие практики.",
+  "home_image": "Главная.JPG",
+  "visual": {
+    "font_family": "Helvetica Now Display",
+    "home_background": "#1b245c",
+    "home_title_color": "#f7ebac",
+    "home_text_color": "#fffdf2",
+    "service_background": "#f3efe8",
+    "service_title_color": "#446799",
+    "service_text_color": "#5f748a"
+  },
+  "contacts": {
+    "telegram": "https://t.me/Annagaludi",
+    "phone": "+7 930 705 1119",
+    "email": "info@atman.local"
+  }
+}

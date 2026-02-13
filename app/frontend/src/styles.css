@@ -605,6 +605,16 @@ a {
   color: #162a55;
 }
 
+.mystic-service-panel {
+  transition: opacity 220ms ease, transform 220ms ease, filter 220ms ease;
+}
+
+.mystic-service-panel.is-switching {
+  opacity: 0;
+  transform: translateY(8px);
+  filter: blur(3px);
+}
+
 .mystic-service-group header {
   display: flex;
   justify-content: space-between;
@@ -641,6 +651,11 @@ a {
   gap: 0.64rem;
 }
 
+.mystic-service-card.is-enter {
+  animation: mysticServiceCardIn 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--card-delay, 0ms);
+}
+
 .mystic-service-cover {
   border-radius: 12px;
   overflow: hidden;
@@ -655,6 +670,8 @@ a {
   height: 100%;
   object-fit: cover;
   display: block;
+  animation: mysticServiceMediaIn 640ms ease both;
+  animation-delay: var(--card-delay, 0ms);
 }
 
 .mystic-service-cover-fallback {
@@ -1247,6 +1264,28 @@ a {
   }
 }
 
+@keyframes mysticServiceCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes mysticServiceMediaIn {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mystic-star,
   .mystic-shooting-star,
@@ -1258,6 +1297,12 @@ a {
   .mystic-lightbox-panel {
     animation: none !important;
     transition: none !important;
+  }
+
+  .mystic-service-card.is-enter,
+  .mystic-service-cover img,
+  .mystic-service-cover video {
+    animation: none !important;
   }
 
   .mystic-reveal {

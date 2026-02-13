@@ -338,13 +338,13 @@ function MysticSky() {
   );
 }
 
-function ServiceCard({ service }) {
+function ServiceCard({ service, index = 0 }) {
   const cover = service.media?.[0] || "";
   const coverSrc = cover ? toMediaUrl(cover) : "";
   const coverIsVideo = isVideoAsset(cover);
 
   return (
-    <article className="mystic-service-card">
+    <article className="mystic-service-card is-enter" style={{ "--card-delay": `${Math.min(index, 10) * 60}ms` }}>
       <div className="mystic-service-cover">
         {coverSrc ? (
           coverIsVideo ? (
@@ -377,8 +377,10 @@ export default function HomePage() {
   const [showAllGroupServices, setShowAllGroupServices] = useState(false);
   const [showAllIndividualServices, setShowAllIndividualServices] = useState(false);
   const [activeServiceTab, setActiveServiceTab] = useState("group");
+  const [isServiceSwitching, setIsServiceSwitching] = useState(false);
   const servicePanelRef = useRef(null);
   const tabScrollReadyRef = useRef(false);
+  const serviceSwitchTimerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -460,6 +462,23 @@ export default function HomePage() {
     const y = servicePanelRef.current.getBoundingClientRect().top + window.scrollY - 92;
     window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
   }, [activeServiceTab]);
+
+  useEffect(() => {
+    return () => {
+      if (serviceSwitchTimerRef.current) {
+        clearTimeout(serviceSwitchTimerRef.current);
+      }
+    };
+  }, []);
+
+  function handleServiceTabChange(nextTab) {
+    if (nextTab === activeServiceTab || isServiceSwitching) return;
+    setIsServiceSwitching(true);
+    serviceSwitchTimerRef.current = setTimeout(() => {
+      setActiveServiceTab(nextTab);
+      requestAnimationFrame(() => setIsServiceSwitching(false));
+    }, 170);
+  }
 
   const grouped = useMemo(
     () => ({
@@ -630,7 +649,7 @@ export default function HomePage() {
               role="tab"
               aria-selected={activeServiceTab === "group"}
               className={`mystic-service-tab ${activeServiceTab === "group" ? "is-active" : ""}`}
-              onClick={() => setActiveServiceTab("group")}
+              onClick={() => handleServiceTabChange("group")}
             >
               Групповые и комбинированные
             </button>
@@ -639,21 +658,25 @@ export default function HomePage() {
               role="tab"
               aria-selected={activeServiceTab === "individual"}
               className={`mystic-service-tab ${activeServiceTab === "individual" ? "is-active" : ""}`}
-              onClick={() => setActiveServiceTab("individual")}
+              onClick={() => handleServiceTabChange("individual")}
             >
               Индивидуальные
             </button>
           </div>
 
           {activeServiceTab === "group" ? (
-            <div ref={servicePanelRef} className="mystic-service-group" role="tabpanel">
+            <div
+              ref={servicePanelRef}
+              className={`mystic-service-group mystic-service-panel ${isServiceSwitching ? "is-switching" : ""}`}
+              role="tabpanel"
+            >
               <header>
                 <h3>Групповые и комбинированные форматы</h3>
                 <p>Поддерживающая атмосфера и мягкое погружение в практику.</p>
               </header>
-              <div className="mystic-service-grid">
-                {groupPreview.map((service) => (
-                  <ServiceCard key={service.slug} service={service} />
+              <div key={`group-${showAllGroupServices ? "all" : "preview"}`} className="mystic-service-grid">
+                {groupPreview.map((service, index) => (
+                  <ServiceCard key={service.slug} service={service} index={index} />
                 ))}
               </div>
               {grouped.group.length > 4 ? (
@@ -669,14 +692,18 @@ export default function HomePage() {
               ) : null}
             </div>
           ) : (
-            <div ref={servicePanelRef} className="mystic-service-group" role="tabpanel">
+            <div
+              ref={servicePanelRef}
+              className={`mystic-service-group mystic-service-panel ${isServiceSwitching ? "is-switching" : ""}`}
+              role="tabpanel"
+            >
               <header>
                 <h3>Индивидуальные форматы</h3>
                 <p>Точечная работа с личным запросом и более глубоким сопровождением.</p>
               </header>
-              <div className="mystic-service-grid">
-                {individualPreview.map((service) => (
-                  <ServiceCard key={service.slug} service={service} />
+              <div key={`individual-${showAllIndividualServices ? "all" : "preview"}`} className="mystic-service-grid">
+                {individualPreview.map((service, index) => (
+                  <ServiceCard key={service.slug} service={service} index={index} />
                 ))}
               </div>
               {grouped.individual.length > 4 ? (

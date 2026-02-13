@@ -25,24 +25,40 @@ python app/backend/init_db.py
 
 # Optional frontend build (if Node.js exists on server)
 if [ "$BUILD_FRONTEND" = "1" ]; then
-  # Try to load nvm if npm is not in PATH (common on shared hosting).
-  if ! command -v npm >/dev/null 2>&1; then
-    if [ -s "$HOME/.nvm/nvm.sh" ]; then
-      # shellcheck source=/dev/null
-      source "$HOME/.nvm/nvm.sh"
-    fi
+  # Try to load nvm (common on shared hosting).
+  if [ -s "$HOME/.nvm/nvm.sh" ]; then
+    # shellcheck source=/dev/null
+    source "$HOME/.nvm/nvm.sh"
   fi
 
-  # Ensure a modern Node is active for Vite builds.
+  # Ensure a modern Node is active for Vite builds (Node >= 18, npm >= 8).
   if command -v nvm >/dev/null 2>&1; then
     nvm use --lts >/dev/null 2>&1 || nvm install --lts >/dev/null 2>&1
   fi
 
-  if command -v npm >/dev/null 2>&1; then
-    (cd app/frontend && npm ci && npm run build)
-  else
-    echo "BUILD_FRONTEND=1, but npm not found. Skipping frontend build."
+  if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+    echo "BUILD_FRONTEND=1, but node/npm not found in PATH."
+    exit 1
   fi
+
+  NODE_MAJOR="$(node -p "process.versions.node.split('.')[0]")"
+  NPM_MAJOR="$(npm -v | cut -d. -f1)"
+  echo "Node: $(node -v), npm: $(npm -v)"
+
+  if [ "$NODE_MAJOR" -lt 18 ] || [ "$NPM_MAJOR" -lt 8 ]; then
+    echo "Node/npm too old for Vite build. Required: Node >= 18 and npm >= 8."
+    exit 1
+  fi
+
+  (
+    cd app/frontend
+    if ! npm ci --no-audit --no-fund; then
+      echo "npm ci failed, fallback to npm install..."
+      rm -rf node_modules
+      npm install --no-audit --no-fund
+    fi
+    npm run build
+  )
 fi
 
 # Trigger Passenger restart

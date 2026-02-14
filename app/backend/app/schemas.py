@@ -4,7 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class ContactCreate(BaseModel):
@@ -109,6 +109,34 @@ class ServiceAdminBase(BaseModel):
     age_restriction: str | None = Field(default=None, max_length=32)
     is_draft: bool = False
     is_active: bool = True
+
+    @field_validator(
+        "pricing",
+        "host",
+        mode="before",
+    )
+    @classmethod
+    def _normalize_dict_fields(cls, value: Any) -> dict[str, Any]:
+        if value is None or not isinstance(value, dict):
+            return {}
+        return value
+
+    @field_validator(
+        "about",
+        "suitable_for",
+        "important",
+        "dress_code",
+        "contraindications",
+        "media",
+        mode="before",
+    )
+    @classmethod
+    def _normalize_list_fields(cls, value: Any) -> list[Any]:
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return value
+        return []
 
 
 class ServiceAdminCreate(ServiceAdminBase):

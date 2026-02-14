@@ -141,8 +141,8 @@ def create_app() -> FastAPI:
         )
         return Response(content=xml, media_type="application/xml; charset=utf-8")
 
-    @app.get("/check_payment_status.php", include_in_schema=False)
-    def legacy_check_payment_status(payment_id: str = Query(default="")) -> RedirectResponse | JSONResponse:
+    @app.get("/check_payment_status.php", include_in_schema=False, response_model=None)
+    def legacy_check_payment_status(payment_id: str = Query(default="")) -> Response:
         if not payment_id:
             return JSONResponse({"error": "Payment ID is required"}, status_code=400)
         return RedirectResponse(url=f"/api/payments/{payment_id}/status", status_code=307)

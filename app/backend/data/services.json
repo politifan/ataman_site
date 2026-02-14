@@ -106,7 +106,7 @@
     "title": "ГОНГ МЕДИТАЦИЯ В ГАМАКАХ",
     "category": "sound_therapy",
     "category_label": "ЗВУКОТЕРАПИЯ",
-    "format_mode": "individual_only",
+    "format_mode": "group_and_individual",
     "teaser": "Медитация проходит в аэрогамаках с эффектом невесомости и проекцией звездного неба.",
     "duration": "60 минут",
     "pricing": {

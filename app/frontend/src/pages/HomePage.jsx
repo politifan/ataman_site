@@ -372,7 +372,6 @@ export default function HomePage() {
   const [site, setSite] = useState(null);
   const [services, setServices] = useState([]);
   const [schedule, setSchedule] = useState([]);
-  const [galleryExpanded, setGalleryExpanded] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [showAllGroupServices, setShowAllGroupServices] = useState(false);
   const [showAllIndividualServices, setShowAllIndividualServices] = useState(false);
@@ -519,7 +518,7 @@ export default function HomePage() {
         });
       }
     }
-    return list;
+    return list.slice(0, 6);
   }, [services, site?.home_image]);
 
   if (loading) {
@@ -598,9 +597,33 @@ export default function HomePage() {
                 </a>
               </div>
               <div className="mystic-ritual-line">
-                <span>Звукотерапия</span>
-                <span>Медитации</span>
-                <span>Телесные практики</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleServiceTabChange("group");
+                    document.getElementById("services")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  Звукотерапия
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleServiceTabChange("group");
+                    document.getElementById("services")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  Медитации
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleServiceTabChange("group");
+                    document.getElementById("services")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  Телесные практики
+                </button>
               </div>
             </div>
 
@@ -749,12 +772,12 @@ export default function HomePage() {
 
         <section id="gallery" className="mystic-section mystic-gallery mystic-reveal" style={{ animationDelay: "90ms" }}>
           <div className="mystic-section-head">
-            <p>Фото и видео</p>
-            <h2>Визуальная атмосфера практик</h2>
-            <span>Реальные кадры пространства и форматов занятий. Всего медиа: {showcaseMedia.length}.</span>
+            <p>Фото практик</p>
+            <h2>Атмосфера пространства</h2>
+            <span>Короткая подборка: {showcaseMedia.length} фото.</span>
           </div>
 
-          <div className={`mystic-gallery-frame ${galleryExpanded ? "is-expanded" : "is-collapsed"}`} id="gallery-content">
+          <div className="mystic-gallery-frame is-expanded" id="gallery-content">
             <div className="mystic-gallery-grid">
               {showcaseMedia.map((item) => (
                 <article key={item.path} className="mystic-gallery-card">
@@ -769,30 +792,10 @@ export default function HomePage() {
                     ) : (
                       <img src={toMediaUrl(item.path)} alt={item.title} loading="lazy" />
                     )}
-                    <div className="mystic-gallery-overlay">
-                      <small>{item.group}</small>
-                      <p>{item.title}</p>
-                      <span>{item.isVideo ? "Видео" : "Фото"} • {item.subtitle}</span>
-                    </div>
                   </button>
                 </article>
               ))}
             </div>
-          </div>
-
-          <div className="mystic-gallery-toggle-wrap">
-            <button
-              type="button"
-              className="mystic-gallery-toggle"
-              aria-expanded={galleryExpanded}
-              aria-controls="gallery-content"
-              onClick={() => setGalleryExpanded((value) => !value)}
-            >
-              <span>{galleryExpanded ? "Свернуть галерею" : "Развернуть галерею"}</span>
-              <i aria-hidden="true" className={galleryExpanded ? "is-open" : ""}>
-                ⌄
-              </i>
-            </button>
           </div>
         </section>
 

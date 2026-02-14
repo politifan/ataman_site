@@ -36,18 +36,11 @@ const initialForm = {
   terms: false
 };
 
-const INFO_ICONS = {
-  suitable: "ikonki/praktika_podhodit_vam_esli.png",
-  important: "ikonki/vazhno.png",
-  dress: "ikonki/forma_odezhdy.png"
-};
-
-function InfoList({ title, items, icon }) {
+function InfoList({ title, items }) {
   if (!items?.length) return null;
   return (
     <>
       <div className="service-copy-head">
-        {icon ? <img src={toMediaUrl(icon)} alt="" aria-hidden="true" /> : null}
         <h2>{title}</h2>
       </div>
       <ul>
@@ -202,9 +195,9 @@ export default function ServicePage() {
               <p key={paragraph}>{paragraph}</p>
             ))}
 
-            <InfoList title="ПРАКТИКА ПОДОЙДЕТ, ЕСЛИ" items={service.suitable_for} icon={INFO_ICONS.suitable} />
-            <InfoList title="ВАЖНО" items={service.important} icon={INFO_ICONS.important} />
-            <InfoList title="ФОРМА ОДЕЖДЫ" items={service.dress_code} icon={INFO_ICONS.dress} />
+            <InfoList title="ПРАКТИКА ПОДОЙДЕТ, ЕСЛИ" items={service.suitable_for} />
+            <InfoList title="ВАЖНО" items={service.important} />
+            <InfoList title="ФОРМА ОДЕЖДЫ" items={service.dress_code} />
 
             {service.contraindications?.length ? (
               <>
@@ -223,6 +216,29 @@ export default function ServicePage() {
                 {service.host?.name ? <h3>{service.host.name}</h3> : null}
                 {service.host?.bio ? <p>{service.host.bio}</p> : null}
               </div>
+            ) : null}
+
+            {service.media?.length ? (
+              <section id="service-media" className="service-media-section service-media-section-inflow">
+                <div className="service-section-head">
+                  <h2>ФОТО И АТМОСФЕРА</h2>
+                  <p>{service.media.length} изображений, кликните для увеличения</p>
+                </div>
+                <div className="media-grid">
+                  {service.media.map((path) => (
+                    <figure key={path}>
+                      <button
+                        type="button"
+                        className="service-media-open"
+                        onClick={() => setSelectedMedia(path)}
+                        aria-label="Открыть изображение"
+                      >
+                        <img src={toMediaUrl(path)} alt={service.title} loading="lazy" />
+                      </button>
+                    </figure>
+                  ))}
+                </div>
+              </section>
             ) : null}
           </article>
 
@@ -384,28 +400,6 @@ export default function ServicePage() {
           </aside>
         </section>
 
-        {service.media?.length ? (
-          <section id="service-media" className="section service-media-section">
-            <div className="service-section-head">
-              <h2>ФОТО И АТМОСФЕРА</h2>
-              <p>{service.media.length} изображений, кликните для увеличения</p>
-            </div>
-            <div className="media-grid">
-              {service.media.map((path) => (
-                <figure key={path}>
-                  <button
-                    type="button"
-                    className="service-media-open"
-                    onClick={() => setSelectedMedia(path)}
-                    aria-label="Открыть изображение"
-                  >
-                    <img src={toMediaUrl(path)} alt={service.title} loading="lazy" />
-                  </button>
-                </figure>
-              ))}
-            </div>
-          </section>
-        ) : null}
       </div>
 
       {selectedMedia ? (

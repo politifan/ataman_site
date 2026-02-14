@@ -148,8 +148,8 @@ def create_app() -> FastAPI:
         return RedirectResponse(url=f"/api/payments/{payment_id}/status", status_code=307)
 
     if frontend_enabled:
-        @app.get("/{full_path:path}", include_in_schema=False)
-        def frontend_spa_fallback(full_path: str) -> FileResponse | JSONResponse:
+        @app.get("/{full_path:path}", include_in_schema=False, response_model=None)
+        def frontend_spa_fallback(full_path: str) -> Response:
             if full_path.startswith(("api/", "media/", "assets/", "robots.txt", "sitemap.xml")):
                 return JSONResponse({"detail": "Not Found"}, status_code=404)
             return FileResponse(str(frontend_dist / "index.html"))

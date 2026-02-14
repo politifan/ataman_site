@@ -94,14 +94,25 @@ def admin_dashboard_stats(db: Session = Depends(get_db_session)) -> AdminDashboa
     )
 
 
+def _admin_services_payload(db: Session) -> list[dict[str, Any]]:
+    rows = db.scalars(select(Service).order_by(Service.id.asc())).all()
+    return [_service_to_admin(row).model_dump(mode="json") for row in rows]
+
+
 @router.get("/services", response_model=None)
 def admin_list_services(db: Session = Depends(get_db_session)) -> JSONResponse:
     try:
-        rows = db.scalars(select(Service).order_by(Service.id.asc())).all()
-        data = [_service_to_admin(row).model_dump(mode="json") for row in rows]
-        return JSONResponse(data)
+        return JSONResponse(_admin_services_payload(db))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"/api/admin/services failed: {type(exc).__name__}: {exc}") from exc
+
+
+@router.get("/services-list", response_model=None)
+def admin_list_services_fallback(db: Session = Depends(get_db_session)) -> JSONResponse:
+    try:
+        return JSONResponse(_admin_services_payload(db))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"/api/admin/services-list failed: {type(exc).__name__}: {exc}") from exc
 
 
 @router.post("/services", response_model=ServiceAdminResponse)
@@ -526,4 +537,3 @@ def _service_to_admin(service: Service) -> ServiceAdminResponse:
         "updated_at": service.updated_at,
     }
     return ServiceAdminResponse.model_validate(payload)
-

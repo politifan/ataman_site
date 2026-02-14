@@ -198,7 +198,13 @@ export function adminLogout() {
 }
 
 export function adminListServices() {
-  return adminRequest("/api/admin/services");
+  return adminRequest("/api/admin/services").catch((error) => {
+    const message = String(error?.message || "");
+    if (!/500|internal server error/i.test(message)) {
+      throw error;
+    }
+    return adminRequest("/api/admin/services-list");
+  });
 }
 
 export function adminCreateService(payload) {

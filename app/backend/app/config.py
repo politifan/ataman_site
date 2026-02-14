@@ -10,11 +10,31 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 
+def _env_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _env_int(name: str, default: int) -> int:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    raw = value.strip()
+    if not raw:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
+
 @dataclass(frozen=True)
 class Settings:
     app_name: str = os.getenv("APP_NAME", "Atman API")
     app_env: str = os.getenv("APP_ENV", "development")
-    app_debug: bool = os.getenv("APP_DEBUG", "1") in {"1", "true", "True"}
+    app_debug: bool = _env_bool("APP_DEBUG", True)
     cors_origins: str = os.getenv("CORS_ORIGINS", "*")
 
     database_url: str = os.getenv("DATABASE_URL", f"sqlite:///{(BASE_DIR / 'data' / 'site.db').as_posix()}")
@@ -29,7 +49,7 @@ class Settings:
 
     admin_token: str | None = os.getenv("ADMIN_TOKEN")
     admin_jwt_secret: str = os.getenv("ADMIN_JWT_SECRET", os.getenv("ADMIN_TOKEN", "change_me_secret"))
-    admin_access_ttl_minutes: int = int(os.getenv("ADMIN_ACCESS_TTL_MINUTES", "720"))
+    admin_access_ttl_minutes: int = _env_int("ADMIN_ACCESS_TTL_MINUTES", 720)
     admin_bootstrap_username: str = os.getenv("ADMIN_BOOTSTRAP_USERNAME", "admin")
     admin_bootstrap_password: str = os.getenv("ADMIN_BOOTSTRAP_PASSWORD", "change_me_now")
     admin_bootstrap_role: str = os.getenv("ADMIN_BOOTSTRAP_ROLE", "admin")

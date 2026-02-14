@@ -18,7 +18,7 @@ async function request(path, options = {}) {
     if (raw) {
       try {
         const payload = JSON.parse(raw);
-        message = payload.detail || payload.message || message;
+        message = extractApiErrorMessage(payload, message);
       } catch (_) {
         message = raw;
       }
@@ -27,6 +27,37 @@ async function request(path, options = {}) {
   }
 
   return response.json();
+}
+
+function extractApiErrorMessage(payload, fallback) {
+  if (!payload || typeof payload !== "object") return fallback;
+
+  const detail = payload.detail;
+  if (typeof detail === "string" && detail.trim()) return detail;
+
+  if (Array.isArray(detail)) {
+    const normalized = detail
+      .map((item) => {
+        if (!item || typeof item !== "object") return "";
+        const msg = typeof item.msg === "string" ? item.msg : "";
+        const loc = Array.isArray(item.loc) ? item.loc.join(".") : "";
+        if (msg && loc) return `${loc}: ${msg}`;
+        return msg || loc || "";
+      })
+      .filter(Boolean)
+      .join("; ");
+    if (normalized) return normalized;
+  }
+
+  if (detail && typeof detail === "object") {
+    const objectText = Object.entries(detail)
+      .map(([key, value]) => `${key}: ${String(value)}`)
+      .join(", ");
+    if (objectText) return objectText;
+  }
+
+  if (typeof payload.message === "string" && payload.message.trim()) return payload.message;
+  return fallback;
 }
 
 function safeParseJSON(value) {
@@ -320,7 +351,7 @@ export async function adminUploadFile(file, target = "gallery") {
     if (raw) {
       try {
         const payload = JSON.parse(raw);
-        message = payload.detail || payload.message || message;
+        message = extractApiErrorMessage(payload, message);
       } catch (_) {
         message = raw;
       }

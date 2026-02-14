@@ -19,7 +19,8 @@ class Settings:
 
     database_url: str = os.getenv("DATABASE_URL", f"sqlite:///{(BASE_DIR / 'data' / 'site.db').as_posix()}")
 
-    media_root: str = os.getenv("MEDIA_ROOT", "../../Сайт Атман")
+    media_root: str = os.getenv("MEDIA_ROOT", "../../media_assets")
+    site_url: str = os.getenv("SITE_URL", "https://spiritualst.ru")
 
     yookassa_shop_id: str | None = os.getenv("YOOKASSA_SHOP_ID")
     yookassa_secret_key: str | None = os.getenv("YOOKASSA_SECRET_KEY")
@@ -27,6 +28,11 @@ class Settings:
     yookassa_webhook_secret: str | None = os.getenv("YOOKASSA_WEBHOOK_SECRET")
 
     admin_token: str | None = os.getenv("ADMIN_TOKEN")
+    admin_jwt_secret: str = os.getenv("ADMIN_JWT_SECRET", os.getenv("ADMIN_TOKEN", "change_me_secret"))
+    admin_access_ttl_minutes: int = int(os.getenv("ADMIN_ACCESS_TTL_MINUTES", "720"))
+    admin_bootstrap_username: str = os.getenv("ADMIN_BOOTSTRAP_USERNAME", "admin")
+    admin_bootstrap_password: str = os.getenv("ADMIN_BOOTSTRAP_PASSWORD", "change_me_now")
+    admin_bootstrap_role: str = os.getenv("ADMIN_BOOTSTRAP_ROLE", "admin")
 
     @property
     def cors_origins_list(self) -> list[str]:

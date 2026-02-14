@@ -534,7 +534,14 @@ export default function HomePage() {
   const nextGroupEvent = schedule.find((item) => !item.is_individual);
   const telegramHref = normalizeContactHref(site?.contacts?.telegram || "");
   const phoneHref = normalizeContactHref(site?.contacts?.phone || "");
+  const phone2Href = normalizeContactHref(site?.contacts?.phone_2 || "");
   const emailHref = normalizeContactHref(site?.contacts?.email || "");
+  const vkHref = normalizeContactHref(site?.contacts?.vk || "");
+  const rutubeHref = normalizeContactHref(site?.contacts?.rutube || "");
+  const orgName = site?.organization?.name || "";
+  const orgInn = site?.organization?.inn || "";
+  const orgOgrnip = site?.organization?.ogrnip || "";
+  const metrikaId = String(site?.analytics?.metrika_id || "").trim();
   const contactHref = telegramHref !== "#" ? telegramHref : phoneHref;
   const contactIsExternal = contactHref.startsWith("http://") || contactHref.startsWith("https://");
   const visibleSchedule = schedule.slice(0, 8);
@@ -546,14 +553,15 @@ export default function HomePage() {
     <div className="mystic-home">
       <header className="mystic-header">
         <div className="container mystic-header-wrap">
-          <a href="#top" className="mystic-header-brand">
-            {site?.brand || "ATMAN"}
-          </a>
-          <nav className="mystic-header-nav">
-            <a href="#services">Услуги</a>
-            <a href="#schedule">Расписание</a>
-            <a href="#gallery">Галерея</a>
-          </nav>
+              <a href="#top" className="mystic-header-brand">
+                {site?.brand || "ATMAN"}
+              </a>
+              <nav className="mystic-header-nav">
+                <a href="#services">Каталог</a>
+                <Link to="/schedule">Расписание</Link>
+                <Link to="/gallery">Галерея</Link>
+                <Link to="/contacts">Контакты</Link>
+              </nav>
           <a
             href={contactHref}
             className="mystic-header-cta"
@@ -850,12 +858,24 @@ export default function HomePage() {
           <div className="mystic-footer-col">
             <h3>{site?.brand || "ATMAN"}</h3>
             <p>Пространство звукотерапии, медитаций и телесной трансформации.</p>
+            {orgName ? <p>{orgName}</p> : null}
+            {orgInn ? <p>ИНН {orgInn}</p> : null}
+            {orgOgrnip ? <p>ОГРНИП {orgOgrnip}</p> : null}
           </div>
           <div className="mystic-footer-col">
             <h4>Навигация</h4>
-            <a href="#services">Услуги</a>
-            <a href="#gallery">Галерея</a>
-            <a href="#schedule">Расписание</a>
+            <Link to="/services">Услуги</Link>
+            <Link to="/gallery">Галерея</Link>
+            <Link to="/schedule">Расписание</Link>
+            <Link to="/contacts">Контакты</Link>
+          </div>
+          <div className="mystic-footer-col">
+            <h4>Документы</h4>
+            <Link to="/legal/offer">Оферта</Link>
+            <Link to="/legal/privacy">Политика конфиденциальности</Link>
+            <Link to="/legal/personal-data">Согласие на ПД</Link>
+            <Link to="/legal/marketing">Согласие на рассылку</Link>
+            <Link to="/legal/terms">Условия услуг</Link>
           </div>
           <div className="mystic-footer-col">
             <h4>Контакты</h4>
@@ -863,7 +883,29 @@ export default function HomePage() {
               Telegram
             </a>
             <a href={phoneHref}>{site?.contacts?.phone || "Телефон"}</a>
+            {site?.contacts?.phone_2 ? <a href={phone2Href}>{site.contacts.phone_2}</a> : null}
             <a href={emailHref}>{site?.contacts?.email || "Email"}</a>
+            {site?.contacts?.address ? <p>{site.contacts.address}</p> : null}
+            {site?.contacts?.working_hours ? <p>{site.contacts.working_hours}</p> : null}
+            {site?.contacts?.vk ? (
+              <a href={vkHref} target="_blank" rel="noreferrer">
+                VK
+              </a>
+            ) : null}
+            {site?.contacts?.rutube ? (
+              <a href={rutubeHref} target="_blank" rel="noreferrer">
+                RuTube
+              </a>
+            ) : null}
+            {metrikaId ? (
+              <a
+                href={`https://metrika.yandex.ru/dashboard?id=${encodeURIComponent(metrikaId)}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Статистика
+              </a>
+            ) : null}
           </div>
         </div>
       </footer>

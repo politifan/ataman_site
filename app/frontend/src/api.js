@@ -1,5 +1,7 @@
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
 const DEFAULT_ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN || "";
+const ADMIN_AUTH_STORAGE_KEY = "atman_admin_auth";
+const ADMIN_TOKEN_STORAGE_KEY = "atman_admin_token";
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -27,6 +29,14 @@ async function request(path, options = {}) {
   return response.json();
 }
 
+function safeParseJSON(value) {
+  try {
+    return JSON.parse(value);
+  } catch (_) {
+    return null;
+  }
+}
+
 export function toMediaUrl(relativePath) {
   if (!relativePath) return "";
   return `${API_BASE}/media/${encodeURI(relativePath)}`;
@@ -49,6 +59,26 @@ export function getSchedule(serviceSlug) {
   return request(`/api/schedule${query}`);
 }
 
+export function getGallery(category) {
+  const query = category ? `?category=${encodeURIComponent(category)}` : "";
+  return request(`/api/gallery${query}`);
+}
+
+export function getLegalPages() {
+  return request("/api/legal");
+}
+
+export function getLegalPage(slug) {
+  return request(`/api/legal/${encodeURIComponent(slug)}`);
+}
+
+export function submitContact(payload) {
+  return request("/api/contacts", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
 export function submitBooking(payload) {
   return request("/api/bookings", {
     method: "POST",
@@ -60,26 +90,80 @@ export function checkPaymentStatus(paymentId) {
   return request(`/api/payments/${encodeURIComponent(paymentId)}/status`);
 }
 
+export function getAdminAuth() {
+  const raw = localStorage.getItem(ADMIN_AUTH_STORAGE_KEY);
+  if (!raw) return null;
+  const parsed = safeParseJSON(raw);
+  if (!parsed || typeof parsed !== "object") return null;
+  if (!parsed.access_token || typeof parsed.access_token !== "string") return null;
+  return parsed;
+}
+
+export function setAdminAuth(payload) {
+  if (!payload || !payload.access_token) {
+    localStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
+    return;
+  }
+  localStorage.setItem(ADMIN_AUTH_STORAGE_KEY, JSON.stringify(payload));
+  localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+}
+
+export function clearAdminAuth() {
+  localStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
+  localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+}
+
 export function getAdminToken() {
-  const fromStorage = localStorage.getItem("atman_admin_token");
+  const auth = getAdminAuth();
+  if (auth?.access_token) return auth.access_token;
+  const fromStorage = localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
   if (fromStorage) return fromStorage;
   if (DEFAULT_ADMIN_TOKEN) return DEFAULT_ADMIN_TOKEN;
   return "";
 }
 
 export function setAdminToken(value) {
-  localStorage.setItem("atman_admin_token", value || "");
+  localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, value || "");
+}
+
+function buildAdminHeaders(existing = {}) {
+  const auth = getAdminAuth();
+  if (auth?.access_token) {
+    return {
+      ...existing,
+      Authorization: `Bearer ${auth.access_token}`
+    };
+  }
+
+  const fallbackToken = getAdminToken();
+  return {
+    ...existing,
+    ...(fallbackToken ? { "X-Admin-Token": fallbackToken } : {})
+  };
 }
 
 function adminRequest(path, options = {}) {
-  const token = getAdminToken();
   return request(path, {
     ...options,
-    headers: {
-      ...(options.headers || {}),
-      "X-Admin-Token": token
-    }
+    headers: buildAdminHeaders(options.headers || {})
   });
+}
+
+export async function adminLogin(username, password) {
+  const payload = await request("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ username, password })
+  });
+  setAdminAuth(payload);
+  return payload;
+}
+
+export function adminMe() {
+  return adminRequest("/api/auth/me");
+}
+
+export function adminLogout() {
+  clearAdminAuth();
 }
 
 export function adminListServices() {
@@ -152,4 +236,97 @@ export function adminDeleteGallery(id) {
   return adminRequest(`/api/admin/gallery/${id}`, {
     method: "DELETE"
   });
+}
+
+export function adminDashboardStats() {
+  return adminRequest("/api/admin/dashboard");
+}
+
+export function adminListBookings(params = {}) {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      search.set(key, String(value));
+    }
+  });
+  const suffix = search.toString() ? `?${search.toString()}` : "";
+  return adminRequest(`/api/admin/bookings${suffix}`);
+}
+
+export function adminUpdateBookingStatus(id, status) {
+  return adminRequest(`/api/admin/bookings/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status })
+  });
+}
+
+export function adminDeleteBooking(id) {
+  return adminRequest(`/api/admin/bookings/${id}`, { method: "DELETE" });
+}
+
+export function adminListContacts(params = {}) {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      search.set(key, String(value));
+    }
+  });
+  const suffix = search.toString() ? `?${search.toString()}` : "";
+  return adminRequest(`/api/admin/contacts${suffix}`);
+}
+
+export function adminUpdateContactStatus(id, status) {
+  return adminRequest(`/api/admin/contacts/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status })
+  });
+}
+
+export function adminDeleteContact(id) {
+  return adminRequest(`/api/admin/contacts/${id}`, { method: "DELETE" });
+}
+
+export function adminListSettings() {
+  return adminRequest("/api/admin/settings");
+}
+
+export function adminBulkUpdateSettings(items) {
+  return adminRequest("/api/admin/settings", {
+    method: "PUT",
+    body: JSON.stringify({ items })
+  });
+}
+
+export function adminDeleteSetting(key) {
+  return adminRequest(`/api/admin/settings/${encodeURIComponent(key)}`, {
+    method: "DELETE"
+  });
+}
+
+export async function adminUploadFile(file, target = "gallery") {
+  const data = new FormData();
+  data.append("file", file);
+  data.append("target", target);
+
+  const response = await fetch(`${API_BASE}/api/admin/upload`, {
+    method: "POST",
+    headers: buildAdminHeaders(),
+    body: data
+  });
+
+  if (!response.ok) {
+    let message = `Upload failed: ${response.status}`;
+    const raw = await response.text();
+    if (raw) {
+      try {
+        const payload = JSON.parse(raw);
+        message = payload.detail || payload.message || message;
+      } catch (_) {
+        message = raw;
+      }
+    }
+    throw new Error(message);
+  }
+
+  return response.json();
 }

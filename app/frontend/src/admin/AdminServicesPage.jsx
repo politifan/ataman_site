@@ -3,6 +3,7 @@ import {
   adminCreateService,
   adminDeleteService,
   adminListServices,
+  adminUploadFile,
   adminUpdateService
 } from "../api";
 
@@ -96,6 +97,7 @@ export default function AdminServicesPage() {
   const [query, setQuery] = useState("");
   const [formatFilter, setFormatFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [uploading, setUploading] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -197,6 +199,24 @@ export default function AdminServicesPage() {
       if (editingId === id) closeModal();
     } catch (err) {
       setError(err.message);
+    }
+  }
+
+  async function onUploadServiceMedia(file) {
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const result = await adminUploadFile(file, "services");
+      setEditor((prev) => ({
+        ...prev,
+        media_text: [prev.media_text, result.path].filter(Boolean).join("\n")
+      }));
+      setMessage("Файл загружен и добавлен в media.");
+    } catch (err) {
+      setError(err.message || "Не удалось загрузить файл.");
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -452,6 +472,15 @@ export default function AdminServicesPage() {
                   value={editor.contraindications_text}
                   onChange={(event) => setEditor((prev) => ({ ...prev, contraindications_text: event.target.value }))}
                 />
+              </label>
+              <label>
+                Upload media
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={(event) => onUploadServiceMedia(event.target.files?.[0])}
+                />
+                <small className="muted">{uploading ? "Загрузка..." : "Файл сохранится в uploads/services."}</small>
               </label>
               <label>
                 Media paths (1 строка = 1 путь)

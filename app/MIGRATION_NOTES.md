@@ -38,7 +38,9 @@
   - `GET /api/services`
   - `GET /api/services/{slug}`
   - `GET /api/schedule`
+  - `GET /api/events.php` (legacy-совместимость)
   - `POST /api/contacts`
+  - `POST /api/submit_contact.php` (legacy-совместимость)
   - `POST /api/bookings`
   - `GET /api/payments/{payment_id}/status`
   - `POST /api/payments/webhook`
@@ -55,7 +57,11 @@
   - `PUT /api/admin/gallery/{id}`
   - `DELETE /api/admin/gallery/{id}`
   - `GET /api/migration/status`
-- Подключена раздача медиа из `Сайт Атман` через `/media/*`.
+- SEO и legacy-инфраструктура:
+  - `GET /robots.txt`
+  - `GET /sitemap.xml` (динамический, включая активные страницы услуг)
+  - `GET /check_payment_status.php` -> redirect на новый payment-status endpoint
+- Подключена раздача медиа из `media_assets` через `/media/*`.
 - Реализован платежный контур ЮKassa:
   - создание платежа при бронировании,
   - хранение статусов платежа в SQL,
@@ -77,10 +83,13 @@
   - CRUD услуг,
   - CRUD расписания,
   - CRUD галереи,
+  - CRUD бронирований,
+  - CRUD сообщений,
+  - CRUD settings,
   - авторизация через `X-Admin-Token`.
+- Добавлены legacy-редиректы со старых PHP URL (`*.php`) на новые React-маршруты.
+- Поддержка Yandex.Metrika через `settings.metrika_id` (без хардкода в шаблоне).
 
 ## Что осталось на следующем этапе
-- Настроить полноценную auth-модель админки (JWT + пользователи), вместо единого token.
-- Добавить загрузку файлов в admin API (сейчас только управление путями).
-- Перенести/расширить блок настроек сайта и SEO-параметры.
+- Перенести JWT-авторизацию админки (вместо token-header).
 - SEO-метаданные на уровне страниц и OpenGraph.

@@ -15,6 +15,19 @@
   "contacts": {
     "telegram": "https://t.me/Annagaludi",
     "phone": "+7 930 705 1119",
-    "email": "info@atman.local"
+    "phone_2": "",
+    "email": "info@atman.local",
+    "address": "г. Волгоград, ул. Елецкая, 21",
+    "working_hours": "Ежедневно с 10:00 до 22:00",
+    "vk": "",
+    "rutube": ""
+  },
+  "organization": {
+    "name": "Индивидуальный предприниматель",
+    "inn": "",
+    "ogrnip": ""
+  },
+  "analytics": {
+    "metrika_id": "101427191"
   }
 }

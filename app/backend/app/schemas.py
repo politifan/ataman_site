@@ -41,6 +41,8 @@ class SiteResponse(BaseModel):
     home_image: str | None = None
     visual: dict[str, Any]
     contacts: dict[str, Any]
+    organization: dict[str, Any] = Field(default_factory=dict)
+    analytics: dict[str, Any] = Field(default_factory=dict)
 
 
 class ServicePublic(BaseModel):
@@ -190,3 +192,119 @@ class ContactResponse(BaseModel):
     ok: bool
     id: int
     message: str
+
+
+class GalleryPublic(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    description: str | None = None
+    image_path: str
+    category: str | None = None
+    sort_order: int
+    is_active: bool
+
+
+class LegalPageResponse(BaseModel):
+    slug: str
+    title: str
+    content: str
+
+
+class BookingAdminResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    schedule_event_id: int
+    service_title: str | None = None
+    service_slug: str | None = None
+    event_start_time: datetime | None = None
+    event_end_time: datetime | None = None
+    name: str
+    phone: str
+    email: str
+    comment: str | None = None
+    status: str
+    payment_status: str
+    payment_id: str | None = None
+    payment_amount: Decimal | None = None
+    payment_confirmation_url: str | None = None
+    paid_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class BookingAdminStatusUpdate(BaseModel):
+    status: str = Field(pattern="^(pending|waiting_payment|confirmed|cancelled)$")
+
+
+class ContactAdminResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    email: str
+    phone: str | None = None
+    message: str
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class ContactAdminStatusUpdate(BaseModel):
+    status: str = Field(pattern="^(new|read|replied)$")
+
+
+class SettingAdminResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    key: str
+    value: str | None = None
+    is_public: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class SettingUpdateItem(BaseModel):
+    key: str = Field(min_length=1, max_length=128)
+    value: str | None = None
+    is_public: bool = True
+
+
+class SettingBulkUpdate(BaseModel):
+    items: list[SettingUpdateItem] = Field(default_factory=list)
+
+
+class AdminDashboardStatsResponse(BaseModel):
+    services: int
+    schedule_events: int
+    bookings_total: int
+    bookings_pending: int
+    contacts_new: int
+    gallery_items: int
+
+
+class AdminLoginRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=6, max_length=200)
+
+
+class AdminAuthUser(BaseModel):
+    id: int | None = None
+    username: str
+    role: str
+    is_active: bool = True
+
+
+class AdminAuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    user: AdminAuthUser
+
+
+class AdminMeResponse(BaseModel):
+    user: AdminAuthUser
+    auth_type: str

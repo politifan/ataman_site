@@ -1,0 +1,109 @@
+import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { getGallery, toMediaUrl } from "../api";
+
+export default function GalleryPage() {
+  const [items, setItems] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      try {
+        setItems(await getGallery());
+      } catch (err) {
+        setError(err.message || "Не удалось загрузить галерею.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  useEffect(() => {
+    function onKey(event) {
+      if (event.key === "Escape") setSelectedImage(null);
+    }
+    if (selectedImage) {
+      window.addEventListener("keydown", onKey);
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [selectedImage]);
+
+  const categories = useMemo(() => {
+    const unique = new Set(items.map((item) => item.category).filter(Boolean));
+    return ["all", ...Array.from(unique)];
+  }, [items]);
+
+  const filtered = useMemo(() => {
+    if (selectedCategory === "all") return items;
+    return items.filter((item) => item.category === selectedCategory);
+  }, [items, selectedCategory]);
+
+  if (loading) return <div className="state-page">Загрузка...</div>;
+  if (error) return <div className="state-page">Ошибка: {error}</div>;
+
+  return (
+    <div className="page-common">
+      <div className="container">
+        <div className="page-common-head">
+          <Link className="back-link" to="/">
+            ← На главную
+          </Link>
+          <h1>Галерея</h1>
+          <p>Фото и визуальные материалы студии.</p>
+        </div>
+
+        <div className="gallery-filters">
+          {categories.map((category) => (
+            <button
+              key={category}
+              type="button"
+              className={selectedCategory === category ? "is-active" : ""}
+              onClick={() => setSelectedCategory(category)}
+            >
+              {category === "all" ? "Все" : category}
+            </button>
+          ))}
+        </div>
+
+        <section className="gallery-grid-page">
+          {filtered.map((item) => (
+            <article key={item.id} className="gallery-grid-item-page">
+              <button type="button" onClick={() => setSelectedImage(item)} aria-label="Открыть изображение">
+                <img src={toMediaUrl(item.image_path)} alt={item.title} loading="lazy" />
+              </button>
+              <div>
+                <h3>{item.title}</h3>
+                {item.description ? <p>{item.description}</p> : null}
+              </div>
+            </article>
+          ))}
+        </section>
+      </div>
+
+      {selectedImage ? (
+        <div className="service-lightbox" role="dialog" aria-modal="true" onClick={() => setSelectedImage(null)}>
+          <div className="service-lightbox-panel" onClick={(event) => event.stopPropagation()}>
+            <button
+              type="button"
+              className="service-lightbox-close"
+              onClick={() => setSelectedImage(null)}
+              aria-label="Закрыть"
+            >
+              ×
+            </button>
+            <img src={toMediaUrl(selectedImage.image_path)} alt={selectedImage.title} />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}

@@ -3,6 +3,7 @@ import {
   adminCreateGallery,
   adminDeleteGallery,
   adminListGallery,
+  adminUploadFile,
   adminUpdateGallery,
   toMediaUrl
 } from "../api";
@@ -28,6 +29,7 @@ export default function AdminGalleryPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -128,6 +130,21 @@ export default function AdminGalleryPage() {
       closeModal();
     } catch (err) {
       setError(err.message);
+    }
+  }
+
+  async function onUploadFile(file) {
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const result = await adminUploadFile(file, "gallery");
+      setForm((prev) => ({ ...prev, image_path: result.path }));
+      setMessage("Файл загружен. Путь подставлен в форму.");
+    } catch (err) {
+      setError(err.message || "Не удалось загрузить файл.");
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -303,6 +320,15 @@ export default function AdminGalleryPage() {
                   value={form.description}
                   onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
                 />
+              </label>
+              <label>
+                Загрузка файла
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={(event) => onUploadFile(event.target.files?.[0])}
+                />
+                <small className="muted">{uploading ? "Загрузка..." : "Загрузите медиа и путь подставится автоматически."}</small>
               </label>
               <label>
                 Image path (относительно /media)

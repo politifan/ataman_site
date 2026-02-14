@@ -1,12 +1,22 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+import secrets
+from datetime import datetime
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
+from ..config import settings
 from ..deps import get_db_session, require_admin
-from ..models import GalleryItem, ScheduleEvent, Service
+from ..models import Booking, Contact, GalleryItem, ScheduleEvent, Service, Setting
 from ..schemas import (
+    AdminDashboardStatsResponse,
+    BookingAdminResponse,
+    BookingAdminStatusUpdate,
+    ContactAdminResponse,
+    ContactAdminStatusUpdate,
     GalleryAdminCreate,
     GalleryAdminResponse,
     GalleryAdminUpdate,
@@ -16,9 +26,70 @@ from ..schemas import (
     ServiceAdminCreate,
     ServiceAdminResponse,
     ServiceAdminUpdate,
+    SettingAdminResponse,
+    SettingBulkUpdate,
 )
 
 router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(require_admin)])
+
+
+def _resolve_media_root(raw_path: str) -> Path | None:
+    candidate = Path(raw_path)
+    if candidate.is_absolute():
+        return candidate if candidate.exists() else None
+
+    here = Path(__file__).resolve()
+    search_roots = [
+        here.parent,  # app/backend/app/routers
+        here.parent.parent,  # app/backend/app
+        here.parent.parent.parent,  # app/backend
+        here.parent.parent.parent.parent,  # app
+        here.parent.parent.parent.parent.parent,  # project root
+    ]
+    for root in search_roots:
+        resolved = (root / candidate).resolve()
+        if resolved.exists():
+            return resolved
+    return None
+
+
+def _serialize_booking(row: Booking) -> BookingAdminResponse:
+    event = row.schedule_event
+    service = event.service if event else None
+    return BookingAdminResponse(
+        id=row.id,
+        schedule_event_id=row.schedule_event_id,
+        service_title=service.title if service else None,
+        service_slug=service.slug if service else None,
+        event_start_time=event.start_time if event else None,
+        event_end_time=event.end_time if event else None,
+        name=row.name,
+        phone=row.phone,
+        email=row.email,
+        comment=row.comment,
+        status=row.status,
+        payment_status=row.payment_status,
+        payment_id=row.payment_id,
+        payment_amount=row.payment_amount,
+        payment_confirmation_url=row.payment_confirmation_url,
+        paid_at=row.paid_at,
+        created_at=row.created_at,
+        updated_at=row.updated_at,
+    )
+
+
+@router.get("/dashboard", response_model=AdminDashboardStatsResponse)
+def admin_dashboard_stats(db: Session = Depends(get_db_session)) -> AdminDashboardStatsResponse:
+    return AdminDashboardStatsResponse(
+        services=int(db.scalar(select(func.count(Service.id))) or 0),
+        schedule_events=int(db.scalar(select(func.count(ScheduleEvent.id))) or 0),
+        bookings_total=int(db.scalar(select(func.count(Booking.id))) or 0),
+        bookings_pending=int(
+            db.scalar(select(func.count(Booking.id)).where(Booking.status.in_(("pending", "waiting_payment")))) or 0
+        ),
+        contacts_new=int(db.scalar(select(func.count(Contact.id)).where(Contact.status == "new")) or 0),
+        gallery_items=int(db.scalar(select(func.count(GalleryItem.id))) or 0),
+    )
 
 
 @router.get("/services", response_model=list[ServiceAdminResponse])
@@ -196,3 +267,220 @@ def admin_delete_gallery(item_id: int, db: Session = Depends(get_db_session)) ->
     db.delete(row)
     db.commit()
     return {"ok": True}
+
+
+@router.get("/bookings", response_model=list[BookingAdminResponse])
+def admin_list_bookings(
+    status: str | None = None,
+    service_id: int | None = None,
+    search: str | None = None,
+    date_from: datetime | None = None,
+    date_to: datetime | None = None,
+    db: Session = Depends(get_db_session),
+) -> list[BookingAdminResponse]:
+    query = (
+        select(Booking)
+        .join(ScheduleEvent, Booking.schedule_event_id == ScheduleEvent.id)
+        .join(Service, ScheduleEvent.service_id == Service.id)
+        .options(joinedload(Booking.schedule_event).joinedload(ScheduleEvent.service))
+        .order_by(Booking.created_at.desc())
+    )
+
+    if status:
+        query = query.where(Booking.status == status)
+    if service_id:
+        query = query.where(ScheduleEvent.service_id == service_id)
+    if search:
+        like = f"%{search.strip()}%"
+        query = query.where(
+            or_(
+                Booking.name.ilike(like),
+                Booking.phone.ilike(like),
+                Booking.email.ilike(like),
+                Booking.payment_id.ilike(like),
+                Service.title.ilike(like),
+            )
+        )
+    if date_from:
+        query = query.where(ScheduleEvent.start_time >= date_from)
+    if date_to:
+        query = query.where(ScheduleEvent.start_time <= date_to)
+
+    rows = db.scalars(query).all()
+    return [_serialize_booking(row) for row in rows]
+
+
+@router.patch("/bookings/{booking_id}/status", response_model=BookingAdminResponse)
+def admin_update_booking_status(
+    booking_id: int,
+    payload: BookingAdminStatusUpdate,
+    db: Session = Depends(get_db_session),
+) -> BookingAdminResponse:
+    row = db.scalar(
+        select(Booking)
+        .options(joinedload(Booking.schedule_event).joinedload(ScheduleEvent.service))
+        .where(Booking.id == booking_id)
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="Бронирование не найдено.")
+
+    old_status = row.status
+    new_status = payload.status
+    event = row.schedule_event
+
+    if old_status != "confirmed" and new_status == "confirmed" and event:
+        if event.current_participants >= event.max_participants:
+            raise HTTPException(status_code=409, detail="Невозможно подтвердить: мест больше нет.")
+        event.current_participants += 1
+
+    if old_status == "confirmed" and new_status != "confirmed" and event and event.current_participants > 0:
+        event.current_participants -= 1
+
+    row.status = new_status
+    if new_status == "confirmed" and row.payment_status in {"pending", "waiting_payment"}:
+        row.payment_status = "paid"
+    if new_status == "cancelled" and row.payment_status != "paid":
+        row.payment_status = "failed"
+
+    db.commit()
+    db.refresh(row)
+    return _serialize_booking(row)
+
+
+@router.delete("/bookings/{booking_id}")
+def admin_delete_booking(booking_id: int, db: Session = Depends(get_db_session)) -> dict[str, bool]:
+    row = db.scalar(select(Booking).options(joinedload(Booking.schedule_event)).where(Booking.id == booking_id))
+    if not row:
+        raise HTTPException(status_code=404, detail="Бронирование не найдено.")
+
+    event = row.schedule_event
+    if row.status == "confirmed" and event and event.current_participants > 0:
+        event.current_participants -= 1
+
+    db.delete(row)
+    db.commit()
+    return {"ok": True}
+
+
+@router.get("/contacts", response_model=list[ContactAdminResponse])
+def admin_list_contacts(
+    status: str | None = None,
+    search: str | None = None,
+    date_from: datetime | None = None,
+    date_to: datetime | None = None,
+    db: Session = Depends(get_db_session),
+) -> list[Contact]:
+    query = select(Contact).order_by(Contact.created_at.desc())
+    if status:
+        query = query.where(Contact.status == status)
+    if search:
+        like = f"%{search.strip()}%"
+        query = query.where(
+            or_(
+                Contact.name.ilike(like),
+                Contact.email.ilike(like),
+                Contact.phone.ilike(like),
+                Contact.message.ilike(like),
+            )
+        )
+    if date_from:
+        query = query.where(Contact.created_at >= date_from)
+    if date_to:
+        query = query.where(Contact.created_at <= date_to)
+    return db.scalars(query).all()
+
+
+@router.patch("/contacts/{contact_id}/status", response_model=ContactAdminResponse)
+def admin_update_contact_status(
+    contact_id: int,
+    payload: ContactAdminStatusUpdate,
+    db: Session = Depends(get_db_session),
+) -> Contact:
+    row = db.get(Contact, contact_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Сообщение не найдено.")
+    row.status = payload.status
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+@router.delete("/contacts/{contact_id}")
+def admin_delete_contact(contact_id: int, db: Session = Depends(get_db_session)) -> dict[str, bool]:
+    row = db.get(Contact, contact_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Сообщение не найдено.")
+    db.delete(row)
+    db.commit()
+    return {"ok": True}
+
+
+@router.get("/settings", response_model=list[SettingAdminResponse])
+def admin_list_settings(db: Session = Depends(get_db_session)) -> list[Setting]:
+    return db.scalars(select(Setting).order_by(Setting.key.asc())).all()
+
+
+@router.put("/settings", response_model=list[SettingAdminResponse])
+def admin_update_settings(payload: SettingBulkUpdate, db: Session = Depends(get_db_session)) -> list[Setting]:
+    if not payload.items:
+        raise HTTPException(status_code=422, detail="Список settings пуст.")
+
+    for item in payload.items:
+        row = db.scalar(select(Setting).where(Setting.key == item.key))
+        if row:
+            row.value = item.value
+            row.is_public = item.is_public
+        else:
+            db.add(Setting(key=item.key, value=item.value, is_public=item.is_public))
+
+    db.commit()
+    return db.scalars(select(Setting).order_by(Setting.key.asc())).all()
+
+
+@router.delete("/settings/{key}")
+def admin_delete_setting(key: str, db: Session = Depends(get_db_session)) -> dict[str, bool]:
+    row = db.scalar(select(Setting).where(Setting.key == key))
+    if not row:
+        raise HTTPException(status_code=404, detail="Настройка не найдена.")
+    db.delete(row)
+    db.commit()
+    return {"ok": True}
+
+
+@router.post("/upload")
+async def admin_upload_file(
+    file: UploadFile = File(...),
+    target: str = Form(default="gallery"),
+) -> dict[str, str | bool]:
+    media_root = _resolve_media_root(settings.media_root)
+    if not media_root:
+        raise HTTPException(status_code=500, detail="MEDIA_ROOT не найден на сервере.")
+
+    allowed_targets = {"gallery", "services", "general", "icons"}
+    if target not in allowed_targets:
+        raise HTTPException(status_code=422, detail="Недопустимый target для загрузки.")
+
+    filename = file.filename or ""
+    ext = Path(filename).suffix.lower()
+    if ext not in {".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".mp4", ".webm", ".mov"}:
+        raise HTTPException(status_code=422, detail="Недопустимый формат файла.")
+
+    content = await file.read()
+    max_size = 30 * 1024 * 1024
+    if len(content) > max_size:
+        raise HTTPException(status_code=422, detail="Файл слишком большой (макс. 30MB).")
+
+    relative_dir = Path("uploads") / target
+    save_dir = media_root / relative_dir
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    unique_name = f"{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{secrets.token_hex(4)}{ext}"
+    save_path = save_dir / unique_name
+    save_path.write_bytes(content)
+
+    relative_path = (relative_dir / unique_name).as_posix()
+    return {
+        "ok": True,
+        "path": relative_path,
+        "url": f"/media/{relative_path}",
+    }

@@ -34,6 +34,14 @@ def seed_site(db) -> None:
     upsert_setting(db, "visual", json.dumps(site.get("visual", {}), ensure_ascii=False))
     upsert_setting(db, "contacts", json.dumps(site.get("contacts", {}), ensure_ascii=False))
 
+    organization = site.get("organization") or {}
+    upsert_setting(db, "org_name", str(organization.get("name") or ""))
+    upsert_setting(db, "org_inn", str(organization.get("inn") or ""))
+    upsert_setting(db, "org_ogrnip", str(organization.get("ogrnip") or ""))
+
+    analytics = site.get("analytics") or {}
+    upsert_setting(db, "metrika_id", str(analytics.get("metrika_id") or "101427191"))
+
 
 def seed_services(db) -> dict[str, Service]:
     services_data = load_json(DATA_DIR / "services.json")
@@ -100,29 +108,59 @@ def seed_schedule(db, service_by_slug: dict[str, Service]) -> None:
             db.add(ScheduleEvent(id=payload["id"], **values))
 
 
-def seed_gallery_stub(db) -> None:
-    reference_title = "Референс главной"
-    reference_path = "referens_oformleniya_uslugi_1.png"
-
-    existing_reference = db.query(GalleryItem).filter(GalleryItem.title == reference_title).one_or_none()
-    if existing_reference:
-        existing_reference.image_path = reference_path
-        existing_reference.category = "reference"
-        existing_reference.is_active = True
-        return
-
+def seed_gallery_assets(db, service_by_slug: dict[str, Service]) -> None:
     if db.query(GalleryItem).count() > 0:
         return
-    db.add(
-        GalleryItem(
-            title=reference_title,
-            description="Материал из папки проекта",
-            image_path=reference_path,
-            category="reference",
-            sort_order=0,
-            is_active=True,
+
+    sort_order = 0
+    seen_paths: set[str] = set()
+
+    site = load_json(DATA_DIR / "site.json")
+    home_image = str(site.get("home_image") or "").strip()
+    if home_image:
+        seen_paths.add(home_image)
+        db.add(
+            GalleryItem(
+                title="Зал студии Атман",
+                description="Основное пространство студии",
+                image_path=home_image,
+                category="studio",
+                sort_order=sort_order,
+                is_active=True,
+            )
         )
-    )
+        sort_order += 10
+
+    for service in service_by_slug.values():
+        media_items = service.media if isinstance(service.media, list) else []
+        for media_path in media_items:
+            path = str(media_path or "").strip()
+            if not path or path in seen_paths:
+                continue
+            seen_paths.add(path)
+            db.add(
+                GalleryItem(
+                    title=service.title,
+                    description=service.category_label or service.category or "",
+                    image_path=path,
+                    category=service.slug,
+                    sort_order=sort_order,
+                    is_active=True,
+                )
+            )
+            sort_order += 1
+
+    if sort_order == 0:
+        db.add(
+            GalleryItem(
+                title="Референс главной",
+                description="Материал из папки проекта",
+                image_path="referens_oformleniya_uslugi_1.png",
+                category="reference",
+                sort_order=0,
+                is_active=True,
+            )
+        )
 
 
 def maybe_reset(db, reset: bool) -> None:
@@ -149,7 +187,7 @@ def main() -> None:
         seed_site(db)
         service_map = seed_services(db)
         seed_schedule(db, service_map)
-        seed_gallery_stub(db)
+        seed_gallery_assets(db, service_map)
         db.commit()
         print("Seed completed.")
     finally:

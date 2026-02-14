@@ -311,7 +311,7 @@ export default function ServicePage() {
                   placeholder="Комментарий"
                   rows={3}
                 />
-                <label>
+                <label className="booking-check">
                   <input
                     type="checkbox"
                     checked={form.privacy_policy}
@@ -320,9 +320,17 @@ export default function ServicePage() {
                     }
                     required
                   />
-                  <span>Политика конфиденциальности</span>
+                  <span>
+                    <span className="booking-check-box" aria-hidden="true" />
+                    <span className="booking-check-text">
+                      Я согласен с{" "}
+                      <Link to="/legal/privacy" target="_blank" rel="noreferrer">
+                        политикой конфиденциальности
+                      </Link>
+                    </span>
+                  </span>
                 </label>
-                <label>
+                <label className="booking-check">
                   <input
                     type="checkbox"
                     checked={form.personal_data}
@@ -331,16 +339,32 @@ export default function ServicePage() {
                     }
                     required
                   />
-                  <span>Согласие на обработку данных</span>
+                  <span>
+                    <span className="booking-check-box" aria-hidden="true" />
+                    <span className="booking-check-text">
+                      Я согласен с{" "}
+                      <Link to="/legal/personal-data" target="_blank" rel="noreferrer">
+                        обработкой персональных данных
+                      </Link>
+                    </span>
+                  </span>
                 </label>
-                <label>
+                <label className="booking-check">
                   <input
                     type="checkbox"
                     checked={form.terms}
                     onChange={(event) => setForm((prev) => ({ ...prev, terms: event.target.checked }))}
                     required
                   />
-                  <span>Условия оказания услуг</span>
+                  <span>
+                    <span className="booking-check-box" aria-hidden="true" />
+                    <span className="booking-check-text">
+                      Я согласен с{" "}
+                      <Link to="/legal/terms" target="_blank" rel="noreferrer">
+                        условиями оказания услуг
+                      </Link>
+                    </span>
+                  </span>
                 </label>
                 <button className="btn-main" type="submit" disabled={sending}>
                   {sending ? "Отправка..." : "Отправить заявку"}

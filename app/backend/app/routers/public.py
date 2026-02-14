@@ -5,18 +5,20 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Form, HTTPException, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from ..deps import get_db_session
-from ..models import Booking, Contact, Payment, ScheduleEvent, Service, Setting
+from ..models import Booking, Contact, GalleryItem, Payment, ScheduleEvent, Service, Setting
 from ..schemas import (
     BookingCreate,
     BookingCreateResponse,
     ContactCreate,
     ContactResponse,
+    GalleryPublic,
+    LegalPageResponse,
     SchedulePublic,
     ServicePublic,
     SiteResponse,
@@ -24,6 +26,44 @@ from ..schemas import (
 from ..services.yookassa import YookassaClient
 
 router = APIRouter(prefix="/api", tags=["public"])
+
+DEFAULT_LEGAL_PAGES: dict[str, dict[str, str]] = {
+    "offer": {
+        "title": "Публичная оферта",
+        "content": (
+            "Настоящий документ является предложением заключить договор оказания услуг студии Атман. "
+            "Оплата услуги и/или подтверждение записи означает принятие условий оферты."
+        ),
+    },
+    "privacy": {
+        "title": "Политика конфиденциальности",
+        "content": (
+            "Мы обрабатываем персональные данные только для оказания услуг и обратной связи. "
+            "Данные не передаются третьим лицам без законных оснований."
+        ),
+    },
+    "personal-data": {
+        "title": "Согласие на обработку персональных данных",
+        "content": (
+            "Оставляя заявку на сайте, пользователь подтверждает согласие на обработку персональных данных "
+            "в соответствии с 152-ФЗ."
+        ),
+    },
+    "marketing": {
+        "title": "Согласие на информационную рассылку",
+        "content": (
+            "Пользователь может получать информационные и маркетинговые сообщения студии и в любой момент "
+            "отозвать согласие, обратившись по контактам на сайте."
+        ),
+    },
+    "terms": {
+        "title": "Условия оказания услуг",
+        "content": (
+            "Запись на практики подтверждается после оформления заявки. Время и формат участия могут уточняться "
+            "администратором. Для отдельных услуг действуют ограничения и правила подготовки."
+        ),
+    },
+}
 
 
 def _parse_json_or_default(raw: str | None, default: Any) -> Any:
@@ -51,6 +91,29 @@ def _serialize_site(settings_rows: list[Setting]) -> SiteResponse:
         },
     )
     contacts = _parse_json_or_default(settings_map.get("contacts"), {})
+    if not isinstance(contacts, dict):
+        contacts = {}
+    contacts = {
+        **contacts,
+        "phone": contacts.get("phone") or settings_map.get("contact_phone") or "",
+        "phone_2": contacts.get("phone_2") or settings_map.get("contact_phone_2") or "",
+        "email": contacts.get("email") or settings_map.get("contact_email") or "",
+        "address": contacts.get("address") or settings_map.get("contact_address") or "",
+        "working_hours": contacts.get("working_hours") or settings_map.get("working_hours") or "",
+        "telegram": contacts.get("telegram") or settings_map.get("social_telegram") or "",
+        "vk": contacts.get("vk") or settings_map.get("social_vk") or "",
+        "rutube": contacts.get("rutube") or settings_map.get("social_rutube") or "",
+    }
+
+    organization = {
+        "name": settings_map.get("org_name", ""),
+        "inn": settings_map.get("org_inn", ""),
+        "ogrnip": settings_map.get("org_ogrnip", ""),
+    }
+
+    analytics = {
+        "metrika_id": settings_map.get("metrika_id", ""),
+    }
 
     return SiteResponse(
         brand=settings_map.get("brand", "СТУДИЯ АТМАН"),
@@ -59,6 +122,8 @@ def _serialize_site(settings_rows: list[Setting]) -> SiteResponse:
         home_image=settings_map.get("home_image"),
         visual=visual,
         contacts=contacts,
+        organization=organization,
+        analytics=analytics,
     )
 
 
@@ -191,6 +256,80 @@ def list_schedule(service_slug: str | None = None, db: Session = Depends(get_db_
     return [_schedule_to_public(item) for item in rows]
 
 
+@router.get("/events.php")
+def legacy_events_php(db: Session = Depends(get_db_session)) -> JSONResponse:
+    data = [item.model_dump(mode="json") for item in list_schedule(db=db)]
+    return JSONResponse(data)
+
+
+@router.get("/gallery", response_model=list[GalleryPublic])
+def list_gallery(
+    category: str | None = None,
+    limit: int = Query(default=120, ge=1, le=500),
+    db: Session = Depends(get_db_session),
+) -> list[GalleryPublic]:
+    query = select(GalleryItem).where(GalleryItem.is_active.is_(True))
+    if category:
+        query = query.where(GalleryItem.category == category)
+    query = query.order_by(GalleryItem.sort_order.asc(), GalleryItem.id.desc()).limit(limit)
+    return db.scalars(query).all()
+
+
+@router.get("/legal", response_model=list[LegalPageResponse])
+def list_legal_pages(db: Session = Depends(get_db_session)) -> list[LegalPageResponse]:
+    pages: list[LegalPageResponse] = []
+    for slug, payload in DEFAULT_LEGAL_PAGES.items():
+        row = db.scalar(select(Setting).where(Setting.key == f"legal_{slug}"))
+        if row and row.value:
+            try:
+                parsed = json.loads(row.value)
+                pages.append(
+                    LegalPageResponse(
+                        slug=slug,
+                        title=str(parsed.get("title") or payload["title"]),
+                        content=str(parsed.get("content") or payload["content"]),
+                    )
+                )
+                continue
+            except Exception:
+                pass
+
+        pages.append(
+            LegalPageResponse(
+                slug=slug,
+                title=payload["title"],
+                content=payload["content"],
+            )
+        )
+
+    return pages
+
+
+@router.get("/legal/{slug}", response_model=LegalPageResponse)
+def get_legal_page(slug: str, db: Session = Depends(get_db_session)) -> LegalPageResponse:
+    default_payload = DEFAULT_LEGAL_PAGES.get(slug)
+    if not default_payload:
+        raise HTTPException(status_code=404, detail="Юридическая страница не найдена.")
+
+    row = db.scalar(select(Setting).where(Setting.key == f"legal_{slug}"))
+    if row and row.value:
+        try:
+            parsed = json.loads(row.value)
+            return LegalPageResponse(
+                slug=slug,
+                title=str(parsed.get("title") or default_payload["title"]),
+                content=str(parsed.get("content") or default_payload["content"]),
+            )
+        except Exception:
+            pass
+
+    return LegalPageResponse(
+        slug=slug,
+        title=default_payload["title"],
+        content=default_payload["content"],
+    )
+
+
 @router.post("/contacts", response_model=ContactResponse)
 def create_contact(payload: ContactCreate, db: Session = Depends(get_db_session)) -> ContactResponse:
     row = Contact(
@@ -208,6 +347,19 @@ def create_contact(payload: ContactCreate, db: Session = Depends(get_db_session)
         id=row.id,
         message="Спасибо! Мы получили сообщение и скоро свяжемся с вами.",
     )
+
+
+@router.post("/submit_contact.php")
+def legacy_submit_contact_php(
+    name: str = Form(...),
+    email: str = Form(...),
+    phone: str | None = Form(default=None),
+    message: str = Form(...),
+    db: Session = Depends(get_db_session),
+) -> JSONResponse:
+    payload = ContactCreate(name=name, email=email, phone=phone, message=message)
+    result = create_contact(payload=payload, db=db)
+    return JSONResponse(result.model_dump(mode="json"))
 
 
 @router.post("/bookings", response_model=BookingCreateResponse)
@@ -293,14 +445,16 @@ def create_booking(payload: BookingCreate, db: Session = Depends(get_db_session)
 def migration_status() -> dict[str, list[str]]:
     return {
         "completed_now": [
-            "FastAPI + MySQL через SQLAlchemy",
-            "Alembic-миграции",
+            "FastAPI + SQLAlchemy (MySQL/SQLite)",
             "ЮKassa create/check/webhook",
-            "Admin CRUD API: услуги/расписание/галерея",
+            "Public API: site/services/schedule/gallery/legal/contacts",
+            "Admin API: dashboard/services/schedule/gallery/bookings/contacts/settings/upload",
+            "Legacy compatibility: /api/events.php and /api/submit_contact.php",
+            "Dynamic SEO endpoints: /robots.txt and /sitemap.xml",
         ],
         "next_stage": [
-            "JWT-авторизация админки",
-            "Загрузка файлов в admin API",
-            "Расширение SEO/контентных блоков",
+            "JWT-авторизация админки (вместо token-header)",
+            "Кеширование публичных read-эндпоинтов",
+            "Расширенный SEO-рендер (SSR/SSG) и structured data",
         ],
     }

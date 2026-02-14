@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from app.db import Base, SessionLocal, engine
+from app.security import ensure_bootstrap_admin
 from app.models import Service
-from seed_from_json import seed_gallery_stub, seed_schedule, seed_services, seed_site
+from seed_from_json import seed_gallery_assets, seed_schedule, seed_services, seed_site
 
 
 def main() -> None:
@@ -10,12 +11,16 @@ def main() -> None:
 
     db = SessionLocal()
     try:
+        _, created = ensure_bootstrap_admin(db)
+        if created:
+            print("Bootstrap admin user created from .env")
+
         has_data = db.query(Service).count() > 0
         if not has_data:
             seed_site(db)
             service_map = seed_services(db)
             seed_schedule(db, service_map)
-            seed_gallery_stub(db)
+            seed_gallery_assets(db, service_map)
             db.commit()
             print("Database initialized and seeded.")
         else:

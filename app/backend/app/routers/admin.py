@@ -3,8 +3,10 @@ from __future__ import annotations
 import secrets
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
@@ -92,9 +94,14 @@ def admin_dashboard_stats(db: Session = Depends(get_db_session)) -> AdminDashboa
     )
 
 
-@router.get("/services", response_model=list[ServiceAdminResponse])
-def admin_list_services(db: Session = Depends(get_db_session)) -> list[Service]:
-    return db.scalars(select(Service).order_by(Service.id.asc())).all()
+@router.get("/services", response_model=None)
+def admin_list_services(db: Session = Depends(get_db_session)) -> JSONResponse:
+    try:
+        rows = db.scalars(select(Service).order_by(Service.id.asc())).all()
+        data = [_service_to_admin(row).model_dump(mode="json") for row in rows]
+        return JSONResponse(data)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"/api/admin/services failed: {type(exc).__name__}: {exc}") from exc
 
 
 @router.post("/services", response_model=ServiceAdminResponse)
@@ -484,3 +491,39 @@ async def admin_upload_file(
         "path": relative_path,
         "url": f"/media/{relative_path}",
     }
+def _service_to_admin(service: Service) -> ServiceAdminResponse:
+    def as_dict(value: Any) -> dict[str, Any]:
+        if isinstance(value, dict):
+            return value
+        return {}
+
+    def as_list(value: Any) -> list[Any]:
+        if isinstance(value, list):
+            return value
+        return []
+
+    payload = {
+        "id": service.id,
+        "slug": service.slug,
+        "title": service.title,
+        "category": service.category,
+        "category_label": service.category_label,
+        "format_mode": service.format_mode or "group_and_individual",
+        "teaser": service.teaser,
+        "duration": service.duration,
+        "pricing": as_dict(service.pricing),
+        "about": as_list(service.about),
+        "suitable_for": as_list(service.suitable_for),
+        "host": as_dict(service.host),
+        "important": as_list(service.important),
+        "dress_code": as_list(service.dress_code),
+        "contraindications": as_list(service.contraindications),
+        "media": as_list(service.media),
+        "age_restriction": service.age_restriction,
+        "is_draft": bool(service.is_draft),
+        "is_active": bool(service.is_active),
+        "created_at": service.created_at,
+        "updated_at": service.updated_at,
+    }
+    return ServiceAdminResponse.model_validate(payload)
+

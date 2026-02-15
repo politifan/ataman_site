@@ -141,6 +141,18 @@ export default function ServicePage() {
     });
   }, [bookingMode, groupBookingEvents, individualBookingEvents]);
 
+  useEffect(() => {
+    const supportsGroup = service?.format_mode === "group_and_individual" && Boolean(service?.pricing?.group || service?.pricing?.fixed);
+    const supportsIndividual = service?.format_mode === "individual_only" || Boolean(service?.pricing?.individual || service?.pricing?.fixed);
+    if (!supportsGroup && supportsIndividual && bookingMode !== "individual") {
+      setBookingMode("individual");
+      return;
+    }
+    if (supportsGroup && !supportsIndividual && bookingMode !== "group") {
+      setBookingMode("group");
+    }
+  }, [service, bookingMode]);
+
   async function handleSubmit(event) {
     event.preventDefault();
     if (!selectedScheduleId) {
@@ -181,8 +193,10 @@ export default function ServicePage() {
   const heroImage = service.media?.[0] ? toMediaUrl(service.media[0]) : "";
   const hasHost = Boolean(service.host?.name || service.host?.bio);
   const formatLabel = formatModeLabel(service.format_mode);
-  const canBookGroup = groupBookingEvents.length > 0;
-  const canBookIndividual = individualBookingEvents.length > 0;
+  const supportsGroup = service.format_mode === "group_and_individual" && Boolean(service.pricing?.group || service.pricing?.fixed);
+  const supportsIndividual = service.format_mode === "individual_only" || Boolean(service.pricing?.individual || service.pricing?.fixed);
+  const canBookGroup = supportsGroup && groupBookingEvents.length > 0;
+  const canBookIndividual = supportsIndividual && individualBookingEvents.length > 0;
   const activeBookingEvents = bookingMode === "individual" ? individualBookingEvents : groupBookingEvents;
   const formatCards = [];
   if (service.pricing?.group) {
@@ -304,9 +318,9 @@ export default function ServicePage() {
                         type="button"
                         className="service-format-action"
                         onClick={() => {
-                          if (item.actionMode === "individual" && canBookIndividual) {
+                          if (item.actionMode === "individual" && supportsIndividual) {
                             setBookingMode("individual");
-                          } else if (item.actionMode === "group" && canBookGroup) {
+                          } else if (item.actionMode === "group" && supportsGroup) {
                             setBookingMode("group");
                           }
                           document.getElementById("service-booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -423,16 +437,16 @@ export default function ServicePage() {
               </div>
             ) : null}
 
-            {!service.is_draft && (canBookGroup || canBookIndividual) ? (
+            {!service.is_draft && (supportsGroup || supportsIndividual) ? (
               <form className="side-card booking-form" onSubmit={handleSubmit}>
                 <h3>ЗАПИСЬ ОНЛАЙН</h3>
-                {(canBookGroup && canBookIndividual) || service.format_mode === "group_and_individual" ? (
+                {(supportsGroup && supportsIndividual) || service.format_mode === "group_and_individual" ? (
                   <div className="booking-mode-switch" role="tablist" aria-label="Формат записи">
                     <button
                       type="button"
                       className={bookingMode === "group" ? "is-active" : ""}
                       onClick={() => setBookingMode("group")}
-                      disabled={!canBookGroup}
+                      disabled={!supportsGroup}
                     >
                       Групповая
                     </button>
@@ -440,7 +454,7 @@ export default function ServicePage() {
                       type="button"
                       className={bookingMode === "individual" ? "is-active" : ""}
                       onClick={() => setBookingMode("individual")}
-                      disabled={!canBookIndividual}
+                      disabled={!supportsIndividual}
                     >
                       Индивидуальная
                     </button>
@@ -453,20 +467,28 @@ export default function ServicePage() {
                       : `Ближайшая группа: ${formatDateTime(selectedEvent.start_time)}`
                     : "Выберите дату из расписания"}
                 </p>
-                <label className="booking-select-label">
-                  <span>Дата и время</span>
-                  <select
-                    value={selectedScheduleId}
-                    onChange={(event) => setSelectedScheduleId(event.target.value)}
-                    required
-                  >
-                    {activeBookingEvents.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {formatDateTime(item.start_time)} • мест {item.available_spots}/{item.max_participants}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                {activeBookingEvents.length ? (
+                  <label className="booking-select-label">
+                    <span>Дата и время</span>
+                    <select
+                      value={selectedScheduleId}
+                      onChange={(event) => setSelectedScheduleId(event.target.value)}
+                      required
+                    >
+                      {activeBookingEvents.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {formatDateTime(item.start_time)} • мест {item.available_spots}/{item.max_participants}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <p className="muted">
+                    {bookingMode === "individual"
+                      ? "Для индивидуального формата пока нет опубликованных дат в расписании. Добавьте их в админке."
+                      : "Для группового формата пока нет опубликованных дат в расписании. Добавьте их в админке."}
+                  </p>
+                )}
                 <input
                   value={form.name}
                   onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
@@ -547,7 +569,7 @@ export default function ServicePage() {
                     </span>
                   </span>
                 </label>
-                <button className="btn-main" type="submit" disabled={sending}>
+                <button className="btn-main" type="submit" disabled={sending || !selectedScheduleId}>
                   {sending ? "Отправка..." : "Отправить заявку"}
                 </button>
                 {success ? <p className="ok">{success}</p> : null}

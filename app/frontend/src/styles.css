@@ -2222,7 +2222,6 @@ a {
   min-height: 360px;
   border-radius: 26px;
   background-size: cover;
-  background-position: center;
   display: flex;
   align-items: flex-end;
   padding: 1.8rem;
@@ -2317,8 +2316,8 @@ a {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  border-left: 2px solid rgba(255, 230, 177, 0.55);
-  padding-left: 0.56rem;
+  border-left: none;
+  padding-left: 0;
 }
 
 .service-title-icon {
@@ -2531,6 +2530,7 @@ a {
   border: 1px solid rgba(227, 238, 255, 0.2);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.04);
+  width: fit-content;
 }
 
 .booking-mode-switch button {

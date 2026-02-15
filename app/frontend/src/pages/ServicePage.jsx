@@ -192,6 +192,7 @@ export default function ServicePage() {
   }
 
   const visibleMedia = (service.media || []).filter((path) => !HIDDEN_MEDIA_PATHS.has(path));
+  const isCenteredHeroImage = visibleMedia[0] === "foto_dlya_uslug/gong_meditatsiya_v_gamakah/img_7302_1.jpg";
   const heroImage = visibleMedia[0] ? toMediaUrl(visibleMedia[0]) : "";
   const hasHost = Boolean(service.host?.name || service.host?.bio);
   const formatLabel = formatModeLabel(service.format_mode);
@@ -220,7 +221,8 @@ export default function ServicePage() {
           style={{
             backgroundImage: heroImage
               ? `linear-gradient(180deg, rgba(22, 35, 80, 0.15), rgba(22, 35, 80, 0.75)), url("${heroImage}")`
-              : "linear-gradient(180deg, #f3efe8, #e6dfd4)"
+              : "linear-gradient(180deg, #f3efe8, #e6dfd4)",
+            backgroundPosition: isCenteredHeroImage ? "center" : undefined
           }}
         >
           <div>

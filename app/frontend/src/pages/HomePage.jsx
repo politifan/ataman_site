@@ -533,8 +533,8 @@ export default function HomePage() {
     const mainShowcase = [
       "foto_dlya_uslug/main/3.JPG",
       "foto_dlya_uslug/main/IMG_6133.JPG",
-      "foto_dlya_uslug/main/IMG_6437 (1).JPG",
-      "foto_dlya_uslug/main/IMG_7302 (1) (1).JPG"
+      "foto_dlya_uslug/main/img_6437_1.jpg",
+      "foto_dlya_uslug/main/img_7302_1_1.jpg"
     ];
 
     if (site?.home_image) {

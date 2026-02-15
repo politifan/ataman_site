@@ -718,12 +718,23 @@ a {
   margin: 0;
   font-size: 1rem;
   line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .mystic-service-card > p {
   margin: 0;
   color: rgba(227, 238, 255, 0.84);
   line-height: 1.48;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(1.48em * 3);
 }
 
 .mystic-service-meta {

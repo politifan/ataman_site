@@ -3,12 +3,12 @@ import { useEffect, useMemo, useState } from "react";
 import { getSchedule, getService, submitBooking, toMediaUrl } from "../api";
 
 const SERVICE_ICONS = {
-  duration: toMediaUrl("ikonki/svg/Продолжительность.svg"),
-  group: toMediaUrl("ikonki/svg/Групповая-практика.svg"),
-  individual: toMediaUrl("ikonki/svg/Индивидуальная-сессия.svg"),
-  suitable: toMediaUrl("ikonki/svg/Практика-подходит-вам-если.svg"),
-  important: toMediaUrl("ikonki/svg/Важно.svg"),
-  dress: toMediaUrl("ikonki/svg/Форма-одежды.svg")
+  duration: toMediaUrl("ikonki/svg/duration.svg"),
+  group: toMediaUrl("ikonki/svg/group_practice.svg"),
+  individual: toMediaUrl("ikonki/svg/individual_session.svg"),
+  suitable: toMediaUrl("ikonki/svg/practice_suits_you.svg"),
+  important: toMediaUrl("ikonki/svg/important.svg"),
+  dress: toMediaUrl("ikonki/svg/dress_code.svg")
 };
 
 function formatDateTime(value) {

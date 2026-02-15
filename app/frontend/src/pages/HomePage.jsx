@@ -110,9 +110,9 @@ const RITUAL_PATH = [
 ];
 
 const HOME_ICONS = {
-  duration: toMediaUrl("ikonki/svg/Продолжительность.svg"),
-  group: toMediaUrl("ikonki/svg/Групповая-практика.svg"),
-  individual: toMediaUrl("ikonki/svg/Индивидуальная-сессия.svg")
+  duration: toMediaUrl("ikonki/svg/duration.svg"),
+  group: toMediaUrl("ikonki/svg/group_practice.svg"),
+  individual: toMediaUrl("ikonki/svg/individual_session.svg")
 };
 
 function formatDateTime(value) {

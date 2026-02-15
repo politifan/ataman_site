@@ -360,11 +360,43 @@ function MysticSky() {
   );
 }
 
+function compactServiceTeaser(value) {
+  const source = autoRu(value || "").replace(/\s+/g, " ").trim();
+  if (!source) return "";
+  if (source.length <= 150) return source;
+
+  // Keep key meaning while removing bulky intro patterns.
+  let compact = source
+    .replace(/^Это\s+/, "")
+    .replace(/^Практика\s+/, "")
+    .replace(/^Глубокая\s+/, "")
+    .replace(/^Мягкая\s+/, "")
+    .replace(/^Звуковая\s+/, "")
+    .replace(/^Индивидуальная\s+/, "")
+    .replace(/\s+основанн[а-я]+\s+на\s+воздействии\s+/i, " с воздействием ")
+    .replace(/\s+направленн[а-я]+\s+на\s+/i, " для ")
+    .replace(/\s+в\s+формате\s+/i, ", формат: ")
+    .replace(/\s+котор(ая|ый|ое)\s+/i, " ")
+    .trim();
+
+  const sentenceBreak = compact.search(/[.!?]/);
+  if (sentenceBreak > 70) compact = compact.slice(0, sentenceBreak + 1);
+
+  if (compact.length > 165) {
+    const cut = compact.lastIndexOf(" ", 162);
+    compact = `${compact.slice(0, cut > 110 ? cut : 162).trim()}…`;
+  }
+
+  return compact;
+}
+
 function ServiceCard({ service, index = 0 }) {
   const cover = service.media?.[0] || "";
   const coverSrc = cover ? toMediaUrl(cover) : "";
   const coverIsVideo = isVideoAsset(cover);
   const coverPosition = COVER_POSITION_BY_SLUG[service.slug] || "50% 50%";
+  const teaserFull = autoRu(service.teaser || "");
+  const teaserShort = compactServiceTeaser(service.teaser || "");
 
   return (
     <article className="mystic-service-card is-enter" style={{ "--card-delay": `${Math.min(index, 10) * 60}ms` }}>
@@ -389,7 +421,7 @@ function ServiceCard({ service, index = 0 }) {
       </div>
       <p className="mystic-service-badge">{autoRu(service.category_label || "Практика")}</p>
       <h4>{autoRu(service.title || "")}</h4>
-      <p>{autoRu(service.teaser || "")}</p>
+      <p title={teaserFull}>{teaserShort}</p>
       <div className="mystic-service-meta">
         <span>
           <img src={HOME_ICONS.duration} alt="" aria-hidden="true" />

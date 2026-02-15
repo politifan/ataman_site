@@ -525,6 +525,16 @@ export default function HomePage() {
   const showcaseMedia = useMemo(() => {
     const seen = new Set();
     const list = [];
+    const excludedShowcase = new Set([
+      "foto_dlya_uslug/saundhiling_s_bubnom/3.jpg",
+      "foto_dlya_uslug/gong_meditatsiya_s_chashami/2.jpg"
+    ]);
+    const mainShowcase = [
+      "foto_dlya_uslug/main/3.JPG",
+      "foto_dlya_uslug/main/IMG_6133.JPG",
+      "foto_dlya_uslug/main/IMG_6437 (1).JPG",
+      "foto_dlya_uslug/main/IMG_7302 (1) (1).JPG"
+    ];
 
     if (site?.home_image) {
       seen.add(site.home_image);
@@ -538,9 +548,22 @@ export default function HomePage() {
       });
     }
 
+    for (const path of mainShowcase) {
+      if (seen.has(path) || excludedShowcase.has(path)) continue;
+      seen.add(path);
+      list.push({
+        path,
+        title: "Атмосфера практик",
+        subtitle: "Фото из главной подборки",
+        label: prettifyMediaName(path),
+        group: "Главная подборка",
+        isVideo: isVideoAsset(path)
+      });
+    }
+
     for (const service of services) {
       for (const path of service.media || []) {
-        if (seen.has(path)) continue;
+        if (seen.has(path) || excludedShowcase.has(path)) continue;
         seen.add(path);
         list.push({
           path,

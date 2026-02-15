@@ -2,6 +2,15 @@ import { Link, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { getSchedule, getService, submitBooking, toMediaUrl } from "../api";
 
+const SERVICE_ICONS = {
+  duration: toMediaUrl("ikonki/svg/Продолжительность.svg"),
+  group: toMediaUrl("ikonki/svg/Групповая-практика.svg"),
+  individual: toMediaUrl("ikonki/svg/Индивидуальная-сессия.svg"),
+  suitable: toMediaUrl("ikonki/svg/Практика-подходит-вам-если.svg"),
+  important: toMediaUrl("ikonki/svg/Важно.svg"),
+  dress: toMediaUrl("ikonki/svg/Форма-одежды.svg")
+};
+
 function formatDateTime(value) {
   const date = new Date(value);
   return new Intl.DateTimeFormat("ru-RU", {
@@ -36,11 +45,12 @@ const initialForm = {
   terms: false
 };
 
-function InfoList({ title, items }) {
+function InfoList({ title, items, icon }) {
   if (!items?.length) return null;
   return (
     <>
       <div className="service-copy-head">
+        {icon ? <img className="service-title-icon" src={icon} alt="" aria-hidden="true" /> : null}
         <h2>{title}</h2>
       </div>
       <ul>
@@ -137,6 +147,34 @@ export default function ServicePage() {
   const heroImage = service.media?.[0] ? toMediaUrl(service.media[0]) : "";
   const hasHost = Boolean(service.host?.name || service.host?.bio);
   const formatLabel = formatModeLabel(service.format_mode);
+  const formatCards = [];
+  if (service.pricing?.group) {
+    formatCards.push({
+      key: "group",
+      icon: SERVICE_ICONS.group,
+      title: "Групповая практика",
+      lines: [
+        service.pricing.group.label || "Групповой формат",
+        `от ${formatPrice(service.pricing.group.price_per_person)} руб.`
+      ]
+    });
+  }
+  if (service.pricing?.individual) {
+    formatCards.push({
+      key: "individual",
+      icon: SERVICE_ICONS.individual,
+      title: "Индивидуальная практика",
+      lines: [service.pricing.individual.label || "Персональная сессия", `${formatPrice(service.pricing.individual.price)} руб.`]
+    });
+  }
+  if (service.pricing?.fixed) {
+    formatCards.push({
+      key: "fixed",
+      icon: SERVICE_ICONS.individual,
+      title: "Индивидуальная практика",
+      lines: [service.pricing.fixed.label || "Персональная сессия", `${formatPrice(service.pricing.fixed.price)} руб.`]
+    });
+  }
 
   return (
     <div className="page-service">
@@ -169,10 +207,16 @@ export default function ServicePage() {
 
         <section className="service-meta-strip">
           <div className="service-meta-pill">
+            <div className="service-meta-pill-head">
+              <img src={SERVICE_ICONS.group} alt="" aria-hidden="true" />
+            </div>
             <span>Формат</span>
             <strong>{formatLabel}</strong>
           </div>
           <div className="service-meta-pill">
+            <div className="service-meta-pill-head">
+              <img src={SERVICE_ICONS.duration} alt="" aria-hidden="true" />
+            </div>
             <span>Длительность</span>
             <strong>{service.duration || "По согласованию"}</strong>
           </div>
@@ -195,9 +239,33 @@ export default function ServicePage() {
               <p key={paragraph}>{paragraph}</p>
             ))}
 
-            <InfoList title="ПРАКТИКА ПОДОЙДЕТ, ЕСЛИ" items={service.suitable_for} />
-            <InfoList title="ВАЖНО" items={service.important} />
-            <InfoList title="ФОРМА ОДЕЖДЫ" items={service.dress_code} />
+            {formatCards.length ? (
+              <section className="service-format-section">
+                <div className="service-copy-head">
+                  <img className="service-title-icon" src={SERVICE_ICONS.group} alt="" aria-hidden="true" />
+                  <h2>ФОРМАТЫ УЧАСТИЯ</h2>
+                </div>
+                <div className="service-format-grid">
+                  {formatCards.map((item) => (
+                    <article key={item.key} className="service-format-card">
+                      <div className="service-format-card-head">
+                        <img src={item.icon} alt="" aria-hidden="true" />
+                        <h3>{item.title}</h3>
+                      </div>
+                      <ul>
+                        {item.lines.map((line) => (
+                          <li key={`${item.key}-${line}`}>{line}</li>
+                        ))}
+                      </ul>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            <InfoList title="ПРАКТИКА ПОДОЙДЕТ, ЕСЛИ" items={service.suitable_for} icon={SERVICE_ICONS.suitable} />
+            <InfoList title="ВАЖНО" items={service.important} icon={SERVICE_ICONS.important} />
+            <InfoList title="ФОРМА ОДЕЖДЫ" items={service.dress_code} icon={SERVICE_ICONS.dress} />
 
             {service.contraindications?.length ? (
               <>

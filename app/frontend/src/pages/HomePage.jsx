@@ -109,6 +109,12 @@ const RITUAL_PATH = [
   }
 ];
 
+const HOME_ICONS = {
+  duration: toMediaUrl("ikonki/svg/Продолжительность.svg"),
+  group: toMediaUrl("ikonki/svg/Групповая-практика.svg"),
+  individual: toMediaUrl("ikonki/svg/Индивидуальная-сессия.svg")
+};
+
 function formatDateTime(value) {
   const date = new Date(value);
   const day = new Intl.DateTimeFormat("ru-RU", {
@@ -360,7 +366,10 @@ function ServiceCard({ service, index = 0 }) {
       <h4>{autoRu(service.title || "")}</h4>
       <p>{autoRu(service.teaser || "")}</p>
       <div className="mystic-service-meta">
-        <span>{service.duration || "Время по согласованию"}</span>
+        <span>
+          <img src={HOME_ICONS.duration} alt="" aria-hidden="true" />
+          {service.duration || "Время по согласованию"}
+        </span>
         <strong>{getServicePrice(service)}</strong>
       </div>
       <Link to={`/services/${service.slug}`}>Подробнее</Link>
@@ -604,6 +613,7 @@ export default function HomePage() {
                     document.getElementById("services")?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
                 >
+                  <img src={HOME_ICONS.group} alt="" aria-hidden="true" />
                   Звукотерапия
                 </button>
                 <button
@@ -613,6 +623,7 @@ export default function HomePage() {
                     document.getElementById("services")?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
                 >
+                  <img src={HOME_ICONS.group} alt="" aria-hidden="true" />
                   Медитации
                 </button>
                 <button
@@ -622,6 +633,7 @@ export default function HomePage() {
                     document.getElementById("services")?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
                 >
+                  <img src={HOME_ICONS.individual} alt="" aria-hidden="true" />
                   Телесные практики
                 </button>
               </div>

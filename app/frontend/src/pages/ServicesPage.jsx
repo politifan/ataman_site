@@ -2,6 +2,12 @@ import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { getServices, getSite, toMediaUrl } from "../api";
 
+const CATALOG_ICONS = {
+  duration: toMediaUrl("ikonki/svg/Продолжительность.svg"),
+  group: toMediaUrl("ikonki/svg/Групповая-практика.svg"),
+  individual: toMediaUrl("ikonki/svg/Индивидуальная-сессия.svg")
+};
+
 function isVideoAsset(path = "") {
   return /\.(mp4|webm|mov|m4v)$/i.test(path);
 }
@@ -119,8 +125,19 @@ export default function ServicesPage() {
                 <p className="services-page-category">{service.category_label || "Практика"}</p>
                 <h2>{service.title}</h2>
                 <p>{service.teaser || "Описание уточняется."}</p>
+                <div className="services-page-format">
+                  <img
+                    src={service.format_mode === "individual_only" ? CATALOG_ICONS.individual : CATALOG_ICONS.group}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                  <span>{service.format_mode === "individual_only" ? "Индивидуальная практика" : "Групповой и индивидуальный формат"}</span>
+                </div>
                 <div className="services-page-meta">
-                  <span>{service.duration || "По согласованию"}</span>
+                  <span>
+                    <img src={CATALOG_ICONS.duration} alt="" aria-hidden="true" />
+                    {service.duration || "По согласованию"}
+                  </span>
                   <strong>{servicePriceLabel(service)}</strong>
                 </div>
                 <Link className="btn-main small" to={`/services/${service.slug}`}>

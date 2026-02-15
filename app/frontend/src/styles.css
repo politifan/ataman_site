@@ -402,6 +402,20 @@ a {
   transition: transform 180ms ease, border-color 180ms ease, color 180ms ease, background-color 180ms ease;
 }
 
+.mystic-ritual-line button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+}
+
+.mystic-ritual-line button img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  display: block;
+  opacity: 0.95;
+}
+
 .mystic-ritual-line button:hover {
   transform: translateY(-1px);
   border-color: rgba(255, 235, 182, 0.72);
@@ -724,6 +738,20 @@ a {
   justify-content: space-between;
   gap: 0.56rem;
   font-size: 0.83rem;
+}
+
+.mystic-service-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.mystic-service-meta span img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  display: block;
+  opacity: 0.92;
 }
 
 .mystic-service-meta strong {
@@ -2221,6 +2249,25 @@ a {
   background: rgba(10, 23, 61, 0.68);
 }
 
+.service-meta-pill-head {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid rgba(227, 238, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  margin-bottom: 0.3rem;
+}
+
+.service-meta-pill-head img {
+  width: 16px;
+  height: 16px;
+  display: block;
+  object-fit: contain;
+}
+
 .service-meta-pill span {
   display: block;
   color: rgba(227, 238, 255, 0.7);
@@ -2278,6 +2325,15 @@ a {
   padding-left: 0.56rem;
 }
 
+.service-title-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 2px 6px rgba(3, 8, 22, 0.36));
+}
+
 .service-main h2 {
   margin: 0;
   font-size: 1.08rem;
@@ -2301,6 +2357,49 @@ a {
   display: grid;
   gap: 0.42rem;
   color: rgba(228, 239, 255, 0.9);
+}
+
+.service-format-section {
+  margin-top: 1rem;
+}
+
+.service-format-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.65rem;
+}
+
+.service-format-card {
+  border: 1px solid rgba(227, 238, 255, 0.17);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.7rem 0.72rem;
+}
+
+.service-format-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  margin-bottom: 0.45rem;
+}
+
+.service-format-card-head img {
+  width: 20px;
+  height: 20px;
+  display: block;
+  object-fit: contain;
+}
+
+.service-format-card-head h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  color: #eaf3ff;
+}
+
+.service-format-card ul {
+  margin: 0;
+  padding-left: 1rem;
+  gap: 0.34rem;
 }
 
 .service-side {
@@ -3416,6 +3515,22 @@ a {
   line-height: 1.48;
 }
 
+.services-page-format {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  color: rgba(232, 242, 255, 0.86);
+  font-size: 0.82rem;
+}
+
+.services-page-format img {
+  width: 16px;
+  height: 16px;
+  display: block;
+  object-fit: contain;
+  opacity: 0.95;
+}
+
 .services-page-meta {
   margin-top: auto;
   padding-top: 0.52rem;
@@ -3424,6 +3539,20 @@ a {
   justify-content: space-between;
   gap: 0.5rem;
   font-size: 0.82rem;
+}
+
+.services-page-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+}
+
+.services-page-meta span img {
+  width: 14px;
+  height: 14px;
+  display: block;
+  object-fit: contain;
+  opacity: 0.95;
 }
 
 .services-page-meta strong {

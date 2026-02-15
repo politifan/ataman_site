@@ -79,7 +79,7 @@ export default function ContactsPage() {
           <div>
             <p>{site?.brand || "ATMAN"}</p>
             <h1>Контакты</h1>
-            <span>Напишите нам, и администратор свяжется с вами для подбора удобного формата практики.</span>
+            <span>Напишите нам, и мы свяжемся с вами для подбора удобного формата практики.</span>
           </div>
           <div className="page-common-actions">
             <Link className="back-link" to="/">

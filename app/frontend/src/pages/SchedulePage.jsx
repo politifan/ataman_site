@@ -97,7 +97,7 @@ export default function SchedulePage() {
                         Telegram
                       </a>
                     ) : (
-                      <span className="muted">Свяжитесь с администратором</span>
+                      <span className="muted">Свяжитесь с нами для уточнения времени</span>
                     )}
                   </div>
                 ))}

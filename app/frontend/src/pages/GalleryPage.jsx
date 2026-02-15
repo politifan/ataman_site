@@ -3,6 +3,29 @@ import { useEffect, useMemo, useState } from "react";
 import { getGallery, toMediaUrl } from "../api";
 
 const HIDDEN_MEDIA_PATHS = new Set(["foto_dlya_uslug/lila/img_6366.jpg"]);
+const CATEGORY_LABELS = {
+  all: "Все",
+  studio: "Пространство студии",
+  reference: "Референсы",
+  "soundhealing-drum": "Саундхилинг с шаманским бубном",
+  "gong-bowls-meditation": "Гонг-медитация с поющими чашами",
+  "gong-hammocks-meditation": "Гонг-медитация в гамаках",
+  "nail-standing": "Гвоздестояние",
+  "chakra-path": "Чакровая дорожка",
+  "leela-game": "Трансформационная игра Лила",
+  "vibro-bath-gong-bowls": "Вибро-акустическая ванна (гонги и тибетские чаши)",
+  "vibro-bath-crystal-bowls": "Вибро-акустическая ванна (хрустальные чаши)",
+  "bila-bells-harmonization": "Гармонизация с Била-колоколами",
+  "systemic-constellations": "Системные расстановки по Хеллингеру",
+  "hypnosis-path-to-self": "Гипнопрактика «Путь к себе»",
+  "shamanic-energy-practice": "Энергопрактика с шаманским бубном"
+};
+
+function categoryLabel(value) {
+  if (!value) return "";
+  if (CATEGORY_LABELS[value]) return CATEGORY_LABELS[value];
+  return value.replace(/[-_]+/g, " ").trim();
+}
 
 export default function GalleryPage() {
   const [items, setItems] = useState([]);
@@ -72,7 +95,7 @@ export default function GalleryPage() {
               className={selectedCategory === category ? "is-active" : ""}
               onClick={() => setSelectedCategory(category)}
             >
-              {category === "all" ? "Все" : category}
+              {categoryLabel(category)}
             </button>
           ))}
         </div>

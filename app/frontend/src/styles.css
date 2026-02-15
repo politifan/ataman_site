@@ -4132,8 +4132,14 @@ body {
 
 .mystic-hero::before {
   background:
-    linear-gradient(180deg, rgba(7, 18, 48, 0.08), rgba(7, 18, 48, 0.46)),
-    radial-gradient(circle at 20% 16%, rgba(255, 231, 165, 0.3), transparent 42%);
+    linear-gradient(180deg, rgba(7, 18, 48, 0.22), rgba(7, 18, 48, 0.62)),
+    radial-gradient(circle at 20% 16%, rgba(255, 231, 165, 0.24), transparent 42%);
+}
+
+.mystic-hero-copy h1,
+.mystic-hero-copy > p,
+.mystic-kicker {
+  text-shadow: 0 2px 16px rgba(5, 15, 46, 0.72);
 }
 
 .mystic-main {

@@ -115,6 +115,22 @@ const HOME_ICONS = {
   individual: toMediaUrl("ikonki/svg/individual_session.svg")
 };
 
+// Fine tune cover cropping per service card (x y):
+// Example: "35% 45%" -> move focus left/down.
+const COVER_POSITION_BY_SLUG = {
+  "soundhealing-drum": "50% 42%",
+  "gong-bowls-meditation": "50% 44%",
+  "gong-hammocks-meditation": "50% 48%",
+  "nail-standing": "50% 50%",
+  "chakra-path": "50% 48%",
+  "leela-game": "50% 46%",
+  "vibro-bath-gong-bowls": "50% 48%",
+  "vibro-bath-crystal-bowls": "50% 50%",
+  "bila-bells-harmonization": "50% 46%",
+  "systemic-constellations": "50% 44%",
+  "hypnosis-path-to-self": "50% 50%"
+};
+
 function formatDateTime(value) {
   const date = new Date(value);
   const day = new Intl.DateTimeFormat("ru-RU", {
@@ -348,15 +364,24 @@ function ServiceCard({ service, index = 0 }) {
   const cover = service.media?.[0] || "";
   const coverSrc = cover ? toMediaUrl(cover) : "";
   const coverIsVideo = isVideoAsset(cover);
+  const coverPosition = COVER_POSITION_BY_SLUG[service.slug] || "50% 50%";
 
   return (
     <article className="mystic-service-card is-enter" style={{ "--card-delay": `${Math.min(index, 10) * 60}ms` }}>
       <div className="mystic-service-cover">
         {coverSrc ? (
           coverIsVideo ? (
-            <video src={coverSrc} muted loop autoPlay playsInline preload="metadata" />
+            <video
+              src={coverSrc}
+              muted
+              loop
+              autoPlay
+              playsInline
+              preload="metadata"
+              style={{ objectPosition: coverPosition }}
+            />
           ) : (
-            <img src={coverSrc} alt={service.title} loading="lazy" />
+            <img src={coverSrc} alt={service.title} loading="lazy" style={{ objectPosition: coverPosition }} />
           )
         ) : (
           <div className="mystic-service-cover-fallback" />

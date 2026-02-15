@@ -198,40 +198,6 @@ export default function ServicePage() {
   const canBookGroup = supportsGroup && groupBookingEvents.length > 0;
   const canBookIndividual = supportsIndividual && individualBookingEvents.length > 0;
   const activeBookingEvents = bookingMode === "individual" ? individualBookingEvents : groupBookingEvents;
-  const formatCards = [];
-  if (service.pricing?.group) {
-    formatCards.push({
-      key: "group",
-      icon: SERVICE_ICONS.group,
-      title: "Групповая практика",
-      lines: [
-        service.pricing.group.label || "Групповой формат",
-        `от ${formatPrice(service.pricing.group.price_per_person)} руб.`
-      ],
-      actionLabel: service.pricing.group.cta || "Выбрать групповую дату",
-      actionMode: "group"
-    });
-  }
-  if (service.pricing?.individual) {
-    formatCards.push({
-      key: "individual",
-      icon: SERVICE_ICONS.individual,
-      title: "Индивидуальная практика",
-      lines: [service.pricing.individual.label || "Персональная сессия", `${formatPrice(service.pricing.individual.price)} руб.`],
-      actionLabel: service.pricing.individual.cta || "Выбрать индивидуальную дату",
-      actionMode: "individual"
-    });
-  }
-  if (service.pricing?.fixed) {
-    formatCards.push({
-      key: "fixed",
-      icon: SERVICE_ICONS.individual,
-      title: "Индивидуальная практика",
-      lines: [service.pricing.fixed.label || "Персональная сессия", `${formatPrice(service.pricing.fixed.price)} руб.`],
-      actionLabel: service.pricing.fixed.cta || "Выбрать дату",
-      actionMode: service.format_mode === "individual_only" ? "individual" : "group"
-    });
-  }
 
   return (
     <div className="page-service">
@@ -295,44 +261,6 @@ export default function ServicePage() {
             {service.about?.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}
-
-            {formatCards.length ? (
-              <section className="service-format-section">
-                <div className="service-copy-head">
-                  <img className="service-title-icon" src={SERVICE_ICONS.group} alt="" aria-hidden="true" />
-                  <h2>ФОРМАТЫ УЧАСТИЯ</h2>
-                </div>
-                <div className="service-format-grid">
-                  {formatCards.map((item) => (
-                    <article key={item.key} className="service-format-card">
-                      <div className="service-format-card-head">
-                        <img src={item.icon} alt="" aria-hidden="true" />
-                        <h3>{item.title}</h3>
-                      </div>
-                      <ul>
-                        {item.lines.map((line) => (
-                          <li key={`${item.key}-${line}`}>{line}</li>
-                        ))}
-                      </ul>
-                      <button
-                        type="button"
-                        className="service-format-action"
-                        onClick={() => {
-                          if (item.actionMode === "individual" && supportsIndividual) {
-                            setBookingMode("individual");
-                          } else if (item.actionMode === "group" && supportsGroup) {
-                            setBookingMode("group");
-                          }
-                          document.getElementById("service-booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                        }}
-                      >
-                        {item.actionLabel}
-                      </button>
-                    </article>
-                  ))}
-                </div>
-              </section>
-            ) : null}
 
             <InfoList title="ПРАКТИКА ПОДОЙДЕТ, ЕСЛИ" items={service.suitable_for} icon={SERVICE_ICONS.suitable} />
             <InfoList title="ВАЖНО" items={service.important} icon={SERVICE_ICONS.important} />

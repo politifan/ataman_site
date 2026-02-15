@@ -724,10 +724,6 @@ a {
   margin: 0;
   color: rgba(227, 238, 255, 0.84);
   line-height: 1.48;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .mystic-service-meta {
@@ -2402,6 +2398,24 @@ a {
   gap: 0.34rem;
 }
 
+.service-format-action {
+  margin-top: 0.62rem;
+  border: 1px solid rgba(227, 238, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f2f8ff;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 0.42rem 0.76rem;
+  cursor: pointer;
+}
+
+.service-format-action:hover {
+  border-color: rgba(255, 233, 178, 0.86);
+  color: #fff3d0;
+}
+
 .service-side {
   display: grid;
   gap: 0.8rem;
@@ -2508,6 +2522,53 @@ a {
 .booking-form {
   display: grid;
   gap: 0.55rem;
+}
+
+.booking-mode-switch {
+  display: inline-flex;
+  gap: 0.28rem;
+  padding: 0.2rem;
+  border: 1px solid rgba(227, 238, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.booking-mode-switch button {
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(227, 238, 255, 0.84);
+  padding: 0.32rem 0.64rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.booking-mode-switch button.is-active {
+  background: linear-gradient(145deg, rgba(255, 233, 179, 0.95), rgba(255, 214, 147, 0.95));
+  color: #162a55;
+}
+
+.booking-mode-switch button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.booking-select-label {
+  display: grid;
+  gap: 0.22rem;
+  font-size: 0.82rem;
+  color: rgba(227, 238, 255, 0.88);
+}
+
+.booking-select-label select {
+  width: 100%;
+  border: 1px solid rgba(227, 238, 255, 0.2);
+  border-radius: 10px;
+  padding: 0.56rem 0.7rem;
+  font: inherit;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e9f2ff;
 }
 
 .booking-form input:not([type="checkbox"]),
@@ -3557,6 +3618,16 @@ a {
 
 .services-page-meta strong {
   color: #fff0c4;
+}
+
+.mystic-ritual-line button img,
+.mystic-service-meta span img,
+.service-meta-pill-head img,
+.service-title-icon,
+.service-format-card-head img,
+.services-page-format img,
+.services-page-meta span img {
+  filter: brightness(0) saturate(100%) invert(100%);
 }
 
 .schedule-grid {

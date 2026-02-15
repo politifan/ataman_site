@@ -66,6 +66,8 @@ export default function ServicePage() {
   const { slug } = useParams();
   const [service, setService] = useState(null);
   const [schedule, setSchedule] = useState([]);
+  const [bookingMode, setBookingMode] = useState("group");
+  const [selectedScheduleId, setSelectedScheduleId] = useState("");
   const [form, setForm] = useState(initialForm);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -100,17 +102,49 @@ export default function ServicePage() {
     };
   }, [selectedMedia]);
 
+  const groupEvents = useMemo(() => schedule.filter((item) => !item.is_individual), [schedule]);
+  const individualEvents = useMemo(() => schedule.filter((item) => item.is_individual), [schedule]);
+  const groupBookingEvents = useMemo(() => groupEvents.filter((item) => item.available_spots > 0), [groupEvents]);
+  const individualBookingEvents = useMemo(
+    () => individualEvents.filter((item) => item.available_spots > 0),
+    [individualEvents]
+  );
   const selectedEvent = useMemo(() => {
-    return schedule.find((item) => !item.is_individual && item.available_spots > 0) || null;
-  }, [schedule]);
+    const source = bookingMode === "individual" ? individualBookingEvents : groupBookingEvents;
+    return source.find((item) => String(item.id) === String(selectedScheduleId)) || source[0] || null;
+  }, [bookingMode, selectedScheduleId, groupBookingEvents, individualBookingEvents]);
   const nextEvents = useMemo(() => {
-    return schedule.filter((item) => !item.is_individual).slice(0, 4);
-  }, [schedule]);
+    return groupEvents.slice(0, 4);
+  }, [groupEvents]);
+
+  useEffect(() => {
+    const hasIndividual = individualBookingEvents.length > 0;
+    const hasGroup = groupBookingEvents.length > 0;
+    if (!hasGroup && hasIndividual) {
+      setBookingMode("individual");
+    } else if (hasGroup && !hasIndividual) {
+      setBookingMode("group");
+    }
+  }, [groupBookingEvents.length, individualBookingEvents.length]);
+
+  useEffect(() => {
+    const source = bookingMode === "individual" ? individualBookingEvents : groupBookingEvents;
+    if (!source.length) {
+      setSelectedScheduleId("");
+      return;
+    }
+    setSelectedScheduleId((prev) => {
+      if (prev && source.some((item) => String(item.id) === String(prev))) {
+        return prev;
+      }
+      return String(source[0].id);
+    });
+  }, [bookingMode, groupBookingEvents, individualBookingEvents]);
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (!selectedEvent) {
-      setError("Нет доступных групповых событий для онлайн-бронирования.");
+    if (!selectedScheduleId) {
+      setError("Нет доступных дат для записи.");
       return;
     }
 
@@ -120,7 +154,7 @@ export default function ServicePage() {
 
     try {
       const response = await submitBooking({
-        schedule_id: selectedEvent.id,
+        schedule_id: Number(selectedScheduleId),
         ...form
       });
       if (response.confirmation_url) {
@@ -147,6 +181,9 @@ export default function ServicePage() {
   const heroImage = service.media?.[0] ? toMediaUrl(service.media[0]) : "";
   const hasHost = Boolean(service.host?.name || service.host?.bio);
   const formatLabel = formatModeLabel(service.format_mode);
+  const canBookGroup = groupBookingEvents.length > 0;
+  const canBookIndividual = individualBookingEvents.length > 0;
+  const activeBookingEvents = bookingMode === "individual" ? individualBookingEvents : groupBookingEvents;
   const formatCards = [];
   if (service.pricing?.group) {
     formatCards.push({
@@ -156,7 +193,9 @@ export default function ServicePage() {
       lines: [
         service.pricing.group.label || "Групповой формат",
         `от ${formatPrice(service.pricing.group.price_per_person)} руб.`
-      ]
+      ],
+      actionLabel: service.pricing.group.cta || "Выбрать групповую дату",
+      actionMode: "group"
     });
   }
   if (service.pricing?.individual) {
@@ -164,7 +203,9 @@ export default function ServicePage() {
       key: "individual",
       icon: SERVICE_ICONS.individual,
       title: "Индивидуальная практика",
-      lines: [service.pricing.individual.label || "Персональная сессия", `${formatPrice(service.pricing.individual.price)} руб.`]
+      lines: [service.pricing.individual.label || "Персональная сессия", `${formatPrice(service.pricing.individual.price)} руб.`],
+      actionLabel: service.pricing.individual.cta || "Выбрать индивидуальную дату",
+      actionMode: "individual"
     });
   }
   if (service.pricing?.fixed) {
@@ -172,7 +213,9 @@ export default function ServicePage() {
       key: "fixed",
       icon: SERVICE_ICONS.individual,
       title: "Индивидуальная практика",
-      lines: [service.pricing.fixed.label || "Персональная сессия", `${formatPrice(service.pricing.fixed.price)} руб.`]
+      lines: [service.pricing.fixed.label || "Персональная сессия", `${formatPrice(service.pricing.fixed.price)} руб.`],
+      actionLabel: service.pricing.fixed.cta || "Выбрать дату",
+      actionMode: service.format_mode === "individual_only" ? "individual" : "group"
     });
   }
 
@@ -257,6 +300,20 @@ export default function ServicePage() {
                           <li key={`${item.key}-${line}`}>{line}</li>
                         ))}
                       </ul>
+                      <button
+                        type="button"
+                        className="service-format-action"
+                        onClick={() => {
+                          if (item.actionMode === "individual" && canBookIndividual) {
+                            setBookingMode("individual");
+                          } else if (item.actionMode === "group" && canBookGroup) {
+                            setBookingMode("group");
+                          }
+                          document.getElementById("service-booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }}
+                      >
+                        {item.actionLabel}
+                      </button>
                     </article>
                   ))}
                 </div>
@@ -366,10 +423,50 @@ export default function ServicePage() {
               </div>
             ) : null}
 
-            {!service.is_draft && selectedEvent ? (
+            {!service.is_draft && (canBookGroup || canBookIndividual) ? (
               <form className="side-card booking-form" onSubmit={handleSubmit}>
                 <h3>ЗАПИСЬ ОНЛАЙН</h3>
-                <p className="muted">Ближайшая группа: {formatDateTime(selectedEvent.start_time)}</p>
+                {(canBookGroup && canBookIndividual) || service.format_mode === "group_and_individual" ? (
+                  <div className="booking-mode-switch" role="tablist" aria-label="Формат записи">
+                    <button
+                      type="button"
+                      className={bookingMode === "group" ? "is-active" : ""}
+                      onClick={() => setBookingMode("group")}
+                      disabled={!canBookGroup}
+                    >
+                      Групповая
+                    </button>
+                    <button
+                      type="button"
+                      className={bookingMode === "individual" ? "is-active" : ""}
+                      onClick={() => setBookingMode("individual")}
+                      disabled={!canBookIndividual}
+                    >
+                      Индивидуальная
+                    </button>
+                  </div>
+                ) : null}
+                <p className="muted">
+                  {selectedEvent
+                    ? bookingMode === "individual"
+                      ? `Ближайшая индивидуальная дата: ${formatDateTime(selectedEvent.start_time)}`
+                      : `Ближайшая группа: ${formatDateTime(selectedEvent.start_time)}`
+                    : "Выберите дату из расписания"}
+                </p>
+                <label className="booking-select-label">
+                  <span>Дата и время</span>
+                  <select
+                    value={selectedScheduleId}
+                    onChange={(event) => setSelectedScheduleId(event.target.value)}
+                    required
+                  >
+                    {activeBookingEvents.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {formatDateTime(item.start_time)} • мест {item.available_spots}/{item.max_participants}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <input
                   value={form.name}
                   onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}

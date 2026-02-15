@@ -380,13 +380,32 @@ def create_booking(payload: BookingCreate, db: Session = Depends(get_db_session)
         raise HTTPException(status_code=404, detail="Событие расписания не найдено.")
     if not event.is_active:
         raise HTTPException(status_code=409, detail="Событие неактивно.")
-    if event.is_individual:
-        raise HTTPException(
-            status_code=409,
-            detail="Индивидуальные практики бронируются через прямую связь с администратором.",
-        )
     if event.current_participants >= event.max_participants:
         raise HTTPException(status_code=409, detail="Свободных мест больше нет.")
+
+    if event.is_individual:
+        amount = _extract_group_price(event.service, event)
+        booking = Booking(
+            schedule_event_id=event.id,
+            name=payload.name.strip(),
+            phone=payload.phone.strip(),
+            email=str(payload.email),
+            comment=(payload.comment or "").strip() or None,
+            status="pending",
+            payment_status="not_required",
+            payment_amount=amount,
+        )
+        db.add(booking)
+        db.commit()
+        db.refresh(booking)
+        return BookingCreateResponse(
+            ok=True,
+            booking_id=booking.id,
+            payment_id=None,
+            payment_status="not_required",
+            confirmation_url=None,
+            message="Заявка на индивидуальную практику создана. Администратор свяжется с вами для подтверждения.",
+        )
 
     amount = _extract_group_price(event.service, event)
 

@@ -10,6 +10,7 @@ const SERVICE_ICONS = {
   important: toMediaUrl("ikonki/svg/important.svg"),
   dress: toMediaUrl("ikonki/svg/dress_code.svg")
 };
+const HIDDEN_MEDIA_PATHS = new Set(["foto_dlya_uslug/lila/img_6366.jpg"]);
 
 function formatDateTime(value) {
   const date = new Date(value);
@@ -190,7 +191,8 @@ export default function ServicePage() {
     return <div className="state-page">Загрузка...</div>;
   }
 
-  const heroImage = service.media?.[0] ? toMediaUrl(service.media[0]) : "";
+  const visibleMedia = (service.media || []).filter((path) => !HIDDEN_MEDIA_PATHS.has(path));
+  const heroImage = visibleMedia[0] ? toMediaUrl(visibleMedia[0]) : "";
   const hasHost = Boolean(service.host?.name || service.host?.bio);
   const formatLabel = formatModeLabel(service.format_mode);
   const supportsGroup = service.format_mode === "group_and_individual" && Boolean(service.pricing?.group || service.pricing?.fixed);
@@ -285,14 +287,14 @@ export default function ServicePage() {
               </div>
             ) : null}
 
-            {service.media?.length ? (
+            {visibleMedia.length ? (
               <section id="service-media" className="service-media-section service-media-section-inflow">
                 <div className="service-section-head">
                   <h2>ФОТО И АТМОСФЕРА</h2>
-                  <p>{service.media.length} изображений, кликните для увеличения</p>
+                  <p>{visibleMedia.length} изображений, кликните для увеличения</p>
                 </div>
                 <div className="media-grid">
-                  {service.media.map((path) => (
+                  {visibleMedia.map((path) => (
                     <figure key={path}>
                       <button
                         type="button"

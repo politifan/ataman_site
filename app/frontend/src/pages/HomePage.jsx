@@ -527,7 +527,8 @@ export default function HomePage() {
     const list = [];
     const excludedShowcase = new Set([
       "foto_dlya_uslug/saundhiling_s_bubnom/3.jpg",
-      "foto_dlya_uslug/gong_meditatsiya_s_chashami/2.jpg"
+      "foto_dlya_uslug/gong_meditatsiya_s_chashami/2.jpg",
+      "foto_dlya_uslug/lila/img_6366.jpg"
     ]);
     const mainShowcase = [
       "foto_dlya_uslug/main/3.JPG",
@@ -575,7 +576,7 @@ export default function HomePage() {
         });
       }
     }
-    return list.slice(0, 6);
+    return list.slice(0, 8);
   }, [services, site?.home_image]);
 
   if (loading) {

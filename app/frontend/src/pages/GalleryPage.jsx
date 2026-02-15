@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { getGallery, toMediaUrl } from "../api";
 
+const HIDDEN_MEDIA_PATHS = new Set(["foto_dlya_uslug/lila/img_6366.jpg"]);
+
 export default function GalleryPage() {
   const [items, setItems] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -43,8 +45,9 @@ export default function GalleryPage() {
   }, [items]);
 
   const filtered = useMemo(() => {
-    if (selectedCategory === "all") return items;
-    return items.filter((item) => item.category === selectedCategory);
+    const visible = items.filter((item) => !HIDDEN_MEDIA_PATHS.has(item.image_path));
+    if (selectedCategory === "all") return visible;
+    return visible.filter((item) => item.category === selectedCategory);
   }, [items, selectedCategory]);
 
   if (loading) return <div className="state-page">Загрузка...</div>;

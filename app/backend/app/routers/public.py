@@ -477,6 +477,7 @@ def create_booking(payload: BookingCreate, db: Session = Depends(get_db_session)
     )
 
 
+@router.post("/certificate-purchase", response_model=GiftCertificatePurchaseResponse)
 @router.post("/certificates/purchase", response_model=GiftCertificatePurchaseResponse)
 def purchase_certificate(
     payload: GiftCertificatePurchaseRequest,

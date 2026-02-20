@@ -118,7 +118,7 @@ export function submitBooking(payload) {
 }
 
 export function purchaseCertificate(payload) {
-  return request("/api/certificates/purchase", {
+  return request("/api/certificate-purchase", {
     method: "POST",
     body: JSON.stringify(payload)
   });

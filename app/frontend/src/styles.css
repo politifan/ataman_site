@@ -2976,6 +2976,20 @@ a {
   padding: 1rem 1.2rem 2rem;
 }
 
+.admin-shell select {
+  color-scheme: dark;
+}
+
+.admin-shell select option,
+.admin-shell select optgroup {
+  background-color: #1a2f5f;
+  color: #e9f3ff;
+}
+
+.admin-shell select option:disabled {
+  color: rgba(233, 243, 255, 0.55);
+}
+
 .admin-main-headline {
   margin-bottom: 1rem;
 }

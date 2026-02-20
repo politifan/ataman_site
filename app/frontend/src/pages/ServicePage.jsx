@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { getSchedule, getService, submitBooking, toMediaUrl } from "../api";
+import AdminSelect from "../admin/AdminSelect";
 
 const SERVICE_ICONS = {
   duration: toMediaUrl("ikonki/svg/duration.svg"),
@@ -402,17 +403,14 @@ export default function ServicePage() {
                 {activeBookingEvents.length ? (
                   <label className="booking-select-label">
                     <span>Дата и время</span>
-                    <select
+                    <AdminSelect
                       value={selectedScheduleId}
-                      onChange={(event) => setSelectedScheduleId(event.target.value)}
-                      required
-                    >
-                      {activeBookingEvents.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {formatDateTime(item.start_time)} • мест {item.available_spots}/{item.max_participants}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(nextValue) => setSelectedScheduleId(String(nextValue))}
+                      options={activeBookingEvents.map((item) => ({
+                        value: String(item.id),
+                        label: `${formatDateTime(item.start_time)} • мест ${item.available_spots}/${item.max_participants}`
+                      }))}
+                    />
                   </label>
                 ) : (
                   <p className="muted">

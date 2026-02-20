@@ -117,6 +117,17 @@ export function submitBooking(payload) {
   });
 }
 
+export function purchaseCertificate(payload) {
+  return request("/api/certificates/purchase", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function getCertificate(code) {
+  return request(`/api/certificates/${encodeURIComponent(code)}`);
+}
+
 export function checkPaymentStatus(paymentId) {
   return request(`/api/payments/${encodeURIComponent(paymentId)}/status`);
 }
@@ -337,6 +348,24 @@ export function adminBulkUpdateSettings(items) {
 export function adminDeleteSetting(key) {
   return adminRequest(`/api/admin/settings/${encodeURIComponent(key)}`, {
     method: "DELETE"
+  });
+}
+
+export function adminListCertificates(params = {}) {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      search.set(key, String(value));
+    }
+  });
+  const suffix = search.toString() ? `?${search.toString()}` : "";
+  return adminRequest(`/api/admin/certificates${suffix}`);
+}
+
+export function adminUpdateCertificate(id, payload) {
+  return adminRequest(`/api/admin/certificates/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload)
   });
 }
 

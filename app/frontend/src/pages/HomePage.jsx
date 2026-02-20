@@ -647,6 +647,7 @@ export default function HomePage() {
               </a>
               <nav className="mystic-header-nav">
                 <a href="#services">Каталог</a>
+                <Link to="/certificates">Сертификат</Link>
                 <Link to="/schedule">Расписание</Link>
                 <Link to="/gallery">Галерея</Link>
                 <Link to="/contacts">Контакты</Link>

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import secrets
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -11,13 +12,16 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from ..deps import get_db_session
-from ..models import Booking, Contact, GalleryItem, Payment, ScheduleEvent, Service, Setting
+from ..models import Booking, Contact, GalleryItem, GiftCertificate, Payment, ScheduleEvent, Service, Setting
 from ..schemas import (
     BookingCreate,
     BookingCreateResponse,
     ContactCreate,
     ContactResponse,
     GalleryPublic,
+    GiftCertificatePublicResponse,
+    GiftCertificatePurchaseRequest,
+    GiftCertificatePurchaseResponse,
     LegalPageResponse,
     SchedulePublic,
     ServicePublic,
@@ -195,6 +199,19 @@ def _extract_group_price(service: Service, event: ScheduleEvent) -> Decimal:
         raise HTTPException(status_code=422, detail="Для услуги не настроена стоимость.")
 
     return Decimal(str(value))
+
+
+def _certificate_public_url(code: str) -> str:
+    return f"/certificates/{code}"
+
+
+def _generate_certificate_code(db: Session) -> str:
+    for _ in range(10):
+        code = f"ATM-{secrets.token_hex(4).upper()}"
+        exists = db.scalar(select(GiftCertificate.id).where(GiftCertificate.code == code))
+        if not exists:
+            return code
+    raise HTTPException(status_code=500, detail="Не удалось сгенерировать уникальный код сертификата.")
 
 
 @router.get("/health")
@@ -460,6 +477,57 @@ def create_booking(payload: BookingCreate, db: Session = Depends(get_db_session)
     )
 
 
+@router.post("/certificates/purchase", response_model=GiftCertificatePurchaseResponse)
+def purchase_certificate(
+    payload: GiftCertificatePurchaseRequest,
+    db: Session = Depends(get_db_session),
+) -> GiftCertificatePurchaseResponse:
+    code = _generate_certificate_code(db)
+    row = GiftCertificate(
+        code=code,
+        amount=payload.amount,
+        recipient_name=(payload.recipient_name or "").strip() or None,
+        sender_name=(payload.sender_name or "").strip() or None,
+        note=(payload.note or "").strip() or None,
+        buyer_name=payload.buyer_name.strip(),
+        buyer_email=str(payload.buyer_email),
+        buyer_phone=(payload.buyer_phone or "").strip() or None,
+        status="paid",
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return GiftCertificatePurchaseResponse(
+        ok=True,
+        certificate_id=row.id,
+        certificate_code=row.code,
+        status=row.status,
+        public_url=_certificate_public_url(row.code),
+        message="Оплата получена. Сертификат создан и будет оформлен администратором.",
+    )
+
+
+@router.get("/certificates/{code}", response_model=GiftCertificatePublicResponse)
+def get_certificate(code: str, db: Session = Depends(get_db_session)) -> GiftCertificatePublicResponse:
+    normalized_code = code.strip().upper()
+    row = db.scalar(select(GiftCertificate).where(GiftCertificate.code == normalized_code))
+    if not row:
+        raise HTTPException(status_code=404, detail="Сертификат не найден.")
+    return GiftCertificatePublicResponse(
+        id=row.id,
+        code=row.code,
+        amount=row.amount,
+        recipient_name=row.recipient_name,
+        sender_name=row.sender_name,
+        note=row.note,
+        status=row.status,
+        issued_by=row.issued_by,
+        issued_at=row.issued_at,
+        redeemed_at=row.redeemed_at,
+        created_at=row.created_at,
+    )
+
+
 @router.get("/migration/status")
 def migration_status() -> dict[str, list[str]]:
     return {
@@ -468,6 +536,7 @@ def migration_status() -> dict[str, list[str]]:
             "ЮKassa create/check/webhook",
             "Public API: site/services/schedule/gallery/legal/contacts",
             "Admin API: dashboard/services/schedule/gallery/bookings/contacts/settings/upload",
+            "Gift certificates: public purchase/view + admin issue/redeem",
             "Legacy compatibility: /api/events.php and /api/submit_contact.php",
             "Dynamic SEO endpoints: /robots.txt and /sitemap.xml",
         ],

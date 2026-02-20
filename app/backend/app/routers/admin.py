@@ -12,13 +12,15 @@ from sqlalchemy.orm import Session, joinedload
 
 from ..config import settings
 from ..deps import get_db_session, require_admin
-from ..models import Booking, Contact, GalleryItem, ScheduleEvent, Service, Setting
+from ..models import Booking, Contact, GalleryItem, GiftCertificate, ScheduleEvent, Service, Setting
 from ..schemas import (
     AdminDashboardStatsResponse,
     BookingAdminResponse,
     BookingAdminStatusUpdate,
     ContactAdminResponse,
     ContactAdminStatusUpdate,
+    GiftCertificateAdminResponse,
+    GiftCertificateAdminUpdate,
     GalleryAdminCreate,
     GalleryAdminResponse,
     GalleryAdminUpdate,
@@ -468,6 +470,62 @@ def admin_delete_setting(key: str, db: Session = Depends(get_db_session)) -> dic
     db.delete(row)
     db.commit()
     return {"ok": True}
+
+
+@router.get("/certificates", response_model=list[GiftCertificateAdminResponse])
+def admin_list_certificates(
+    status: str | None = None,
+    search: str | None = None,
+    db: Session = Depends(get_db_session),
+) -> list[GiftCertificate]:
+    query = select(GiftCertificate).order_by(GiftCertificate.created_at.desc())
+    if status:
+        query = query.where(GiftCertificate.status == status)
+    if search:
+        like = f"%{search.strip()}%"
+        query = query.where(
+            or_(
+                GiftCertificate.code.ilike(like),
+                GiftCertificate.recipient_name.ilike(like),
+                GiftCertificate.sender_name.ilike(like),
+                GiftCertificate.buyer_name.ilike(like),
+                GiftCertificate.buyer_email.ilike(like),
+                GiftCertificate.buyer_phone.ilike(like),
+            )
+        )
+    return db.scalars(query).all()
+
+
+@router.patch("/certificates/{certificate_id}", response_model=GiftCertificateAdminResponse)
+def admin_update_certificate(
+    certificate_id: int,
+    payload: GiftCertificateAdminUpdate,
+    db: Session = Depends(get_db_session),
+) -> GiftCertificate:
+    row = db.get(GiftCertificate, certificate_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Сертификат не найден.")
+
+    updates = payload.model_dump(exclude_unset=True)
+    next_status = updates.get("status")
+    now = datetime.utcnow()
+
+    for key, value in updates.items():
+        setattr(row, key, value)
+
+    if next_status == "issued" and row.issued_at is None:
+        row.issued_at = now
+
+    if next_status == "redeemed" and row.redeemed_at is None:
+        row.redeemed_at = now
+    if next_status == "redeemed" and row.issued_at is None:
+        row.issued_at = now
+    if next_status in {"paid", "issued", "cancelled"}:
+        row.redeemed_at = None
+
+    db.commit()
+    db.refresh(row)
+    return row
 
 
 @router.post("/upload")

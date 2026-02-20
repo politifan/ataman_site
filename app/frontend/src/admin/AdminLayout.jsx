@@ -65,6 +65,12 @@ export default function AdminLayout() {
         description: "Отрабатывайте входящие обращения и фиксируйте статус коммуникации."
       };
     }
+    if (location.pathname.includes("/admin/certificates")) {
+      return {
+        title: "Подарочные сертификаты",
+        description: "Выпускайте, редактируйте и погашайте сертификаты, отслеживая их статусы."
+      };
+    }
     if (location.pathname.includes("/admin/settings")) {
       return {
         title: "Системные настройки",
@@ -179,6 +185,7 @@ export default function AdminLayout() {
           <NavLink to="/admin/gallery">Галерея</NavLink>
           <NavLink to="/admin/bookings">Записи</NavLink>
           <NavLink to="/admin/contacts">Сообщения</NavLink>
+          <NavLink to="/admin/certificates">Сертификаты</NavLink>
           <NavLink to="/admin/settings">Настройки</NavLink>
         </nav>
 

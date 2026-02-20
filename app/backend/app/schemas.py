@@ -34,6 +34,39 @@ class BookingCreateResponse(BaseModel):
     message: str
 
 
+class GiftCertificatePurchaseRequest(BaseModel):
+    amount: Decimal = Field(ge=500, le=1000000)
+    recipient_name: str | None = Field(default=None, max_length=120)
+    sender_name: str | None = Field(default=None, max_length=120)
+    note: str | None = Field(default=None, max_length=1000)
+    buyer_name: str = Field(min_length=2, max_length=120)
+    buyer_email: EmailStr
+    buyer_phone: str | None = Field(default=None, max_length=32)
+
+
+class GiftCertificatePurchaseResponse(BaseModel):
+    ok: bool
+    certificate_id: int
+    certificate_code: str
+    status: str
+    public_url: str
+    message: str
+
+
+class GiftCertificatePublicResponse(BaseModel):
+    id: int
+    code: str
+    amount: Decimal
+    recipient_name: str | None = None
+    sender_name: str | None = None
+    note: str | None = None
+    status: str
+    issued_by: str | None = None
+    issued_at: datetime | None = None
+    redeemed_at: datetime | None = None
+    created_at: datetime
+
+
 class SiteResponse(BaseModel):
     brand: str
     tagline: str
@@ -282,6 +315,38 @@ class ContactAdminResponse(BaseModel):
 
 class ContactAdminStatusUpdate(BaseModel):
     status: str = Field(pattern="^(new|read|replied)$")
+
+
+class GiftCertificateAdminResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    code: str
+    amount: Decimal
+    recipient_name: str | None = None
+    sender_name: str | None = None
+    note: str | None = None
+    buyer_name: str
+    buyer_email: str
+    buyer_phone: str | None = None
+    status: str
+    issued_by: str | None = None
+    issued_at: datetime | None = None
+    redeemed_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class GiftCertificateAdminUpdate(BaseModel):
+    amount: Decimal | None = Field(default=None, ge=500, le=1000000)
+    recipient_name: str | None = Field(default=None, max_length=120)
+    sender_name: str | None = Field(default=None, max_length=120)
+    note: str | None = Field(default=None, max_length=1000)
+    buyer_name: str | None = Field(default=None, min_length=2, max_length=120)
+    buyer_email: EmailStr | None = None
+    buyer_phone: str | None = Field(default=None, max_length=32)
+    status: str | None = Field(default=None, pattern="^(paid|issued|redeemed|cancelled)$")
+    issued_by: str | None = Field(default=None, max_length=120)
 
 
 class SettingAdminResponse(BaseModel):

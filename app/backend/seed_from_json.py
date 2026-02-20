@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.db import SessionLocal
-from app.models import Booking, Contact, GalleryItem, Payment, PaymentLog, ScheduleEvent, Service, Setting
+from app.models import Booking, Contact, GalleryItem, GiftCertificate, Payment, PaymentLog, ScheduleEvent, Service, Setting
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
@@ -174,6 +174,7 @@ def maybe_reset(db, reset: bool) -> None:
     db.query(Contact).delete()
     db.query(Service).delete()
     db.query(GalleryItem).delete()
+    db.query(GiftCertificate).delete()
     db.query(Setting).delete()
 
 

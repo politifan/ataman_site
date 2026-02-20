@@ -8,6 +8,8 @@ import GalleryPage from "./pages/GalleryPage";
 import ContactsPage from "./pages/ContactsPage";
 import LegalPage from "./pages/LegalPage";
 import PaymentStatePage from "./pages/PaymentStatePage";
+import CertificatePurchasePage from "./pages/CertificatePurchasePage";
+import CertificatePublicPage from "./pages/CertificatePublicPage";
 import AdminLayout from "./admin/AdminLayout";
 import AdminDashboardPage from "./admin/AdminDashboardPage";
 import AdminServicesPage from "./admin/AdminServicesPage";
@@ -16,6 +18,7 @@ import AdminGalleryPage from "./admin/AdminGalleryPage";
 import AdminBookingsPage from "./admin/AdminBookingsPage";
 import AdminContactsPage from "./admin/AdminContactsPage";
 import AdminSettingsPage from "./admin/AdminSettingsPage";
+import AdminCertificatesPage from "./admin/AdminCertificatesPage";
 import { getSite } from "./api";
 
 function LegacyRedirect({ to }) {
@@ -81,6 +84,8 @@ export default function App() {
         <Route path="/schedule" element={<SchedulePage />} />
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/contacts" element={<ContactsPage />} />
+        <Route path="/certificates" element={<CertificatePurchasePage />} />
+        <Route path="/certificates/:code" element={<CertificatePublicPage />} />
         <Route path="/legal" element={<Navigate to="/legal/privacy" replace />} />
         <Route path="/legal/:slug" element={<LegalPage />} />
         <Route path="/payment/:state" element={<PaymentStatePage />} />
@@ -111,6 +116,7 @@ export default function App() {
           <Route path="bookings" element={<AdminBookingsPage />} />
           <Route path="contacts" element={<AdminContactsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
+          <Route path="certificates" element={<AdminCertificatesPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

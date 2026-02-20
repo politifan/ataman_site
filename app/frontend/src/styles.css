@@ -3969,6 +3969,137 @@ a {
   color: #e8f2ff;
 }
 
+.certificate-purchase-panel {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 0.8rem;
+}
+
+.certificate-purchase-preview {
+  border: 1px solid rgba(227, 238, 255, 0.16);
+  border-radius: 14px;
+  padding: 0.8rem;
+  background: linear-gradient(160deg, rgba(14, 31, 75, 0.86), rgba(10, 25, 63, 0.82));
+}
+
+.certificate-purchase-preview p {
+  margin: 0;
+  color: rgba(227, 238, 255, 0.72);
+}
+
+.certificate-purchase-preview strong {
+  display: block;
+  margin-top: 0.32rem;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  color: #ffe8b6;
+}
+
+.certificate-purchase-preview span {
+  display: block;
+  margin-top: 0.5rem;
+  color: rgba(227, 238, 255, 0.8);
+  line-height: 1.5;
+}
+
+.certificate-purchase-form {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.certificate-purchase-form label {
+  display: grid;
+  gap: 0.25rem;
+  color: rgba(227, 238, 255, 0.86);
+  font-size: 0.86rem;
+}
+
+.certificate-purchase-form input,
+.certificate-purchase-form textarea {
+  width: 100%;
+  border: 1px solid rgba(227, 238, 255, 0.24);
+  border-radius: 10px;
+  padding: 0.56rem 0.66rem;
+  font: inherit;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e9f2ff;
+}
+
+.certificate-result-panel h2 {
+  margin: 0;
+  color: #ffe8b6;
+}
+
+.certificate-result-panel p {
+  margin: 0.35rem 0 0;
+}
+
+.certificate-template {
+  border: 1px solid rgba(255, 235, 184, 0.35);
+  border-radius: 18px;
+  padding: clamp(1rem, 3vw, 1.6rem);
+  background:
+    radial-gradient(circle at 86% 12%, rgba(255, 224, 153, 0.24), transparent 32%),
+    linear-gradient(160deg, rgba(12, 27, 66, 0.95), rgba(9, 22, 56, 0.9));
+  box-shadow: 0 18px 46px rgba(5, 12, 32, 0.4);
+}
+
+.certificate-template-kicker {
+  margin: 0;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #ffdca1;
+  font-size: 0.74rem;
+}
+
+.certificate-template h2 {
+  margin: 0.35rem 0 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: #ffe8b6;
+}
+
+.certificate-template-grid {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.56rem;
+}
+
+.certificate-template-grid div {
+  border: 1px solid rgba(227, 238, 255, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.52rem;
+}
+
+.certificate-template-grid small {
+  display: block;
+  color: rgba(227, 238, 255, 0.7);
+  font-size: 0.74rem;
+}
+
+.certificate-template-grid strong {
+  display: block;
+  margin-top: 0.18rem;
+  color: #fff2cf;
+}
+
+.certificate-template-note {
+  margin: 0.75rem 0 0;
+  color: rgba(227, 238, 255, 0.9);
+  line-height: 1.55;
+}
+
+.certificate-template-footer {
+  margin-top: 0.82rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  color: rgba(227, 238, 255, 0.82);
+}
+
 .legal-layout {
   display: grid;
   grid-template-columns: 1.5fr 0.7fr;
@@ -4132,7 +4263,8 @@ a {
 
 .admin-status-pill.is-confirmed,
 .admin-status-pill.is-replied,
-.admin-status-pill.is-read {
+.admin-status-pill.is-read,
+.admin-status-pill.is-issued {
   color: #c6ffd5;
   border-color: rgba(175, 255, 198, 0.4);
 }
@@ -4145,9 +4277,15 @@ a {
 
 .admin-status-pill.is-pending,
 .admin-status-pill.is-waiting_payment,
-.admin-status-pill.is-new {
+.admin-status-pill.is-new,
+.admin-status-pill.is-paid {
   color: #ffe9b5;
   border-color: rgba(255, 230, 170, 0.45);
+}
+
+.admin-status-pill.is-redeemed {
+  color: #bce7ff;
+  border-color: rgba(174, 225, 255, 0.45);
 }
 
 .admin-toolbar-bookings {
@@ -4187,6 +4325,7 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
   border: 1px solid rgba(227, 238, 255, 0.28);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
@@ -4387,6 +4526,11 @@ body {
   }
 
   .payment-state-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .certificate-purchase-panel,
+  .certificate-template-grid {
     grid-template-columns: 1fr;
   }
 

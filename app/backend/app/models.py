@@ -195,3 +195,27 @@ class GalleryItem(TimestampMixin, Base):
     category: Mapped[str | None] = mapped_column(String(80), nullable=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
+class GiftCertificate(TimestampMixin, Base):
+    __tablename__ = "gift_certificates"
+    __table_args__ = (
+        Index("ix_gift_certificates_status_created", "status", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    code: Mapped[str] = mapped_column(String(32), unique=True, index=True, nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+
+    recipient_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    sender_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    buyer_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    buyer_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    buyer_phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
+    status: Mapped[str] = mapped_column(String(24), default="paid", nullable=False)
+    issued_by: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    redeemed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

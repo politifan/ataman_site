@@ -60,6 +60,7 @@ export default function AdminSchedulePage() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedServiceId, setSelectedServiceId] = useState(null);
+  const [returnServiceModalId, setReturnServiceModalId] = useState(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -155,6 +156,7 @@ export default function AdminSchedulePage() {
 
   function openCreate() {
     setEditingId(null);
+    setReturnServiceModalId(null);
     setForm(initialForm);
     setModalOpen(true);
   }
@@ -167,7 +169,12 @@ export default function AdminSchedulePage() {
     setSelectedServiceId(null);
   }
 
-  function openEdit(row) {
+  function openEdit(row, options = {}) {
+    if (options.returnToServiceId !== undefined) {
+      setReturnServiceModalId(options.returnToServiceId);
+    } else {
+      setReturnServiceModalId(null);
+    }
     setEditingId(row.id);
     setForm({
       service_id: String(row.service_id),
@@ -185,6 +192,10 @@ export default function AdminSchedulePage() {
     setModalOpen(false);
     setEditingId(null);
     setForm(initialForm);
+    if (returnServiceModalId !== null) {
+      setSelectedServiceId(returnServiceModalId);
+      setReturnServiceModalId(null);
+    }
   }
 
   async function save(event) {
@@ -389,7 +400,7 @@ export default function AdminSchedulePage() {
                         type="button"
                         onClick={() => {
                           closeServiceModal();
-                          openEdit(row);
+                          openEdit(row, { returnToServiceId: selectedServiceGroup.service_id });
                         }}
                       >
                         Ред.

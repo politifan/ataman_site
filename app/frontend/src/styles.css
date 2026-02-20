@@ -3260,6 +3260,11 @@ a {
   cursor: pointer;
 }
 
+.admin-schedule-service-card .admin-actions {
+  align-content: center;
+  justify-items: center;
+}
+
 .admin-list-item p {
   margin: 0.3rem 0 0;
   color: rgba(227, 238, 255, 0.72);
@@ -3345,6 +3350,20 @@ a {
 }
 
 .admin-actions .danger {
+  border-color: #f0bfbf;
+  color: #8a2929;
+}
+
+.admin-actions-inline button {
+  border: 1px solid rgba(227, 238, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8f2ff;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+
+.admin-actions-inline .danger {
   border-color: #f0bfbf;
   color: #8a2929;
 }
@@ -4165,11 +4184,15 @@ a {
 }
 
 .admin-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid rgba(227, 238, 255, 0.28);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
   color: #e8f2ff;
   padding: 0.24rem 0.5rem;
+  min-height: 34px;
   font-size: 0.76rem;
   cursor: pointer;
 }

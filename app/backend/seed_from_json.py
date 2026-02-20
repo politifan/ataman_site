@@ -16,31 +16,32 @@ def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def upsert_setting(db, key: str, value: str, *, is_public: bool = True) -> None:
+def upsert_setting(db, key: str, value: str, *, is_public: bool = True, overwrite: bool = True) -> None:
     row = db.query(Setting).filter(Setting.key == key).one_or_none()
     if row:
-        row.value = value
-        row.is_public = is_public
+        if overwrite:
+            row.value = value
+            row.is_public = is_public
     else:
         db.add(Setting(key=key, value=value, is_public=is_public))
 
 
-def seed_site(db) -> None:
+def seed_site(db, *, overwrite: bool = True) -> None:
     site = load_json(DATA_DIR / "site.json")
-    upsert_setting(db, "brand", site.get("brand", ""))
-    upsert_setting(db, "tagline", site.get("tagline", ""))
-    upsert_setting(db, "subline", site.get("subline", ""))
-    upsert_setting(db, "home_image", site.get("home_image", ""))
-    upsert_setting(db, "visual", json.dumps(site.get("visual", {}), ensure_ascii=False))
-    upsert_setting(db, "contacts", json.dumps(site.get("contacts", {}), ensure_ascii=False))
+    upsert_setting(db, "brand", site.get("brand", ""), overwrite=overwrite)
+    upsert_setting(db, "tagline", site.get("tagline", ""), overwrite=overwrite)
+    upsert_setting(db, "subline", site.get("subline", ""), overwrite=overwrite)
+    upsert_setting(db, "home_image", site.get("home_image", ""), overwrite=overwrite)
+    upsert_setting(db, "visual", json.dumps(site.get("visual", {}), ensure_ascii=False), overwrite=overwrite)
+    upsert_setting(db, "contacts", json.dumps(site.get("contacts", {}), ensure_ascii=False), overwrite=overwrite)
 
     organization = site.get("organization") or {}
-    upsert_setting(db, "org_name", str(organization.get("name") or ""))
-    upsert_setting(db, "org_inn", str(organization.get("inn") or ""))
-    upsert_setting(db, "org_ogrnip", str(organization.get("ogrnip") or ""))
+    upsert_setting(db, "org_name", str(organization.get("name") or ""), overwrite=overwrite)
+    upsert_setting(db, "org_inn", str(organization.get("inn") or ""), overwrite=overwrite)
+    upsert_setting(db, "org_ogrnip", str(organization.get("ogrnip") or ""), overwrite=overwrite)
 
     analytics = site.get("analytics") or {}
-    upsert_setting(db, "metrika_id", str(analytics.get("metrika_id") or "101427191"))
+    upsert_setting(db, "metrika_id", str(analytics.get("metrika_id") or "101427191"), overwrite=overwrite)
 
 
 def seed_services(db) -> dict[str, Service]:

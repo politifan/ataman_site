@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.db_migrations import backfill_gift_certificate_validity, ensure_gift_certificate_validity_schema
 from app.db import Base, SessionLocal, engine
 from app.security import ensure_bootstrap_admin
 from app.models import Service
@@ -15,6 +16,7 @@ def apply_runtime_content_fixes(db) -> None:
 
 def main() -> None:
     Base.metadata.create_all(bind=engine)
+    ensure_gift_certificate_validity_schema(engine)
 
     db = SessionLocal()
     try:
@@ -29,12 +31,14 @@ def main() -> None:
             seed_schedule(db, service_map)
             seed_gallery_assets(db, service_map)
             db.commit()
+            backfill_gift_certificate_validity(db)
             print("Database initialized and seeded.")
         else:
             # Preserve admin-edited settings on redeploy; only create missing keys from defaults.
             seed_site(db, overwrite=False)
             apply_runtime_content_fixes(db)
             db.commit()
+            backfill_gift_certificate_validity(db)
             print("Database initialized. Seed skipped (services already exist).")
     finally:
         db.close()

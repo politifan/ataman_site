@@ -23,6 +23,21 @@ function statusLabel(status) {
   return status;
 }
 
+function formatDays(value) {
+  const n = Number(value || 0);
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${n} день`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${n} дня`;
+  return `${n} дней`;
+}
+
+function validityLabel(mode, days) {
+  if (mode === "1m") return "1 месяц";
+  if (mode === "custom_days") return days ? formatDays(days) : "по дням";
+  return "3 месяца";
+}
+
 export default function CertificatePublicPage() {
   const { code } = useParams();
   const [item, setItem] = useState(null);
@@ -99,10 +114,12 @@ export default function CertificatePublicPage() {
               <small>Кому</small>
               <strong>{item.recipient_name || "Получатель не указан"}</strong>
             </article>
-            <article>
-              <small>От кого</small>
-              <strong>{item.sender_name || "Отправитель не указан"}</strong>
-            </article>
+            {!item.sender_hidden ? (
+              <article>
+                <small>От кого</small>
+                <strong>{item.sender_name || "Отправитель не указан"}</strong>
+              </article>
+            ) : null}
             <article>
               <small>Номер сертификата</small>
               <strong>{item.code}</strong>
@@ -110,6 +127,14 @@ export default function CertificatePublicPage() {
             <article>
               <small>Дата оформления</small>
               <strong>{formatDate(item.created_at)}</strong>
+            </article>
+            <article>
+              <small>Срок действия</small>
+              <strong>{validityLabel(item.validity_mode, item.validity_days)}</strong>
+            </article>
+            <article>
+              <small>Действителен до</small>
+              <strong>{item.expires_at ? formatDate(item.expires_at) : "После выпуска администратором"}</strong>
             </article>
           </div>
 

@@ -59,8 +59,12 @@ class GiftCertificatePublicResponse(BaseModel):
     amount: Decimal
     recipient_name: str | None = None
     sender_name: str | None = None
+    sender_hidden: bool = False
     note: str | None = None
     status: str
+    validity_mode: str
+    validity_days: int | None = None
+    expires_at: datetime | None = None
     issued_by: str | None = None
     issued_at: datetime | None = None
     redeemed_at: datetime | None = None
@@ -325,11 +329,15 @@ class GiftCertificateAdminResponse(BaseModel):
     amount: Decimal
     recipient_name: str | None = None
     sender_name: str | None = None
+    sender_hidden: bool = False
     note: str | None = None
     buyer_name: str
     buyer_email: str
     buyer_phone: str | None = None
     status: str
+    validity_mode: str
+    validity_days: int | None = None
+    expires_at: datetime | None = None
     issued_by: str | None = None
     issued_at: datetime | None = None
     redeemed_at: datetime | None = None
@@ -341,11 +349,14 @@ class GiftCertificateAdminUpdate(BaseModel):
     amount: Decimal | None = Field(default=None, ge=500, le=1000000)
     recipient_name: str | None = Field(default=None, max_length=120)
     sender_name: str | None = Field(default=None, max_length=120)
+    sender_hidden: bool | None = None
     note: str | None = Field(default=None, max_length=1000)
     buyer_name: str | None = Field(default=None, min_length=2, max_length=120)
     buyer_email: EmailStr | None = None
     buyer_phone: str | None = Field(default=None, max_length=32)
     status: str | None = Field(default=None, pattern="^(paid|issued|redeemed|cancelled)$")
+    validity_mode: str | None = Field(default=None, pattern="^(3m|1m|custom_days)$")
+    validity_days: int | None = Field(default=None, ge=1, le=3650)
     issued_by: str | None = Field(default=None, max_length=120)
 
 

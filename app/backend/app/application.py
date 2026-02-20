@@ -11,6 +11,7 @@ from sqlalchemy import select
 
 from .config import settings
 from .db import Base, SessionLocal, engine
+from .db_migrations import backfill_gift_certificate_validity, ensure_gift_certificate_validity_schema
 from .models import Service
 from .routers.admin import router as admin_router
 from .routers.auth import router as auth_router
@@ -156,9 +157,11 @@ def create_app() -> FastAPI:
 
     # Local DB bootstrap (SQLite or any DB URL): create tables if missing.
     Base.metadata.create_all(bind=engine)
+    ensure_gift_certificate_validity_schema(engine)
     db = SessionLocal()
     try:
         ensure_bootstrap_admin(db)
+        backfill_gift_certificate_validity(db)
     finally:
         db.close()
     return app

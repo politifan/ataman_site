@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
+from ..certificates import DEFAULT_VALIDITY_MODE
 from ..deps import get_db_session
 from ..models import Booking, Contact, GalleryItem, GiftCertificate, Payment, ScheduleEvent, Service, Setting
 from ..schemas import (
@@ -491,11 +492,15 @@ def purchase_certificate(
         amount=payload.amount,
         recipient_name=(payload.recipient_name or "").strip() or None,
         sender_name=(payload.sender_name or "").strip() or None,
+        sender_hidden=False,
         note=(payload.note or "").strip() or None,
         buyer_name=payload.buyer_name.strip(),
         buyer_email=str(payload.buyer_email),
         buyer_phone=(payload.buyer_phone or "").strip() or None,
         status="paid",
+        validity_mode=DEFAULT_VALIDITY_MODE,
+        validity_days=None,
+        expires_at=None,
     )
     db.add(row)
     db.commit()
@@ -521,9 +526,13 @@ def get_certificate(code: str, db: Session = Depends(get_db_session)) -> GiftCer
         code=row.code,
         amount=row.amount,
         recipient_name=row.recipient_name,
-        sender_name=row.sender_name,
+        sender_name=None if row.sender_hidden else row.sender_name,
+        sender_hidden=bool(row.sender_hidden),
         note=row.note,
         status=row.status,
+        validity_mode=row.validity_mode,
+        validity_days=row.validity_days,
+        expires_at=row.expires_at,
         issued_by=row.issued_by,
         issued_at=row.issued_at,
         redeemed_at=row.redeemed_at,

@@ -3414,6 +3414,19 @@ a {
   accent-color: #f4e5b4;
 }
 
+.admin-form .admin-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-form .admin-checkbox-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #f4e5b4;
+}
+
 .admin-thumb {
   margin-top: 0.5rem;
   width: 78px;

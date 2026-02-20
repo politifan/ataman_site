@@ -10,6 +10,11 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
+from ..certificates import (
+    VALIDITY_MODE_CUSTOM_DAYS,
+    calculate_certificate_expires_at,
+    normalize_certificate_validity,
+)
 from ..config import settings
 from ..deps import get_db_session, require_admin
 from ..models import Booking, Contact, GalleryItem, GiftCertificate, ScheduleEvent, Service, Setting
@@ -510,18 +515,33 @@ def admin_update_certificate(
     next_status = updates.get("status")
     now = datetime.utcnow()
 
+    if updates.get("validity_mode") == VALIDITY_MODE_CUSTOM_DAYS:
+        requested_days = updates.get("validity_days")
+        if requested_days is None and not row.validity_days:
+            raise HTTPException(status_code=422, detail="Для варианта «другое» укажите срок действия в днях.")
+
     for key, value in updates.items():
         setattr(row, key, value)
 
+    normalized_mode, normalized_days = normalize_certificate_validity(row.validity_mode, row.validity_days)
+    row.validity_mode = normalized_mode
+    row.validity_days = normalized_days
+
+    issued_now = False
     if next_status == "issued" and row.issued_at is None:
         row.issued_at = now
+        issued_now = True
 
     if next_status == "redeemed" and row.redeemed_at is None:
         row.redeemed_at = now
     if next_status == "redeemed" and row.issued_at is None:
         row.issued_at = now
+        issued_now = True
     if next_status in {"paid", "issued", "cancelled"}:
         row.redeemed_at = None
+
+    if row.issued_at and (issued_now or "validity_mode" in updates or "validity_days" in updates or row.expires_at is None):
+        row.expires_at = calculate_certificate_expires_at(row.issued_at, row.validity_mode, row.validity_days)
 
     db.commit()
     db.refresh(row)

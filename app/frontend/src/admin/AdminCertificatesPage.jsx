@@ -10,6 +10,12 @@ const STATUS_OPTIONS = [
   { value: "cancelled", label: "Отменен" }
 ];
 
+const VALIDITY_OPTIONS = [
+  { value: "3m", label: "3 месяца" },
+  { value: "1m", label: "1 месяц" },
+  { value: "custom_days", label: "Другое (в днях)" }
+];
+
 function formatDate(value) {
   if (!value) return "-";
   return new Date(value).toLocaleString("ru-RU");
@@ -17,6 +23,12 @@ function formatDate(value) {
 
 function formatAmount(value) {
   return `${new Intl.NumberFormat("ru-RU").format(Number(value || 0))} руб.`;
+}
+
+function formatValidity(mode, days) {
+  if (mode === "1m") return "1 месяц";
+  if (mode === "custom_days") return days ? `${days} дн.` : "Другое";
+  return "3 месяца";
 }
 
 export default function AdminCertificatesPage() {
@@ -54,12 +66,15 @@ export default function AdminCertificatesPage() {
       amount: String(row.amount || ""),
       recipient_name: row.recipient_name || "",
       sender_name: row.sender_name || "",
+      sender_hidden: Boolean(row.sender_hidden),
       note: row.note || "",
       buyer_name: row.buyer_name || "",
       buyer_email: row.buyer_email || "",
       buyer_phone: row.buyer_phone || "",
       status: row.status || "paid",
-      issued_by: row.issued_by || ""
+      issued_by: row.issued_by || "",
+      validity_mode: row.validity_mode || "3m",
+      validity_days: row.validity_days ? String(row.validity_days) : ""
     });
   }
 
@@ -70,6 +85,13 @@ export default function AdminCertificatesPage() {
 
   async function save() {
     if (!selected || !draft) return;
+    const validityMode = draft.validity_mode || "3m";
+    const validityDays = validityMode === "custom_days" ? Number(draft.validity_days) : null;
+    if (validityMode === "custom_days" && (!Number.isFinite(validityDays) || validityDays < 1)) {
+      setError("Для варианта «другое» укажите срок в днях.");
+      return;
+    }
+
     setSaving(true);
     setError("");
     setMessage("");
@@ -78,12 +100,15 @@ export default function AdminCertificatesPage() {
         amount: Number(draft.amount),
         recipient_name: draft.recipient_name.trim() || null,
         sender_name: draft.sender_name.trim() || null,
+        sender_hidden: Boolean(draft.sender_hidden),
         note: draft.note.trim() || null,
         buyer_name: draft.buyer_name.trim(),
         buyer_email: draft.buyer_email.trim(),
         buyer_phone: draft.buyer_phone.trim() || null,
         status: draft.status,
-        issued_by: draft.issued_by.trim() || null
+        issued_by: draft.issued_by.trim() || null,
+        validity_mode: validityMode,
+        validity_days: validityMode === "custom_days" ? validityDays : null
       });
       setMessage(`Сертификат ${selected.code} обновлен.`);
       await load();
@@ -161,7 +186,7 @@ export default function AdminCertificatesPage() {
                   <td>{formatAmount(row.amount)}</td>
                   <td>
                     <p>Кому: {row.recipient_name || "-"}</p>
-                    <p>От: {row.sender_name || "-"}</p>
+                    <p>От: {row.sender_hidden ? "скрыто" : (row.sender_name || "-")}</p>
                   </td>
                   <td>
                     <p>{row.buyer_name}</p>
@@ -170,6 +195,8 @@ export default function AdminCertificatesPage() {
                   </td>
                   <td>
                     <span className={`admin-status-pill is-${row.status}`}>{row.status}</span>
+                    <p>Срок: {formatValidity(row.validity_mode, row.validity_days)}</p>
+                    <p>Действует до: {formatDate(row.expires_at)}</p>
                     <p>Выпуск: {formatDate(row.issued_at)}</p>
                     <p>Погашение: {formatDate(row.redeemed_at)}</p>
                   </td>
@@ -216,7 +243,16 @@ export default function AdminCertificatesPage() {
                 <input
                   value={draft.sender_name}
                   onChange={(event) => setDraft((prev) => ({ ...prev, sender_name: event.target.value }))}
+                  disabled={draft.sender_hidden}
                 />
+              </label>
+              <label className="admin-checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={Boolean(draft.sender_hidden)}
+                  onChange={(event) => setDraft((prev) => ({ ...prev, sender_hidden: event.target.checked }))}
+                />
+                <span>Скрыть отправителя в сертификате</span>
               </label>
               <label>
                 Подпись / кто выпустил
@@ -234,6 +270,32 @@ export default function AdminCertificatesPage() {
                   options={STATUS_OPTIONS.filter((item) => item.value)}
                 />
               </label>
+              <label>
+                Срок действия
+                <AdminSelect
+                  value={draft.validity_mode}
+                  onChange={(nextValue) =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      validity_mode: nextValue,
+                      validity_days: nextValue === "custom_days" ? prev.validity_days : ""
+                    }))
+                  }
+                  options={VALIDITY_OPTIONS}
+                />
+              </label>
+              {draft.validity_mode === "custom_days" ? (
+                <label>
+                  Срок в днях
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={draft.validity_days}
+                    onChange={(event) => setDraft((prev) => ({ ...prev, validity_days: event.target.value }))}
+                  />
+                </label>
+              ) : null}
               <label>
                 Комментарий
                 <textarea

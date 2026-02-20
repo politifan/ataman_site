@@ -30,7 +30,7 @@ class YookassaClient:
         if not settings.yookassa_enabled:
             raise HTTPException(
                 status_code=503,
-                detail="ЮKassa не настроена (YOOKASSA_SHOP_ID / YOOKASSA_SECRET_KEY).",
+                detail="Онлайн-оплата временно недоступна. Попробуйте позже или свяжитесь с нами.",
             )
         self.shop_id = settings.yookassa_shop_id or ""
         self.secret_key = settings.yookassa_secret_key or ""
@@ -56,7 +56,7 @@ class YookassaClient:
         if response.status_code >= 400:
             raise HTTPException(
                 status_code=502,
-                detail=f"Ошибка ЮKassa: {response.status_code} {response.text}",
+                detail="Не удалось создать платеж. Попробуйте еще раз чуть позже.",
             )
         return response.json()
 
@@ -115,4 +115,4 @@ def safe_json_loads(raw_body: bytes) -> dict:
     try:
         return json.loads(raw_body.decode("utf-8"))
     except Exception as exc:  # pragma: no cover
-        raise HTTPException(status_code=400, detail=f"Невалидный JSON webhook: {exc}") from exc
+        raise HTTPException(status_code=400, detail="Некорректные данные платежного уведомления.") from exc

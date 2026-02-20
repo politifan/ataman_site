@@ -36,17 +36,58 @@ function extractApiErrorMessage(payload, fallback) {
   if (typeof detail === "string" && detail.trim()) return detail;
 
   if (Array.isArray(detail)) {
-    const normalized = detail
-      .map((item) => {
-        if (!item || typeof item !== "object") return "";
-        const msg = typeof item.msg === "string" ? item.msg : "";
-        const loc = Array.isArray(item.loc) ? item.loc.join(".") : "";
-        if (msg && loc) return `${loc}: ${msg}`;
-        return msg || loc || "";
-      })
-      .filter(Boolean)
-      .join("; ");
-    if (normalized) return normalized;
+    const first = detail.find((item) => item && typeof item === "object");
+    if (first) {
+      const loc = Array.isArray(first.loc) ? first.loc : [];
+      const field = String(loc[loc.length - 1] || "");
+      const msg = typeof first.msg === "string" ? first.msg : "";
+      const lowered = msg.toLowerCase();
+
+      const labels = {
+        name: "имя",
+        buyer_name: "ваше имя",
+        recipient_name: "имя получателя",
+        sender_name: "имя отправителя",
+        email: "email",
+        buyer_email: "email",
+        phone: "телефон",
+        buyer_phone: "телефон",
+        amount: "сумма сертификата",
+        note: "комментарий",
+        message: "сообщение",
+        username: "логин",
+        password: "пароль"
+      };
+
+      const fieldLabel = labels[field] || "поле";
+
+      if (lowered.includes("at least") && lowered.includes("characters")) {
+        const minMatch = msg.match(/at least\s+(\d+)/i);
+        const min = minMatch ? minMatch[1] : "";
+        if (field === "buyer_name" || field === "name") {
+          return `Введите ${fieldLabel} (минимум ${min || "2"} символа).`;
+        }
+        return `Поле «${fieldLabel}» заполнено слишком коротко${min ? ` (минимум ${min} символа)` : ""}.`;
+      }
+
+      if (lowered.includes("valid email")) {
+        return "Укажите корректный email.";
+      }
+
+      if (lowered.includes("field required")) {
+        return `Заполните поле «${fieldLabel}».`;
+      }
+
+      if (lowered.includes("greater than or equal") || lowered.includes("greater than")) {
+        return `Проверьте значение поля «${fieldLabel}».`;
+      }
+
+      if (lowered.includes("boolean")) {
+        return "Подтвердите обязательные согласия и попробуйте снова.";
+      }
+
+      if (msg) return msg;
+    }
   }
 
   if (detail && typeof detail === "object") {

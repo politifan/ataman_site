@@ -107,7 +107,7 @@ def admin_list_services(db: Session = Depends(get_db_session)) -> JSONResponse:
     try:
         return JSONResponse(_admin_services_payload(db))
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"/api/admin/services failed: {type(exc).__name__}: {exc}") from exc
+        raise HTTPException(status_code=500, detail="Не удалось загрузить услуги. Обновите страницу.") from exc
 
 
 @router.get("/services-list", response_model=None)
@@ -115,7 +115,7 @@ def admin_list_services_fallback(db: Session = Depends(get_db_session)) -> JSONR
     try:
         return JSONResponse(_admin_services_payload(db))
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"/api/admin/services-list failed: {type(exc).__name__}: {exc}") from exc
+        raise HTTPException(status_code=500, detail="Не удалось загрузить услуги. Обновите страницу.") from exc
 
 
 @router.post("/services", response_model=ServiceAdminResponse)

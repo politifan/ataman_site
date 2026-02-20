@@ -242,7 +242,7 @@ def list_services(
         data = [_service_to_public(item).model_dump(mode="json") for item in services]
         return JSONResponse(data)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"/api/services failed: {type(exc).__name__}: {exc}") from exc
+        raise HTTPException(status_code=500, detail="Не удалось загрузить список услуг. Попробуйте позже.") from exc
 
 
 @router.get("/services/{slug}", response_model=ServicePublic)

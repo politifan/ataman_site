@@ -47,15 +47,15 @@ def get_current_admin(
     if credentials and credentials.scheme.lower() == "bearer":
         token = credentials.credentials.strip()
         if not token:
-            raise HTTPException(status_code=401, detail="Пустой Bearer token.")
+            raise HTTPException(status_code=401, detail="Сессия недействительна. Войдите снова.")
         try:
             payload = decode_access_token(token)
         except ValueError as exc:
-            raise HTTPException(status_code=401, detail=f"Недействительный Bearer token: {exc}") from exc
+            raise HTTPException(status_code=401, detail="Сессия недействительна. Войдите снова.") from exc
 
         user = get_admin_by_id(db, payload.sub)
         if not user:
-            raise HTTPException(status_code=401, detail="Пользователь администратора не найден или отключен.")
+            raise HTTPException(status_code=401, detail="Сессия истекла. Войдите снова.")
         return AdminPrincipal(
             id=user.id,
             username=user.username,

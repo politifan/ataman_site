@@ -4210,6 +4210,11 @@ a {
   flex-wrap: wrap;
 }
 
+.certificate-sheet-top > div {
+  min-width: 0;
+  flex: 1 1 320px;
+}
+
 .certificate-sheet-kicker {
   margin: 0;
   color: rgba(26, 44, 93, 0.64);
@@ -4222,9 +4227,11 @@ a {
   margin: 0.22rem 0 0;
   color: transparent;
   font-family: "Cormorant Garamond", serif;
-  font-size: clamp(2.1rem, 7vw, 3.4rem);
+  font-size: clamp(1.85rem, 6.2vw, 3rem);
   line-height: 0.98;
   display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   background-image: linear-gradient(
     110deg,
     #1a2e61 0%,
@@ -4788,6 +4795,11 @@ body {
 
   .certificate-hero-photo-wrap {
     width: min(62vw, 250px);
+  }
+
+  .certificate-sheet h1 {
+    font-size: clamp(1.65rem, 9.2vw, 2.4rem);
+    line-height: 1.02;
   }
 
   .admin-kpi-grid-six {

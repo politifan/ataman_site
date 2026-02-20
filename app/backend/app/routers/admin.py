@@ -30,6 +30,7 @@ from ..schemas import (
     ServiceAdminUpdate,
     SettingAdminResponse,
     SettingBulkUpdate,
+    SettingUpdateItem,
 )
 
 router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(require_admin)])
@@ -439,11 +440,15 @@ def admin_list_settings(db: Session = Depends(get_db_session)) -> list[Setting]:
 
 
 @router.put("/settings", response_model=list[SettingAdminResponse])
-def admin_update_settings(payload: SettingBulkUpdate, db: Session = Depends(get_db_session)) -> list[Setting]:
-    if not payload.items:
+def admin_update_settings(
+    payload: SettingBulkUpdate | list[SettingUpdateItem],
+    db: Session = Depends(get_db_session),
+) -> list[Setting]:
+    items = payload.items if isinstance(payload, SettingBulkUpdate) else payload
+    if not items:
         raise HTTPException(status_code=422, detail="Список settings пуст.")
 
-    for item in payload.items:
+    for item in items:
         row = db.scalar(select(Setting).where(Setting.key == item.key))
         if row:
             row.value = item.value

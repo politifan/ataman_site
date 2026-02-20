@@ -4071,25 +4071,56 @@ a {
   padding-top: 0.7rem;
 }
 
+.certificate-hero-main {
+  position: relative;
+  border-radius: 20px;
+  padding: clamp(0.9rem, 2.6vw, 1.2rem);
+  background: linear-gradient(150deg, rgba(31, 52, 99, 0.9), rgba(25, 45, 86, 0.82));
+  border: 1px solid rgba(255, 233, 184, 0.26);
+  box-shadow: 0 10px 28px rgba(43, 66, 114, 0.3);
+  overflow: hidden;
+}
+
+.certificate-hero-main::before {
+  content: "";
+  position: absolute;
+  inset: auto auto -64% -30%;
+  width: 340px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 235, 187, 0.12) 0 38%, transparent 38% 100%),
+    repeating-radial-gradient(circle, rgba(184, 208, 245, 0.18) 0 2px, transparent 2px 13px);
+  pointer-events: none;
+}
+
 .certificate-brand {
+  position: relative;
+  z-index: 1;
   margin: 0;
   font-family: "Cormorant Garamond", serif;
   font-size: clamp(2.2rem, 6vw, 3.8rem);
   line-height: 0.95;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: #1a2c5d;
+  color: #ffe8b6;
+  text-shadow: 0 2px 14px rgba(5, 15, 46, 0.65);
 }
 
 .certificate-brand-sub {
+  position: relative;
+  z-index: 1;
   margin: 0.3rem 0 0;
-  color: rgba(26, 44, 93, 0.66);
+  color: rgba(255, 233, 183, 0.9);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.84rem;
+  text-shadow: 0 2px 10px rgba(5, 15, 46, 0.45);
 }
 
 .certificate-contacts {
+  position: relative;
+  z-index: 1;
   margin-top: 0.8rem;
   display: grid;
   gap: 0.42rem;
@@ -4097,7 +4128,7 @@ a {
 
 .certificate-contacts p {
   margin: 0;
-  color: rgba(26, 44, 93, 0.74);
+  color: rgba(229, 240, 255, 0.9);
   font-size: 1rem;
 }
 

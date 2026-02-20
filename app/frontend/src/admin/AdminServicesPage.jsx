@@ -6,6 +6,7 @@ import {
   adminUploadFile,
   adminUpdateService
 } from "../api";
+import AdminSelect from "./AdminSelect";
 
 const basePayload = {
   slug: "",
@@ -239,16 +240,24 @@ export default function AdminServicesPage() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
-        <select value={formatFilter} onChange={(event) => setFormatFilter(event.target.value)}>
-          <option value="all">Все форматы</option>
-          <option value="group_and_individual">Групповые + индивидуальные</option>
-          <option value="individual_only">Только индивидуальные</option>
-        </select>
-        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-          <option value="all">Все статусы</option>
-          <option value="active">Только активные</option>
-          <option value="inactive">Только неактивные</option>
-        </select>
+        <AdminSelect
+          value={formatFilter}
+          onChange={(nextValue) => setFormatFilter(nextValue)}
+          options={[
+            { value: "all", label: "Все форматы" },
+            { value: "group_and_individual", label: "Групповые + индивидуальные" },
+            { value: "individual_only", label: "Только индивидуальные" }
+          ]}
+        />
+        <AdminSelect
+          value={statusFilter}
+          onChange={(nextValue) => setStatusFilter(nextValue)}
+          options={[
+            { value: "all", label: "Все статусы" },
+            { value: "active", label: "Только активные" },
+            { value: "inactive", label: "Только неактивные" }
+          ]}
+        />
         <div className="admin-view-toggle">
           <button
             type="button"
@@ -402,13 +411,14 @@ export default function AdminServicesPage() {
               </label>
               <label>
                 Format
-                <select
+                <AdminSelect
                   value={editor.format_mode}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, format_mode: event.target.value }))}
-                >
-                  <option value="group_and_individual">group_and_individual</option>
-                  <option value="individual_only">individual_only</option>
-                </select>
+                  onChange={(nextValue) => setEditor((prev) => ({ ...prev, format_mode: nextValue }))}
+                  options={[
+                    { value: "group_and_individual", label: "group_and_individual" },
+                    { value: "individual_only", label: "individual_only" }
+                  ]}
+                />
               </label>
               <label>
                 Teaser

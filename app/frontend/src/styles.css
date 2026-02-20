@@ -2976,18 +2976,81 @@ a {
   padding: 1rem 1.2rem 2rem;
 }
 
-.admin-shell select {
-  color-scheme: dark;
+.admin-select {
+  position: relative;
+  width: 100%;
 }
 
-.admin-shell select option,
-.admin-shell select optgroup {
-  background-color: #1a2f5f;
+.admin-select-trigger {
+  width: 100%;
+  border: 1px solid rgba(227, 238, 255, 0.22);
+  border-radius: 10px;
+  padding: 0.48rem 0.58rem;
+  font: inherit;
+  background: rgba(255, 255, 255, 0.05);
   color: #e9f3ff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  text-align: left;
+  cursor: pointer;
 }
 
-.admin-shell select option:disabled {
-  color: rgba(233, 243, 255, 0.55);
+.admin-select-trigger:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.admin-select-caret {
+  font-size: 0.8em;
+  opacity: 0.85;
+  transition: transform 0.2s ease;
+}
+
+.admin-select.is-open .admin-select-caret {
+  transform: rotate(180deg);
+}
+
+.admin-select-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 120;
+  border: 1px solid rgba(227, 238, 255, 0.28);
+  border-radius: 10px;
+  background: linear-gradient(170deg, rgba(20, 44, 92, 0.98), rgba(14, 34, 77, 0.98));
+  box-shadow: 0 12px 28px rgba(2, 8, 22, 0.45);
+  max-height: 260px;
+  overflow: auto;
+  padding: 0.25rem;
+}
+
+.admin-select-option {
+  width: 100%;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: #e9f3ff;
+  padding: 0.42rem 0.5rem;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.admin-select-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-select-option.is-selected {
+  background: rgba(255, 229, 166, 0.2);
+  color: #fff0c3;
+}
+
+.admin-select-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .admin-main-headline {
@@ -3022,7 +3085,7 @@ a {
   align-items: center;
 }
 
-.admin-toolbar select,
+.admin-toolbar .admin-select-trigger,
 .admin-filter-input {
   width: 100%;
   border: 1px solid rgba(227, 238, 255, 0.22);
@@ -3277,7 +3340,7 @@ a {
 }
 
 .admin-form input:not([type="checkbox"]),
-.admin-form select,
+.admin-form .admin-select-trigger,
 .admin-form textarea {
   width: 100%;
   border: 1px solid rgba(227, 238, 255, 0.22);
@@ -4048,7 +4111,7 @@ a {
   gap: 0.35rem;
 }
 
-.admin-status-edit select,
+.admin-status-edit .admin-select-trigger,
 .admin-status-edit button {
   border: 1px solid rgba(227, 238, 255, 0.24);
   border-radius: 9px;

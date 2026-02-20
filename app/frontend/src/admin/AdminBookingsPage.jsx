@@ -5,6 +5,7 @@ import {
   adminListServices,
   adminUpdateBookingStatus
 } from "../api";
+import AdminSelect from "./AdminSelect";
 
 const BOOKING_STATUSES = ["pending", "waiting_payment", "confirmed", "cancelled"];
 
@@ -113,22 +114,23 @@ export default function AdminBookingsPage() {
       </header>
 
       <form className="admin-toolbar admin-toolbar-bookings" onSubmit={applyFilters}>
-        <select value={filters.status} onChange={(event) => setFilters((prev) => ({ ...prev, status: event.target.value }))}>
-          <option value="">Все статусы</option>
-          {BOOKING_STATUSES.map((status) => (
-            <option key={status} value={status}>{status}</option>
-          ))}
-        </select>
+        <AdminSelect
+          value={filters.status}
+          onChange={(nextValue) => setFilters((prev) => ({ ...prev, status: nextValue }))}
+          options={[
+            { value: "", label: "Все статусы" },
+            ...BOOKING_STATUSES.map((status) => ({ value: status, label: status }))
+          ]}
+        />
 
-        <select
+        <AdminSelect
           value={filters.service_id}
-          onChange={(event) => setFilters((prev) => ({ ...prev, service_id: event.target.value }))}
-        >
-          <option value="">Все услуги</option>
-          {services.map((service) => (
-            <option key={service.id} value={service.id}>{service.title}</option>
-          ))}
-        </select>
+          onChange={(nextValue) => setFilters((prev) => ({ ...prev, service_id: String(nextValue) }))}
+          options={[
+            { value: "", label: "Все услуги" },
+            ...services.map((service) => ({ value: String(service.id), label: service.title }))
+          ]}
+        />
 
         <input
           className="admin-filter-input"
@@ -189,19 +191,16 @@ export default function AdminBookingsPage() {
                   </td>
                   <td>
                     <div className="admin-status-edit">
-                      <select
+                      <AdminSelect
                         value={statusDraft[item.id] || item.status}
-                        onChange={(event) =>
+                        onChange={(nextValue) =>
                           setStatusDraft((prev) => ({
                             ...prev,
-                            [item.id]: event.target.value
+                            [item.id]: nextValue
                           }))
                         }
-                      >
-                        {BOOKING_STATUSES.map((status) => (
-                          <option key={status} value={status}>{status}</option>
-                        ))}
-                      </select>
+                        options={BOOKING_STATUSES.map((status) => ({ value: status, label: status }))}
+                      />
                       <button type="button" onClick={() => onUpdateStatus(item.id)}>Сохранить</button>
                     </div>
                   </td>

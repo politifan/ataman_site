@@ -6,6 +6,7 @@ import {
   adminUpdateSchedule,
   adminListServices
 } from "../api";
+import AdminSelect from "./AdminSelect";
 
 const initialForm = {
   service_id: "",
@@ -188,16 +189,24 @@ export default function AdminSchedulePage() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
-        <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)}>
-          <option value="all">Все типы</option>
-          <option value="group">Групповые</option>
-          <option value="individual">Индивидуальные</option>
-        </select>
-        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-          <option value="all">Все статусы</option>
-          <option value="active">Только активные</option>
-          <option value="inactive">Только неактивные</option>
-        </select>
+        <AdminSelect
+          value={typeFilter}
+          onChange={(nextValue) => setTypeFilter(nextValue)}
+          options={[
+            { value: "all", label: "Все типы" },
+            { value: "group", label: "Групповые" },
+            { value: "individual", label: "Индивидуальные" }
+          ]}
+        />
+        <AdminSelect
+          value={statusFilter}
+          onChange={(nextValue) => setStatusFilter(nextValue)}
+          options={[
+            { value: "all", label: "Все статусы" },
+            { value: "active", label: "Только активные" },
+            { value: "inactive", label: "Только неактивные" }
+          ]}
+        />
         <div className="admin-view-toggle">
           <button
             type="button"
@@ -323,16 +332,14 @@ export default function AdminSchedulePage() {
               <h2>{editingId ? `Редактирование #${editingId}` : "Создание события"}</h2>
               <label>
                 Услуга
-                <select
+                <AdminSelect
                   value={form.service_id}
-                  onChange={(event) => setForm((prev) => ({ ...prev, service_id: event.target.value }))}
-                  required
-                >
-                  <option value="">Выберите услугу</option>
-                  {services.map((service) => (
-                    <option key={service.id} value={service.id}>{service.title}</option>
-                  ))}
-                </select>
+                  onChange={(nextValue) => setForm((prev) => ({ ...prev, service_id: String(nextValue) }))}
+                  options={[
+                    { value: "", label: "Выберите услугу" },
+                    ...services.map((service) => ({ value: String(service.id), label: service.title }))
+                  ]}
+                />
               </label>
               <label>
                 Старт

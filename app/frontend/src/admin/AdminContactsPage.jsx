@@ -4,6 +4,7 @@ import {
   adminListContacts,
   adminUpdateContactStatus
 } from "../api";
+import AdminSelect from "./AdminSelect";
 
 const CONTACT_STATUSES = ["new", "read", "replied"];
 
@@ -97,12 +98,14 @@ export default function AdminContactsPage() {
       </header>
 
       <form className="admin-toolbar admin-toolbar-contacts" onSubmit={applyFilters}>
-        <select value={filters.status} onChange={(event) => setFilters((prev) => ({ ...prev, status: event.target.value }))}>
-          <option value="">Все статусы</option>
-          {CONTACT_STATUSES.map((status) => (
-            <option key={status} value={status}>{status}</option>
-          ))}
-        </select>
+        <AdminSelect
+          value={filters.status}
+          onChange={(nextValue) => setFilters((prev) => ({ ...prev, status: nextValue }))}
+          options={[
+            { value: "", label: "Все статусы" },
+            ...CONTACT_STATUSES.map((status) => ({ value: status, label: status }))
+          ]}
+        />
         <input
           className="admin-filter-input"
           value={filters.search}
@@ -157,19 +160,16 @@ export default function AdminContactsPage() {
                   <td>{formatDateTime(item.created_at)}</td>
                   <td>
                     <div className="admin-status-edit">
-                      <select
+                      <AdminSelect
                         value={statusDraft[item.id] || item.status}
-                        onChange={(event) =>
+                        onChange={(nextValue) =>
                           setStatusDraft((prev) => ({
                             ...prev,
-                            [item.id]: event.target.value
+                            [item.id]: nextValue
                           }))
                         }
-                      >
-                        {CONTACT_STATUSES.map((status) => (
-                          <option key={status} value={status}>{status}</option>
-                        ))}
-                      </select>
+                        options={CONTACT_STATUSES.map((status) => ({ value: status, label: status }))}
+                      />
                       <button type="button" onClick={() => onUpdateStatus(item.id)}>Сохранить</button>
                     </div>
                   </td>

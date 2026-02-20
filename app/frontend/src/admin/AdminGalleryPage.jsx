@@ -7,6 +7,7 @@ import {
   adminUpdateGallery,
   toMediaUrl
 } from "../api";
+import AdminSelect from "./AdminSelect";
 
 const initialForm = {
   title: "",
@@ -179,17 +180,23 @@ export default function AdminGalleryPage() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
-        <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
-          <option value="all">Все категории</option>
-          {categories.map((category) => (
-            <option key={category} value={category}>{category}</option>
-          ))}
-        </select>
-        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-          <option value="all">Все статусы</option>
-          <option value="active">Только активные</option>
-          <option value="inactive">Только неактивные</option>
-        </select>
+        <AdminSelect
+          value={categoryFilter}
+          onChange={(nextValue) => setCategoryFilter(nextValue)}
+          options={[
+            { value: "all", label: "Все категории" },
+            ...categories.map((category) => ({ value: category, label: category }))
+          ]}
+        />
+        <AdminSelect
+          value={statusFilter}
+          onChange={(nextValue) => setStatusFilter(nextValue)}
+          options={[
+            { value: "all", label: "Все статусы" },
+            { value: "active", label: "Только активные" },
+            { value: "inactive", label: "Только неактивные" }
+          ]}
+        />
         <div className="admin-view-toggle">
           <button
             type="button"

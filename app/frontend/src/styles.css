@@ -3254,6 +3254,12 @@ a {
   gap: 0.8rem;
 }
 
+.admin-schedule-service-card {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
 .admin-list-item p {
   margin: 0.3rem 0 0;
   color: rgba(227, 238, 255, 0.72);
@@ -3305,6 +3311,28 @@ a {
   display: flex;
   gap: 0.35rem;
   justify-content: flex-end;
+}
+
+.admin-schedule-events-grid {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.admin-schedule-event-row {
+  border: 1px solid rgba(227, 238, 255, 0.14);
+  border-radius: 10px;
+  padding: 0.55rem 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-schedule-event-row p {
+  margin: 0.22rem 0 0;
+  color: rgba(227, 238, 255, 0.8);
+  font-size: 0.84rem;
 }
 
 .admin-actions button {

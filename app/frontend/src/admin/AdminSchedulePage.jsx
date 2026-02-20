@@ -39,6 +39,16 @@ function toPayload(form) {
   };
 }
 
+function formatEventDateTime(value) {
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(value));
+}
+
 export default function AdminSchedulePage() {
   const [rows, setRows] = useState([]);
   const [services, setServices] = useState([]);
@@ -49,6 +59,7 @@ export default function AdminSchedulePage() {
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedServiceId, setSelectedServiceId] = useState(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -106,6 +117,36 @@ export default function AdminSchedulePage() {
     };
   }, [rows]);
 
+  const groupedServices = useMemo(() => {
+    const grouped = new Map();
+    filtered.forEach((row) => {
+      const key = String(row.service_id);
+      const current = grouped.get(key) || {
+        service_id: row.service_id,
+        service_title: row.service_title || row.service_slug || `Услуга #${row.service_id}`,
+        service_slug: row.service_slug || "",
+        events: []
+      };
+      current.events.push(row);
+      grouped.set(key, current);
+    });
+    return Array.from(grouped.values())
+      .map((item) => ({
+        ...item,
+        events: [...item.events].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+      }))
+      .sort((a, b) => {
+        const aStart = a.events[0] ? new Date(a.events[0].start_time).getTime() : 0;
+        const bStart = b.events[0] ? new Date(b.events[0].start_time).getTime() : 0;
+        return aStart - bStart;
+      });
+  }, [filtered]);
+
+  const selectedServiceGroup = useMemo(() => {
+    if (selectedServiceId === null) return null;
+    return groupedServices.find((item) => String(item.service_id) === String(selectedServiceId)) || null;
+  }, [groupedServices, selectedServiceId]);
+
   function resetFilters() {
     setQuery("");
     setTypeFilter("all");
@@ -116,6 +157,14 @@ export default function AdminSchedulePage() {
     setEditingId(null);
     setForm(initialForm);
     setModalOpen(true);
+  }
+
+  function openServiceModal(serviceId) {
+    setSelectedServiceId(serviceId);
+  }
+
+  function closeServiceModal() {
+    setSelectedServiceId(null);
   }
 
   function openEdit(row) {
@@ -295,32 +344,63 @@ export default function AdminSchedulePage() {
 
       {!loading && filtered.length > 0 && viewMode === "cards" ? (
         <div className="admin-list">
-          {filtered.map((row) => (
-            <article key={row.id} className="admin-list-item">
+          {groupedServices.map((group) => (
+            <button
+              key={group.service_id}
+              type="button"
+              className="admin-list-item admin-schedule-service-card"
+              onClick={() => openServiceModal(group.service_id)}
+            >
               <div>
-                <strong>{row.service_title || row.service_slug}</strong>
+                <strong>{group.service_title}</strong>
                 <p>
-                  {new Date(row.start_time).toLocaleString("ru-RU")} - {new Date(row.end_time).toLocaleString("ru-RU")}
+                  Дат в расписании: {group.events.length}
                 </p>
                 <p>
-                  {row.current_participants}/{row.max_participants} • {row.is_individual ? "индивидуально" : "группа"} • {row.is_active ? "активно" : "скрыто"}
+                  Ближайшая: {group.events[0] ? formatEventDateTime(group.events[0].start_time) : "-"}
                 </p>
-                <div className="admin-progress">
-                  <span
-                    style={{
-                      width: `${Math.round(
-                        (row.current_participants / Math.max(1, row.max_participants)) * 100
-                      )}%`
-                    }}
-                  />
-                </div>
               </div>
               <div className="admin-actions">
-                <button type="button" onClick={() => openEdit(row)}>Ред.</button>
-                <button className="danger" type="button" onClick={() => remove(row.id)}>Удал.</button>
+                <span className="admin-link-btn">Открыть даты</span>
               </div>
-            </article>
+            </button>
           ))}
+        </div>
+      ) : null}
+
+      {selectedServiceGroup ? (
+        <div className="admin-modal" onClick={closeServiceModal}>
+          <div className="admin-modal-panel" onClick={(event) => event.stopPropagation()}>
+            <button type="button" className="admin-modal-close" onClick={closeServiceModal} aria-label="Закрыть">×</button>
+            <div className="admin-form">
+              <h2>{selectedServiceGroup.service_title}</h2>
+              <p className="muted">Событий: {selectedServiceGroup.events.length}</p>
+              <div className="admin-schedule-events-grid">
+                {selectedServiceGroup.events.map((row) => (
+                  <article key={row.id} className="admin-schedule-event-row">
+                    <div>
+                      <strong>{formatEventDateTime(row.start_time)}</strong>
+                      <p>
+                        {row.current_participants}/{row.max_participants} - {row.is_individual ? "индивидуально" : "группа"} - {row.is_active ? "активно" : "скрыто"}
+                      </p>
+                    </div>
+                    <div className="admin-actions-inline">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeServiceModal();
+                          openEdit(row);
+                        }}
+                      >
+                        Ред.
+                      </button>
+                      <button type="button" className="danger" onClick={() => remove(row.id)}>Удал.</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       ) : null}
 

@@ -22,9 +22,26 @@ function createInitialForm() {
 
 function toInputDate(value) {
   if (!value) return "";
-  const date = new Date(value);
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+  const raw = String(value).trim().replace(" ", "T");
+  if (!raw) return "";
+
+  // If API returns explicit UTC/offset datetime, convert to local for datetime-local input.
+  if (/Z$|[+-]\d{2}:\d{2}$/.test(raw)) {
+    const date = new Date(raw);
+    if (!Number.isNaN(date.getTime())) {
+      const offset = date.getTimezoneOffset() * 60000;
+      return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+    }
+  }
+
+  // For naive datetimes (without timezone), keep local wall-clock value as-is.
+  return raw.slice(0, 16);
+}
+
+function toApiDateTime(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return raw;
+  return raw.length === 16 ? `${raw}:00` : raw;
 }
 
 function toPayload(form) {
@@ -32,8 +49,8 @@ function toPayload(form) {
   if (!form.start_time || !form.end_time) throw new Error("Укажите дату и время.");
   return {
     service_id: Number(form.service_id),
-    start_time: new Date(form.start_time).toISOString(),
-    end_time: new Date(form.end_time).toISOString(),
+    start_time: toApiDateTime(form.start_time),
+    end_time: toApiDateTime(form.end_time),
     max_participants: Number(form.max_participants),
     current_participants: Number(form.current_participants),
     is_individual: Boolean(form.is_individual),

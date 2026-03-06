@@ -91,7 +91,7 @@ export default function SchedulePage() {
                         : `Свободно мест: ${event.available_spots}/${event.max_participants}`}
                     </span>
                     {!event.is_individual ? (
-                      <Link to={`/services/${group.slug}#service-booking`}>Записаться</Link>
+                      <Link to={`/services/${group.slug}?event=${event.id}#service-booking`}>Записаться</Link>
                     ) : telegramHref !== "#" ? (
                       <a href={telegramHref} target="_blank" rel="noreferrer">
                         Telegram

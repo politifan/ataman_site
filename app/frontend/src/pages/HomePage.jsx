@@ -918,7 +918,7 @@ export default function HomePage() {
                       <span className={item.available_spots > 0 ? "open" : "closed"}>
                         Мест: {item.available_spots}/{item.max_participants}
                       </span>
-                      <Link to={`/services/${item.service_slug}`}>Записаться</Link>
+                      <Link to={`/services/${item.service_slug}?event=${item.id}#service-booking`}>Записаться</Link>
                     </>
                   )}
                 </div>

@@ -8,15 +8,17 @@ import {
 } from "../api";
 import AdminSelect from "./AdminSelect";
 
-const initialForm = {
-  service_id: "",
-  start_time: "",
-  end_time: "",
-  max_participants: 1,
-  current_participants: 0,
-  is_individual: false,
-  is_active: true
-};
+function createInitialForm() {
+  return {
+    service_id: "",
+    start_time: "",
+    end_time: "",
+    max_participants: 1,
+    current_participants: 0,
+    is_individual: false,
+    is_active: true
+  };
+}
 
 function toInputDate(value) {
   if (!value) return "";
@@ -52,7 +54,7 @@ function formatEventDateTime(value) {
 export default function AdminSchedulePage() {
   const [rows, setRows] = useState([]);
   const [services, setServices] = useState([]);
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState(() => createInitialForm());
   const [editingId, setEditingId] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState("cards");
@@ -157,7 +159,7 @@ export default function AdminSchedulePage() {
   function openCreate() {
     setEditingId(null);
     setReturnServiceModalId(null);
-    setForm(initialForm);
+    setForm(createInitialForm());
     setModalOpen(true);
   }
 
@@ -191,7 +193,7 @@ export default function AdminSchedulePage() {
   function closeModal() {
     setModalOpen(false);
     setEditingId(null);
-    setForm(initialForm);
+    setForm(createInitialForm());
     if (returnServiceModalId !== null) {
       setSelectedServiceId(returnServiceModalId);
       setReturnServiceModalId(null);

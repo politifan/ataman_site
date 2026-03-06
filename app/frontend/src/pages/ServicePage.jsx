@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { getSchedule, getService, submitBooking, toMediaUrl } from "../api";
 import AdminSelect from "../admin/AdminSelect";
@@ -66,6 +66,7 @@ function InfoList({ title, items, icon }) {
 
 export default function ServicePage() {
   const { slug } = useParams();
+  const location = useLocation();
   const [service, setService] = useState(null);
   const [schedule, setSchedule] = useState([]);
   const [bookingMode, setBookingMode] = useState("group");
@@ -75,6 +76,10 @@ export default function ServicePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [selectedMedia, setSelectedMedia] = useState("");
+  const preferredScheduleId = useMemo(() => {
+    const raw = new URLSearchParams(location.search).get("event");
+    return raw ? String(raw) : "";
+  }, [location.search]);
 
   useEffect(() => {
     async function load() {
@@ -112,9 +117,9 @@ export default function ServicePage() {
     [individualEvents]
   );
   const selectedEvent = useMemo(() => {
-    const source = bookingMode === "individual" ? individualBookingEvents : groupBookingEvents;
+    const source = bookingMode === "individual" ? individualEvents : groupEvents;
     return source.find((item) => String(item.id) === String(selectedScheduleId)) || source[0] || null;
-  }, [bookingMode, selectedScheduleId, groupBookingEvents, individualBookingEvents]);
+  }, [bookingMode, selectedScheduleId, groupEvents, individualEvents]);
   const nextEvents = useMemo(() => {
     return groupEvents.slice(0, 4);
   }, [groupEvents]);
@@ -130,18 +135,22 @@ export default function ServicePage() {
   }, [groupBookingEvents.length, individualBookingEvents.length]);
 
   useEffect(() => {
-    const source = bookingMode === "individual" ? individualBookingEvents : groupBookingEvents;
+    const source = bookingMode === "individual" ? individualEvents : groupEvents;
     if (!source.length) {
       setSelectedScheduleId("");
       return;
     }
     setSelectedScheduleId((prev) => {
+      if (preferredScheduleId && source.some((item) => String(item.id) === String(preferredScheduleId))) {
+        return String(preferredScheduleId);
+      }
       if (prev && source.some((item) => String(item.id) === String(prev))) {
         return prev;
       }
-      return String(source[0].id);
+      const firstAvailable = source.find((item) => item.available_spots > 0);
+      return String((firstAvailable || source[0]).id);
     });
-  }, [bookingMode, groupBookingEvents, individualBookingEvents]);
+  }, [bookingMode, groupEvents, individualEvents, preferredScheduleId]);
 
   useEffect(() => {
     const supportsGroup = service?.format_mode === "group_and_individual" && Boolean(service?.pricing?.group || service?.pricing?.fixed);
@@ -157,8 +166,12 @@ export default function ServicePage() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (!selectedScheduleId) {
+    if (!selectedScheduleId || !selectedEvent) {
       setError("Нет доступных дат для записи.");
+      return;
+    }
+    if (selectedEvent.available_spots <= 0) {
+      setError("На выбранное событие свободных мест нет.");
       return;
     }
 
@@ -168,7 +181,7 @@ export default function ServicePage() {
 
     try {
       const response = await submitBooking({
-        schedule_id: Number(selectedScheduleId),
+        schedule_id: Number(selectedEvent.id),
         ...form
       });
       if (response.confirmation_url) {
@@ -201,7 +214,7 @@ export default function ServicePage() {
   const supportsIndividual = service.format_mode === "individual_only" || Boolean(service.pricing?.individual || service.pricing?.fixed);
   const canBookGroup = supportsGroup && groupBookingEvents.length > 0;
   const canBookIndividual = supportsIndividual && individualBookingEvents.length > 0;
-  const activeBookingEvents = bookingMode === "individual" ? individualBookingEvents : groupBookingEvents;
+  const activeModeEvents = bookingMode === "individual" ? individualEvents : groupEvents;
 
   return (
     <div className="page-service">
@@ -396,20 +409,26 @@ export default function ServicePage() {
                 <p className="muted">
                   {selectedEvent
                     ? bookingMode === "individual"
-                      ? `Ближайшая индивидуальная дата: ${formatDateTime(selectedEvent.start_time)}`
-                      : `Ближайшая группа: ${formatDateTime(selectedEvent.start_time)}`
+                      ? `Выбранная индивидуальная дата: ${formatDateTime(selectedEvent.start_time)}`
+                      : `Выбранная группа: ${formatDateTime(selectedEvent.start_time)}`
                     : "Выберите дату из расписания"}
                 </p>
-                {activeBookingEvents.length ? (
+                {activeModeEvents.length ? (
                   <label className="booking-select-label">
                     <span>Дата и время</span>
                     <AdminSelect
                       value={selectedScheduleId}
                       onChange={(nextValue) => setSelectedScheduleId(String(nextValue))}
-                      options={activeBookingEvents.map((item) => ({
-                        value: String(item.id),
-                        label: `${formatDateTime(item.start_time)} • мест ${item.available_spots}/${item.max_participants}`
-                      }))}
+                      options={activeModeEvents.map((item) => {
+                        const hasSpots = item.available_spots > 0;
+                        return {
+                          value: String(item.id),
+                          label: `${formatDateTime(item.start_time)} • ${
+                            hasSpots ? `мест ${item.available_spots}/${item.max_participants}` : "мест нет"
+                          }`,
+                          disabled: !hasSpots
+                        };
+                      })}
                     />
                   </label>
                 ) : (
@@ -499,7 +518,11 @@ export default function ServicePage() {
                     </span>
                   </span>
                 </label>
-                <button className="btn-main" type="submit" disabled={sending || !selectedScheduleId}>
+                <button
+                  className="btn-main"
+                  type="submit"
+                  disabled={sending || !selectedScheduleId || !selectedEvent || selectedEvent.available_spots <= 0}
+                >
                   {sending ? "Отправка..." : "Отправить заявку"}
                 </button>
                 {success ? <p className="ok">{success}</p> : null}

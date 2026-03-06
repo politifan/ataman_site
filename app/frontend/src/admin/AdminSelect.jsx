@@ -9,6 +9,7 @@ export default function AdminSelect({
 }) {
   const rootRef = useRef(null);
   const [open, setOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
 
   const normalizedOptions = Array.isArray(options) ? options : [];
   const selectedOption = useMemo(() => {
@@ -35,13 +36,42 @@ export default function AdminSelect({
     };
   }, []);
 
+  useEffect(() => {
+    if (!open || !rootRef.current) return;
+
+    function updateMenuDirection() {
+      const rect = rootRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      const estimatedMenuHeight = 264;
+      const gap = 8;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      setOpenUpward(spaceBelow < estimatedMenuHeight + gap && spaceAbove > spaceBelow);
+    }
+
+    updateMenuDirection();
+    window.addEventListener("resize", updateMenuDirection);
+    window.addEventListener("scroll", updateMenuDirection, true);
+
+    return () => {
+      window.removeEventListener("resize", updateMenuDirection);
+      window.removeEventListener("scroll", updateMenuDirection, true);
+    };
+  }, [open]);
+
   function pick(nextValue) {
     onChange?.(nextValue);
     setOpen(false);
   }
 
   return (
-    <div ref={rootRef} className={`admin-select ${open ? "is-open" : ""} ${disabled ? "is-disabled" : ""}`}>
+    <div
+      ref={rootRef}
+      className={`admin-select ${open ? "is-open" : ""} ${openUpward ? "is-open-upward" : ""} ${disabled ? "is-disabled" : ""}`}
+    >
       <button
         type="button"
         className="admin-select-trigger"

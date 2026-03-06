@@ -3036,6 +3036,11 @@ a {
   padding: 0.25rem;
 }
 
+.admin-select.is-open-upward .admin-select-menu {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
 .admin-select-option {
   width: 100%;
   border: none;
@@ -3411,6 +3416,7 @@ a {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.4rem;
+  min-width: 0;
 }
 
 .admin-services-stepper button {
@@ -3422,6 +3428,8 @@ a {
   font-size: 0.78rem;
   text-align: left;
   cursor: pointer;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .admin-services-stepper button.is-active {
@@ -3435,12 +3443,14 @@ a {
   border-radius: 12px;
   border: 1px solid rgba(227, 238, 255, 0.12);
   background: rgba(2, 7, 21, 0.18);
+  min-width: 0;
 }
 
 .admin-services-carousel-track {
   display: flex;
   width: 100%;
   transition: transform 260ms ease;
+  min-width: 0;
 }
 
 .admin-services-step {
@@ -3449,6 +3459,7 @@ a {
   display: grid;
   gap: 0.55rem;
   padding: 0.75rem;
+  min-width: 0;
 }
 
 .admin-services-step h3 {
@@ -3473,6 +3484,7 @@ a {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .admin-list-editor {
@@ -3528,6 +3540,7 @@ a {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .admin-services-media-grid {
@@ -3606,6 +3619,7 @@ a {
   gap: 0.3rem;
   font-size: 0.9rem;
   color: rgba(227, 238, 255, 0.85);
+  min-width: 0;
 }
 
 .admin-form label.inline {
@@ -3682,6 +3696,14 @@ a {
   background: linear-gradient(160deg, rgba(12, 26, 67, 0.95), rgba(9, 20, 54, 0.93));
   box-shadow: 0 28px 60px rgba(0, 0, 0, 0.46);
   position: relative;
+  min-width: 0;
+}
+
+.admin-services-wizard,
+.admin-services-wizard small,
+.admin-services-wizard .muted {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .admin-modal-close {

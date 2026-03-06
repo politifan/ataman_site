@@ -3452,6 +3452,11 @@ a {
   min-width: 0;
 }
 
+.admin-services-carousel-track.is-stacked {
+  display: grid;
+  gap: 0.75rem;
+}
+
 .admin-services-step {
   width: 100%;
   display: none;
@@ -3464,6 +3469,15 @@ a {
 
 .admin-services-step[aria-hidden="false"] {
   display: grid;
+}
+
+.admin-services-step.is-stacked {
+  display: grid;
+  border-top: 1px solid rgba(227, 238, 255, 0.08);
+}
+
+.admin-services-step.is-stacked:first-child {
+  border-top: none;
 }
 
 .admin-services-step h3 {

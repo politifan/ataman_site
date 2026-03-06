@@ -323,6 +323,7 @@ export default function AdminServicesPage() {
   const [mediaPathDraft, setMediaPathDraft] = useState("");
 
   const totalSteps = SERVICE_WIZARD_STEPS.length;
+  const isEditing = editingId !== null;
   const currentStep = SERVICE_WIZARD_STEPS[stepIndex];
   const isFirstStep = stepIndex === 0;
   const isLastStep = stepIndex === totalSteps - 1;
@@ -456,6 +457,14 @@ export default function AdminServicesPage() {
 
   function goToStep(nextIndex) {
     if (nextIndex < 0 || nextIndex >= totalSteps) return;
+    if (isEditing) {
+      setStepIndex(nextIndex);
+      document.getElementById(`admin-service-step-${nextIndex}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+      return;
+    }
     if (nextIndex <= stepIndex) {
       setStepIndex(nextIndex);
       return;
@@ -754,11 +763,12 @@ export default function AdminServicesPage() {
               </div>
 
               <div className="admin-services-carousel">
-                <div
-                  className="admin-services-carousel-track"
-                  style={{ transform: `translateX(-${stepIndex * 100}%)` }}
-                >
-                  <section className="admin-services-step" aria-hidden={stepIndex !== 0}>
+                <div className={`admin-services-carousel-track ${isEditing ? "is-stacked" : ""}`}>
+                  <section
+                    id="admin-service-step-0"
+                    className={`admin-services-step ${isEditing ? "is-stacked" : ""}`}
+                    aria-hidden={isEditing ? "false" : stepIndex !== 0}
+                  >
                     <h3>Основные параметры</h3>
                     <label>
                       Название услуги
@@ -817,7 +827,11 @@ export default function AdminServicesPage() {
                     </label>
                   </section>
 
-                  <section className="admin-services-step" aria-hidden={stepIndex !== 1}>
+                  <section
+                    id="admin-service-step-1"
+                    className={`admin-services-step ${isEditing ? "is-stacked" : ""}`}
+                    aria-hidden={isEditing ? "false" : stepIndex !== 1}
+                  >
                     <h3>Описание услуги</h3>
                     <label>
                       Краткий анонс
@@ -848,7 +862,11 @@ export default function AdminServicesPage() {
                     </label>
                   </section>
 
-                  <section className="admin-services-step" aria-hidden={stepIndex !== 2}>
+                  <section
+                    id="admin-service-step-2"
+                    className={`admin-services-step ${isEditing ? "is-stacked" : ""}`}
+                    aria-hidden={isEditing ? "false" : stepIndex !== 2}
+                  >
                     <h3>Стоимость</h3>
 
                     <label className="inline">
@@ -1019,7 +1037,11 @@ export default function AdminServicesPage() {
                     ) : null}
                   </section>
 
-                  <section className="admin-services-step" aria-hidden={stepIndex !== 3}>
+                  <section
+                    id="admin-service-step-3"
+                    className={`admin-services-step ${isEditing ? "is-stacked" : ""}`}
+                    aria-hidden={isEditing ? "false" : stepIndex !== 3}
+                  >
                     <h3>Содержимое страницы</h3>
 
                     <ListEditor
@@ -1078,7 +1100,11 @@ export default function AdminServicesPage() {
                     </label>
                   </section>
 
-                  <section className="admin-services-step" aria-hidden={stepIndex !== 4}>
+                  <section
+                    id="admin-service-step-4"
+                    className={`admin-services-step ${isEditing ? "is-stacked" : ""}`}
+                    aria-hidden={isEditing ? "false" : stepIndex !== 4}
+                  >
                     <h3>Медиа</h3>
 
                     <div className="admin-media-add-row">
@@ -1175,7 +1201,7 @@ export default function AdminServicesPage() {
                 >
                   Назад
                 </button>
-                {!isLastStep ? (
+                {!isEditing && !isLastStep ? (
                   <button type="button" className="btn-main" onClick={() => goToStep(stepIndex + 1)}>
                     Далее
                   </button>

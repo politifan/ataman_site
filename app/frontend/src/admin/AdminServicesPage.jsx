@@ -29,6 +29,34 @@ const basePayload = {
   is_active: true
 };
 
+const SERVICE_WIZARD_STEPS = [
+  {
+    id: "base",
+    title: "Основа",
+    description: "Название, slug, категория и формат услуги."
+  },
+  {
+    id: "description",
+    title: "Описание",
+    description: "Короткий анонс, длительность и возраст."
+  },
+  {
+    id: "content",
+    title: "Контент и цена",
+    description: "Стоимость и смысловые блоки услуги."
+  },
+  {
+    id: "rules",
+    title: "Условия",
+    description: "Важное, ограничения и информация о ведущем."
+  },
+  {
+    id: "media",
+    title: "Медиа и публикация",
+    description: "Фото/видео и статус показа на сайте."
+  }
+];
+
 function normalizeTextareaLines(value) {
   return value
     .split("\n")
@@ -99,6 +127,12 @@ export default function AdminServicesPage() {
   const [formatFilter, setFormatFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [uploading, setUploading] = useState(false);
+  const [stepIndex, setStepIndex] = useState(0);
+
+  const totalSteps = SERVICE_WIZARD_STEPS.length;
+  const currentStep = SERVICE_WIZARD_STEPS[stepIndex];
+  const isFirstStep = stepIndex === 0;
+  const isLastStep = stepIndex === totalSteps - 1;
 
   async function load() {
     setLoading(true);
@@ -151,6 +185,7 @@ export default function AdminServicesPage() {
   function openCreate() {
     setEditingId(null);
     setEditor(toEditor(null));
+    setStepIndex(0);
     setModalOpen(true);
     setMessage("");
     setError("");
@@ -159,6 +194,7 @@ export default function AdminServicesPage() {
   function openEdit(row) {
     setEditingId(row.id);
     setEditor(toEditor(row));
+    setStepIndex(0);
     setModalOpen(true);
     setMessage("");
     setError("");
@@ -168,6 +204,41 @@ export default function AdminServicesPage() {
     setModalOpen(false);
     setEditingId(null);
     setEditor(toEditor(null));
+    setStepIndex(0);
+  }
+
+  function validateWizardStep(index) {
+    if (index === 0) {
+      if (!editor.slug.trim() || !editor.title.trim()) {
+        throw new Error("Заполните slug и title, чтобы перейти дальше.");
+      }
+    }
+
+    if (index === 2 && editor.pricing_text.trim()) {
+      try {
+        JSON.parse(editor.pricing_text);
+      } catch (_) {
+        throw new Error("Проверьте поле pricing: должен быть валидный JSON.");
+      }
+    }
+  }
+
+  function goToStep(nextIndex) {
+    if (nextIndex < 0 || nextIndex >= totalSteps) return;
+    if (nextIndex <= stepIndex) {
+      setStepIndex(nextIndex);
+      return;
+    }
+
+    try {
+      for (let index = stepIndex; index < nextIndex; index += 1) {
+        validateWizardStep(index);
+      }
+      setError("");
+      setStepIndex(nextIndex);
+    } catch (err) {
+      setError(err.message || "Проверьте поля текущего шага.");
+    }
   }
 
   async function save(event) {
@@ -377,170 +448,236 @@ export default function AdminServicesPage() {
             <button type="button" className="admin-modal-close" onClick={closeModal} aria-label="Закрыть">
               ×
             </button>
-            <form className="admin-form" onSubmit={save}>
+            <form className="admin-form admin-services-wizard" onSubmit={save}>
               <h2>{editingId ? `Редактирование #${editingId}` : "Создание услуги"}</h2>
-              <label>
-                Slug
-                <input
-                  value={editor.slug}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, slug: event.target.value }))}
-                  required
-                />
-              </label>
-              <label>
-                Title
-                <input
-                  value={editor.title}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, title: event.target.value }))}
-                  required
-                />
-              </label>
-              <label>
-                Category
-                <input
-                  value={editor.category}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, category: event.target.value }))}
-                />
-              </label>
-              <label>
-                Category label
-                <input
-                  value={editor.category_label}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, category_label: event.target.value }))}
-                />
-              </label>
-              <label>
-                Format
-                <AdminSelect
-                  value={editor.format_mode}
-                  onChange={(nextValue) => setEditor((prev) => ({ ...prev, format_mode: nextValue }))}
-                  options={[
-                    { value: "group_and_individual", label: "group_and_individual" },
-                    { value: "individual_only", label: "individual_only" }
-                  ]}
-                />
-              </label>
-              <label>
-                Teaser
-                <textarea
-                  rows={2}
-                  value={editor.teaser}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, teaser: event.target.value }))}
-                />
-              </label>
-              <label>
-                Duration
-                <input
-                  value={editor.duration}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, duration: event.target.value }))}
-                />
-              </label>
-              <label>
-                Pricing (JSON)
-                <textarea
-                  rows={5}
-                  value={editor.pricing_text}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, pricing_text: event.target.value }))}
-                />
-              </label>
-              <label>
-                About (1 строка = 1 пункт)
-                <textarea
-                  rows={4}
-                  value={editor.about_text}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, about_text: event.target.value }))}
-                />
-              </label>
-              <label>
-                Suitable_for (1 строка = 1 пункт)
-                <textarea
-                  rows={4}
-                  value={editor.suitable_for_text}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, suitable_for_text: event.target.value }))}
-                />
-              </label>
-              <label>
-                Important (1 строка = 1 пункт)
-                <textarea
-                  rows={3}
-                  value={editor.important_text}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, important_text: event.target.value }))}
-                />
-              </label>
-              <label>
-                Dress code
-                <textarea
-                  rows={3}
-                  value={editor.dress_code_text}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, dress_code_text: event.target.value }))}
-                />
-              </label>
-              <label>
-                Contraindications
-                <textarea
-                  rows={3}
-                  value={editor.contraindications_text}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, contraindications_text: event.target.value }))}
-                />
-              </label>
-              <label>
-                Upload media
-                <input
-                  type="file"
-                  accept="image/*,video/*"
-                  onChange={(event) => onUploadServiceMedia(event.target.files?.[0])}
-                />
-                <small className="muted">{uploading ? "Загрузка..." : "Файл сохранится в uploads/services."}</small>
-              </label>
-              <label>
-                Media paths (1 строка = 1 путь)
-                <textarea
-                  rows={3}
-                  value={editor.media_text}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, media_text: event.target.value }))}
-                />
-              </label>
-              <label>
-                Host name
-                <input
-                  value={editor.host_name}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, host_name: event.target.value }))}
-                />
-              </label>
-              <label>
-                Host bio
-                <textarea
-                  rows={2}
-                  value={editor.host_bio}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, host_bio: event.target.value }))}
-                />
-              </label>
-              <label>
-                Age restriction
-                <input
-                  value={editor.age_restriction}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, age_restriction: event.target.value }))}
-                />
-              </label>
-              <label className="inline">
-                <input
-                  type="checkbox"
-                  checked={editor.is_draft}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, is_draft: event.target.checked }))}
-                />
-                Draft
-              </label>
-              <label className="inline">
-                <input
-                  type="checkbox"
-                  checked={editor.is_active}
-                  onChange={(event) => setEditor((prev) => ({ ...prev, is_active: event.target.checked }))}
-                />
-                Active
-              </label>
-              <button className="btn-main" type="submit">
-                Сохранить
-              </button>
+              <div className="admin-services-wizard-head">
+                <p>
+                  Шаг {stepIndex + 1} из {totalSteps}
+                </p>
+                <strong>{currentStep.title}</strong>
+                <span>{currentStep.description}</span>
+              </div>
+
+              <div className="admin-services-stepper" role="tablist" aria-label="Шаги редактирования услуги">
+                {SERVICE_WIZARD_STEPS.map((step, index) => (
+                  <button
+                    key={step.id}
+                    type="button"
+                    className={index === stepIndex ? "is-active" : ""}
+                    onClick={() => goToStep(index)}
+                  >
+                    {index + 1}. {step.title}
+                  </button>
+                ))}
+              </div>
+
+              <div className="admin-services-carousel">
+                <div
+                  className="admin-services-carousel-track"
+                  style={{ transform: `translateX(-${stepIndex * 100}%)` }}
+                >
+                  <section className="admin-services-step" aria-hidden={stepIndex !== 0}>
+                    <h3>Базовые поля</h3>
+                    <label>
+                      Slug
+                      <input
+                        value={editor.slug}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, slug: event.target.value }))}
+                        required
+                      />
+                    </label>
+                    <label>
+                      Title
+                      <input
+                        value={editor.title}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, title: event.target.value }))}
+                        required
+                      />
+                    </label>
+                    <label>
+                      Category
+                      <input
+                        value={editor.category}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, category: event.target.value }))}
+                      />
+                    </label>
+                    <label>
+                      Category label
+                      <input
+                        value={editor.category_label}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, category_label: event.target.value }))}
+                      />
+                    </label>
+                    <label>
+                      Format
+                      <AdminSelect
+                        value={editor.format_mode}
+                        onChange={(nextValue) => setEditor((prev) => ({ ...prev, format_mode: nextValue }))}
+                        options={[
+                          { value: "group_and_individual", label: "group_and_individual" },
+                          { value: "individual_only", label: "individual_only" }
+                        ]}
+                      />
+                    </label>
+                  </section>
+
+                  <section className="admin-services-step" aria-hidden={stepIndex !== 1}>
+                    <h3>Описание услуги</h3>
+                    <label>
+                      Teaser
+                      <textarea
+                        rows={3}
+                        value={editor.teaser}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, teaser: event.target.value }))}
+                      />
+                    </label>
+                    <label>
+                      Duration
+                      <input
+                        value={editor.duration}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, duration: event.target.value }))}
+                      />
+                    </label>
+                    <label>
+                      Age restriction
+                      <input
+                        value={editor.age_restriction}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, age_restriction: event.target.value }))}
+                      />
+                    </label>
+                  </section>
+
+                  <section className="admin-services-step" aria-hidden={stepIndex !== 2}>
+                    <h3>Контент и стоимость</h3>
+                    <label>
+                      Pricing (JSON)
+                      <textarea
+                        rows={7}
+                        value={editor.pricing_text}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, pricing_text: event.target.value }))}
+                      />
+                    </label>
+                    <label>
+                      About (1 строка = 1 пункт)
+                      <textarea
+                        rows={5}
+                        value={editor.about_text}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, about_text: event.target.value }))}
+                      />
+                    </label>
+                    <label>
+                      Suitable_for (1 строка = 1 пункт)
+                      <textarea
+                        rows={5}
+                        value={editor.suitable_for_text}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, suitable_for_text: event.target.value }))}
+                      />
+                    </label>
+                  </section>
+
+                  <section className="admin-services-step" aria-hidden={stepIndex !== 3}>
+                    <h3>Условия и ведущий</h3>
+                    <label>
+                      Important (1 строка = 1 пункт)
+                      <textarea
+                        rows={4}
+                        value={editor.important_text}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, important_text: event.target.value }))}
+                      />
+                    </label>
+                    <label>
+                      Dress code
+                      <textarea
+                        rows={4}
+                        value={editor.dress_code_text}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, dress_code_text: event.target.value }))}
+                      />
+                    </label>
+                    <label>
+                      Contraindications
+                      <textarea
+                        rows={4}
+                        value={editor.contraindications_text}
+                        onChange={(event) =>
+                          setEditor((prev) => ({ ...prev, contraindications_text: event.target.value }))
+                        }
+                      />
+                    </label>
+                    <label>
+                      Host name
+                      <input
+                        value={editor.host_name}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, host_name: event.target.value }))}
+                      />
+                    </label>
+                    <label>
+                      Host bio
+                      <textarea
+                        rows={3}
+                        value={editor.host_bio}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, host_bio: event.target.value }))}
+                      />
+                    </label>
+                  </section>
+
+                  <section className="admin-services-step" aria-hidden={stepIndex !== 4}>
+                    <h3>Медиа и публикация</h3>
+                    <label>
+                      Upload media
+                      <input
+                        type="file"
+                        accept="image/*,video/*"
+                        onChange={(event) => onUploadServiceMedia(event.target.files?.[0])}
+                      />
+                      <small className="muted">{uploading ? "Загрузка..." : "Файл сохранится в uploads/services."}</small>
+                    </label>
+                    <label>
+                      Media paths (1 строка = 1 путь)
+                      <textarea
+                        rows={6}
+                        value={editor.media_text}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, media_text: event.target.value }))}
+                      />
+                    </label>
+                    <label className="inline">
+                      <input
+                        type="checkbox"
+                        checked={editor.is_draft}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, is_draft: event.target.checked }))}
+                      />
+                      Draft
+                    </label>
+                    <label className="inline">
+                      <input
+                        type="checkbox"
+                        checked={editor.is_active}
+                        onChange={(event) => setEditor((prev) => ({ ...prev, is_active: event.target.checked }))}
+                      />
+                      Active
+                    </label>
+                  </section>
+                </div>
+              </div>
+
+              <div className="admin-services-wizard-actions">
+                <button
+                  type="button"
+                  className="admin-ghost-btn"
+                  onClick={() => goToStep(stepIndex - 1)}
+                  disabled={isFirstStep}
+                >
+                  Назад
+                </button>
+                {!isLastStep ? (
+                  <button type="button" className="btn-main" onClick={() => goToStep(stepIndex + 1)}>
+                    Далее
+                  </button>
+                ) : (
+                  <button className="btn-main" type="submit">
+                    Сохранить
+                  </button>
+                )}
+              </div>
             </form>
           </div>
         </div>

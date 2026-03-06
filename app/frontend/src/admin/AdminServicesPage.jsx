@@ -4,7 +4,8 @@ import {
   adminDeleteService,
   adminListServices,
   adminUploadFile,
-  adminUpdateService
+  adminUpdateService,
+  toMediaUrl
 } from "../api";
 import AdminSelect from "./AdminSelect";
 
@@ -33,60 +34,195 @@ const SERVICE_WIZARD_STEPS = [
   {
     id: "base",
     title: "Основа",
-    description: "Название, slug, категория и формат услуги."
+    description: "Название, адрес и формат услуги."
   },
   {
     id: "description",
     title: "Описание",
-    description: "Короткий анонс, длительность и возраст."
+    description: "Коротко о практике и базовые параметры."
+  },
+  {
+    id: "pricing",
+    title: "Стоимость",
+    description: "Цены заполняются готовыми полями."
   },
   {
     id: "content",
-    title: "Контент и цена",
-    description: "Стоимость и смысловые блоки услуги."
-  },
-  {
-    id: "rules",
-    title: "Условия",
-    description: "Важное, ограничения и информация о ведущем."
+    title: "Контент",
+    description: "Пункты для блоков страницы услуги."
   },
   {
     id: "media",
     title: "Медиа и публикация",
-    description: "Фото/видео и статус показа на сайте."
+    description: "Превью, загрузка и замена файлов."
   }
 ];
 
-function normalizeTextareaLines(value) {
-  return value
-    .split("\n")
-    .map((item) => item.trim())
+const CYRILLIC_TO_LATIN = {
+  а: "a",
+  б: "b",
+  в: "v",
+  г: "g",
+  д: "d",
+  е: "e",
+  ё: "yo",
+  ж: "zh",
+  з: "z",
+  и: "i",
+  й: "y",
+  к: "k",
+  л: "l",
+  м: "m",
+  н: "n",
+  о: "o",
+  п: "p",
+  р: "r",
+  с: "s",
+  т: "t",
+  у: "u",
+  ф: "f",
+  х: "h",
+  ц: "ts",
+  ч: "ch",
+  ш: "sh",
+  щ: "sch",
+  ъ: "",
+  ы: "y",
+  ь: "",
+  э: "e",
+  ю: "yu",
+  я: "ya"
+};
+
+function slugify(value) {
+  const transliterated = String(value || "")
+    .toLowerCase()
+    .split("")
+    .map((char) => CYRILLIC_TO_LATIN[char] ?? char)
+    .join("");
+
+  return transliterated
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function formatModeLabel(value) {
+  return value === "individual_only" ? "Только индивидуально" : "Групповой и индивидуальный";
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function normalizeList(items) {
+  return asArray(items)
+    .map((item) => String(item || "").trim())
     .filter(Boolean);
+}
+
+function parsePrice(value, fieldLabel) {
+  const raw = String(value || "").trim().replace(",", ".");
+  if (!raw) {
+    throw new Error(`Заполните поле «${fieldLabel}».`);
+  }
+
+  const price = Number(raw);
+  if (!Number.isFinite(price) || price <= 0) {
+    throw new Error(`В поле «${fieldLabel}» укажите корректную сумму.`);
+  }
+
+  return price;
 }
 
 function toEditor(service) {
   const row = service || basePayload;
+  const pricing = row.pricing || {};
+
+  const knownPricingKeys = new Set(["group", "individual", "fixed", "extra"]);
+  const pricingOther = Object.fromEntries(
+    Object.entries(pricing).filter(([key]) => !knownPricingKeys.has(key))
+  );
+
   return {
     ...basePayload,
     ...row,
-    pricing_text: JSON.stringify(row.pricing || {}, null, 2),
-    about_text: (row.about || []).join("\n"),
-    suitable_for_text: (row.suitable_for || []).join("\n"),
-    important_text: (row.important || []).join("\n"),
-    dress_code_text: (row.dress_code || []).join("\n"),
-    contraindications_text: (row.contraindications || []).join("\n"),
-    media_text: (row.media || []).join("\n"),
+    about_items: asArray(row.about),
+    suitable_for_items: asArray(row.suitable_for),
+    important_items: asArray(row.important),
+    dress_code_items: asArray(row.dress_code),
+    contraindications_items: asArray(row.contraindications),
+    media_items: asArray(row.media),
     host_name: row.host?.name || "",
-    host_bio: row.host?.bio || ""
+    host_bio: row.host?.bio || "",
+
+    pricing_group_enabled: Boolean(pricing.group),
+    pricing_group_label: pricing.group?.label || "Групповая практика",
+    pricing_group_price:
+      pricing.group?.price_per_person !== undefined && pricing.group?.price_per_person !== null
+        ? String(pricing.group.price_per_person)
+        : "",
+    pricing_group_cta: pricing.group?.cta || "Просмотреть расписание",
+
+    pricing_individual_enabled: Boolean(pricing.individual),
+    pricing_individual_label: pricing.individual?.label || "Индивидуальная сессия",
+    pricing_individual_price:
+      pricing.individual?.price !== undefined && pricing.individual?.price !== null
+        ? String(pricing.individual.price)
+        : "",
+    pricing_individual_cta: pricing.individual?.cta || "Записаться",
+
+    pricing_fixed_enabled: Boolean(pricing.fixed),
+    pricing_fixed_label: pricing.fixed?.label || "Фиксированная стоимость",
+    pricing_fixed_price:
+      pricing.fixed?.price !== undefined && pricing.fixed?.price !== null
+        ? String(pricing.fixed.price)
+        : "",
+    pricing_fixed_cta: pricing.fixed?.cta || "Записаться",
+
+    pricing_extra_enabled: Boolean(pricing.extra),
+    pricing_extra_label: pricing.extra?.label || "Дополнительная опция",
+    pricing_extra_price:
+      pricing.extra?.price !== undefined && pricing.extra?.price !== null
+        ? String(pricing.extra.price)
+        : "",
+
+    pricing_other: pricingOther
   };
 }
 
 function toPayload(editor) {
-  let pricing = {};
-  try {
-    pricing = editor.pricing_text ? JSON.parse(editor.pricing_text) : {};
-  } catch (_) {
-    throw new Error("Поле pricing должно быть валидным JSON.");
+  const pricing = { ...(editor.pricing_other || {}) };
+
+  if (editor.pricing_group_enabled) {
+    pricing.group = {
+      label: editor.pricing_group_label.trim() || "Групповая практика",
+      price_per_person: parsePrice(editor.pricing_group_price, "Групповая цена"),
+      cta: editor.pricing_group_cta.trim() || "Просмотреть расписание"
+    };
+  }
+
+  if (editor.pricing_individual_enabled) {
+    pricing.individual = {
+      label: editor.pricing_individual_label.trim() || "Индивидуальная сессия",
+      price: parsePrice(editor.pricing_individual_price, "Индивидуальная цена"),
+      cta: editor.pricing_individual_cta.trim() || "Записаться"
+    };
+  }
+
+  if (editor.pricing_fixed_enabled) {
+    pricing.fixed = {
+      label: editor.pricing_fixed_label.trim() || "Фиксированная стоимость",
+      price: parsePrice(editor.pricing_fixed_price, "Фиксированная цена"),
+      cta: editor.pricing_fixed_cta.trim() || "Записаться"
+    };
+  }
+
+  if (editor.pricing_extra_enabled) {
+    pricing.extra = {
+      label: editor.pricing_extra_label.trim() || "Дополнительная опция",
+      price: parsePrice(editor.pricing_extra_price, "Стоимость доп. опции")
+    };
   }
 
   return {
@@ -98,20 +234,73 @@ function toPayload(editor) {
     teaser: editor.teaser.trim() || null,
     duration: editor.duration.trim() || null,
     pricing,
-    about: normalizeTextareaLines(editor.about_text),
-    suitable_for: normalizeTextareaLines(editor.suitable_for_text),
+    about: normalizeList(editor.about_items),
+    suitable_for: normalizeList(editor.suitable_for_items),
     host: {
       name: editor.host_name.trim(),
       bio: editor.host_bio.trim()
     },
-    important: normalizeTextareaLines(editor.important_text),
-    dress_code: normalizeTextareaLines(editor.dress_code_text),
-    contraindications: normalizeTextareaLines(editor.contraindications_text),
-    media: normalizeTextareaLines(editor.media_text),
+    important: normalizeList(editor.important_items),
+    dress_code: normalizeList(editor.dress_code_items),
+    contraindications: normalizeList(editor.contraindications_items),
+    media: normalizeList(editor.media_items),
     age_restriction: editor.age_restriction.trim() || null,
     is_draft: Boolean(editor.is_draft),
     is_active: Boolean(editor.is_active)
   };
+}
+
+function ListEditor({ label, value, onChange, placeholder, multiline = false }) {
+  const items = asArray(value);
+
+  function updateItem(index, nextValue) {
+    const next = [...items];
+    next[index] = nextValue;
+    onChange(next);
+  }
+
+  function removeItem(index) {
+    const next = items.filter((_, itemIndex) => itemIndex !== index);
+    onChange(next);
+  }
+
+  function addItem() {
+    onChange([...items, ""]);
+  }
+
+  return (
+    <div className="admin-list-editor">
+      <p>{label}</p>
+      {items.map((item, index) => (
+        <div className="admin-list-editor-row" key={`${label}-${index}`}>
+          {multiline ? (
+            <textarea
+              rows={2}
+              value={item}
+              placeholder={placeholder}
+              onChange={(event) => updateItem(index, event.target.value)}
+            />
+          ) : (
+            <input
+              value={item}
+              placeholder={placeholder}
+              onChange={(event) => updateItem(index, event.target.value)}
+            />
+          )}
+          <button type="button" className="danger" onClick={() => removeItem(index)}>
+            Удалить
+          </button>
+        </div>
+      ))}
+      <button type="button" className="admin-ghost-btn" onClick={addItem}>
+        + Добавить пункт
+      </button>
+    </div>
+  );
+}
+
+function isVideoPath(path) {
+  return /\.(mp4|webm|mov|m4v)$/i.test(String(path || ""));
 }
 
 export default function AdminServicesPage() {
@@ -126,8 +315,12 @@ export default function AdminServicesPage() {
   const [query, setQuery] = useState("");
   const [formatFilter, setFormatFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [uploading, setUploading] = useState(false);
+
   const [stepIndex, setStepIndex] = useState(0);
+  const [isSlugManual, setIsSlugManual] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadingReplaceIndex, setUploadingReplaceIndex] = useState(null);
+  const [mediaPathDraft, setMediaPathDraft] = useState("");
 
   const totalSteps = SERVICE_WIZARD_STEPS.length;
   const currentStep = SERVICE_WIZARD_STEPS[stepIndex];
@@ -160,7 +353,7 @@ export default function AdminServicesPage() {
       if (!q) return true;
       return [row.title, row.slug, row.category_label, row.category]
         .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(q));
+        .some((item) => String(item).toLowerCase().includes(q));
     });
   }, [items, query, formatFilter, statusFilter]);
 
@@ -186,6 +379,8 @@ export default function AdminServicesPage() {
     setEditingId(null);
     setEditor(toEditor(null));
     setStepIndex(0);
+    setIsSlugManual(false);
+    setMediaPathDraft("");
     setModalOpen(true);
     setMessage("");
     setError("");
@@ -195,6 +390,8 @@ export default function AdminServicesPage() {
     setEditingId(row.id);
     setEditor(toEditor(row));
     setStepIndex(0);
+    setIsSlugManual(true);
+    setMediaPathDraft("");
     setModalOpen(true);
     setMessage("");
     setError("");
@@ -205,21 +402,55 @@ export default function AdminServicesPage() {
     setEditingId(null);
     setEditor(toEditor(null));
     setStepIndex(0);
+    setIsSlugManual(false);
+    setMediaPathDraft("");
+  }
+
+  function onTitleChange(nextTitle) {
+    setEditor((prev) => {
+      const next = { ...prev, title: nextTitle };
+      if (!isSlugManual) {
+        next.slug = slugify(nextTitle);
+      }
+      return next;
+    });
+  }
+
+  function onSlugChange(nextSlug) {
+    setIsSlugManual(true);
+    setEditor((prev) => ({ ...prev, slug: nextSlug }));
+  }
+
+  function generateSlugFromTitle() {
+    setIsSlugManual(false);
+    setEditor((prev) => ({ ...prev, slug: slugify(prev.title) }));
   }
 
   function validateWizardStep(index) {
     if (index === 0) {
-      if (!editor.slug.trim() || !editor.title.trim()) {
-        throw new Error("Заполните slug и title, чтобы перейти дальше.");
+      if (!editor.title.trim()) {
+        throw new Error("Заполните название услуги.");
+      }
+      if (!editor.slug.trim()) {
+        throw new Error("Заполните адрес услуги.");
       }
     }
 
-    if (index === 2 && editor.pricing_text.trim()) {
-      try {
-        JSON.parse(editor.pricing_text);
-      } catch (_) {
-        throw new Error("Проверьте поле pricing: должен быть валидный JSON.");
+    if (index === 2) {
+      if (
+        !editor.pricing_group_enabled &&
+        !editor.pricing_individual_enabled &&
+        !editor.pricing_fixed_enabled &&
+        !editor.pricing_extra_enabled &&
+        !Object.keys(editor.pricing_other || {}).length
+      ) {
+        throw new Error("Добавьте хотя бы один вариант стоимости.");
       }
+
+      if (editor.pricing_group_enabled) parsePrice(editor.pricing_group_price, "Групповая цена");
+      if (editor.pricing_individual_enabled) parsePrice(editor.pricing_individual_price, "Индивидуальная цена");
+      if (editor.pricing_fixed_enabled) parsePrice(editor.pricing_fixed_price, "Фиксированная цена");
+      if (editor.pricing_extra_enabled) parsePrice(editor.pricing_extra_price, "Стоимость доп. опции");
     }
   }
 
@@ -247,7 +478,8 @@ export default function AdminServicesPage() {
     setMessage("");
     try {
       const payload = toPayload(editor);
-      if (!payload.slug || !payload.title) throw new Error("Slug и title обязательны.");
+      if (!payload.slug || !payload.title) throw new Error("Название и адрес обязательны.");
+
       if (editingId) {
         await adminUpdateService(editingId, payload);
         setMessage("Услуга обновлена.");
@@ -255,6 +487,7 @@ export default function AdminServicesPage() {
         await adminCreateService(payload);
         setMessage("Услуга создана.");
       }
+
       await load();
       closeModal();
     } catch (err) {
@@ -270,26 +503,74 @@ export default function AdminServicesPage() {
       await load();
       if (editingId === id) closeModal();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Ошибка удаления.");
     }
   }
 
-  async function onUploadServiceMedia(file) {
+  async function uploadMediaFile(file, { replaceIndex = null } = {}) {
     if (!file) return;
     setUploading(true);
     setError("");
+    if (replaceIndex !== null) {
+      setUploadingReplaceIndex(replaceIndex);
+    }
+
     try {
       const result = await adminUploadFile(file, "services");
-      setEditor((prev) => ({
-        ...prev,
-        media_text: [prev.media_text, result.path].filter(Boolean).join("\n")
-      }));
-      setMessage("Файл загружен и добавлен в media.");
+      const nextPath = String(result.path || "").trim();
+      if (!nextPath) throw new Error("Сервер не вернул путь к файлу.");
+
+      setEditor((prev) => {
+        const current = asArray(prev.media_items);
+        const next = [...current];
+        if (replaceIndex !== null && replaceIndex >= 0 && replaceIndex < next.length) {
+          next[replaceIndex] = nextPath;
+        } else {
+          next.push(nextPath);
+        }
+        return {
+          ...prev,
+          media_items: next
+        };
+      });
+
+      setMessage(replaceIndex !== null ? "Файл заменён." : "Файл загружен и добавлен.");
     } catch (err) {
       setError(err.message || "Не удалось загрузить файл.");
     } finally {
       setUploading(false);
+      setUploadingReplaceIndex(null);
     }
+  }
+
+  function removeMediaItem(index) {
+    setEditor((prev) => ({
+      ...prev,
+      media_items: asArray(prev.media_items).filter((_, itemIndex) => itemIndex !== index)
+    }));
+  }
+
+  function moveMediaItem(index, direction) {
+    setEditor((prev) => {
+      const next = [...asArray(prev.media_items)];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) {
+        return prev;
+      }
+      [next[index], next[target]] = [next[target], next[index]];
+      return { ...prev, media_items: next };
+    });
+  }
+
+  function addMediaPath() {
+    const path = mediaPathDraft.trim();
+    if (!path) return;
+
+    setEditor((prev) => ({
+      ...prev,
+      media_items: [...asArray(prev.media_items), path]
+    }));
+    setMediaPathDraft("");
   }
 
   return (
@@ -307,7 +588,7 @@ export default function AdminServicesPage() {
       <div className="admin-toolbar">
         <input
           className="admin-filter-input"
-          placeholder="Поиск: title / slug / категория"
+          placeholder="Поиск: название / адрес / категория"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
@@ -316,8 +597,8 @@ export default function AdminServicesPage() {
           onChange={(nextValue) => setFormatFilter(nextValue)}
           options={[
             { value: "all", label: "Все форматы" },
-            { value: "group_and_individual", label: "Групповые + индивидуальные" },
-            { value: "individual_only", label: "Только индивидуальные" }
+            { value: "group_and_individual", label: "Групповой и индивидуальный" },
+            { value: "individual_only", label: "Только индивидуальный" }
           ]}
         />
         <AdminSelect
@@ -326,7 +607,7 @@ export default function AdminServicesPage() {
           options={[
             { value: "all", label: "Все статусы" },
             { value: "active", label: "Только активные" },
-            { value: "inactive", label: "Только неактивные" }
+            { value: "inactive", label: "Только скрытые" }
           ]}
         />
         <div className="admin-view-toggle">
@@ -385,10 +666,10 @@ export default function AdminServicesPage() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Title</th>
-                <th>Slug</th>
-                <th>Format</th>
+                <th>№</th>
+                <th>Название</th>
+                <th>Адрес</th>
+                <th>Формат</th>
                 <th>Статус</th>
                 <th></th>
               </tr>
@@ -399,11 +680,11 @@ export default function AdminServicesPage() {
                   <td>{row.id}</td>
                   <td>{row.title}</td>
                   <td>{row.slug}</td>
-                  <td>{row.format_mode}</td>
+                  <td>{formatModeLabel(row.format_mode)}</td>
                   <td>{row.is_active ? "Активна" : "Скрыта"}</td>
                   <td className="admin-actions-inline">
                     <button type="button" onClick={() => openEdit(row)}>
-                      Ред.
+                      Изм.
                     </button>
                     <button type="button" className="danger" onClick={() => remove(row.id)}>
                       Удал.
@@ -424,14 +705,14 @@ export default function AdminServicesPage() {
                 <strong>{row.title}</strong>
                 <p>{row.slug}</p>
                 <div className="admin-tags">
-                  <span>{row.format_mode === "individual_only" ? "Индивидуально" : "Группа + индивидуально"}</span>
+                  <span>{formatModeLabel(row.format_mode)}</span>
                   <span>{row.category_label || row.category || "Без категории"}</span>
                   <span>{row.is_active ? "Активна" : "Скрыта"}</span>
                 </div>
               </div>
               <div className="admin-actions">
                 <button type="button" onClick={() => openEdit(row)}>
-                  Ред.
+                  Изм.
                 </button>
                 <button type="button" className="danger" onClick={() => remove(row.id)}>
                   Удал.
@@ -450,6 +731,7 @@ export default function AdminServicesPage() {
             </button>
             <form className="admin-form admin-services-wizard" onSubmit={save}>
               <h2>{editingId ? `Редактирование #${editingId}` : "Создание услуги"}</h2>
+
               <div className="admin-services-wizard-head">
                 <p>
                   Шаг {stepIndex + 1} из {totalSteps}
@@ -477,45 +759,59 @@ export default function AdminServicesPage() {
                   style={{ transform: `translateX(-${stepIndex * 100}%)` }}
                 >
                   <section className="admin-services-step" aria-hidden={stepIndex !== 0}>
-                    <h3>Базовые поля</h3>
+                    <h3>Основные параметры</h3>
                     <label>
-                      Slug
-                      <input
-                        value={editor.slug}
-                        onChange={(event) => setEditor((prev) => ({ ...prev, slug: event.target.value }))}
-                        required
-                      />
-                    </label>
-                    <label>
-                      Title
+                      Название услуги
                       <input
                         value={editor.title}
-                        onChange={(event) => setEditor((prev) => ({ ...prev, title: event.target.value }))}
+                        onChange={(event) => onTitleChange(event.target.value)}
+                        placeholder="Например: Гонг-медитация"
                         required
                       />
                     </label>
+
                     <label>
-                      Category
+                      Адрес услуги
+                      <div className="admin-slug-row">
+                        <input
+                          value={editor.slug}
+                          onChange={(event) => onSlugChange(event.target.value)}
+                          placeholder="gong-meditatsiya"
+                          required
+                        />
+                        <button type="button" className="admin-ghost-btn" onClick={generateSlugFromTitle}>
+                          Сгенерировать
+                        </button>
+                      </div>
+                      <small className="muted">Используется в ссылке на услугу: `/services/{editor.slug || "..."}`</small>
+                    </label>
+
+                    <label>
+                      Категория (технический код)
                       <input
                         value={editor.category}
                         onChange={(event) => setEditor((prev) => ({ ...prev, category: event.target.value }))}
+                        placeholder="zvukoterapiya"
                       />
                     </label>
+
                     <label>
-                      Category label
+                      Название категории
                       <input
                         value={editor.category_label}
                         onChange={(event) => setEditor((prev) => ({ ...prev, category_label: event.target.value }))}
+                        placeholder="Звукотерапия"
                       />
                     </label>
+
                     <label>
-                      Format
+                      Формат проведения
                       <AdminSelect
                         value={editor.format_mode}
                         onChange={(nextValue) => setEditor((prev) => ({ ...prev, format_mode: nextValue }))}
                         options={[
-                          { value: "group_and_individual", label: "group_and_individual" },
-                          { value: "individual_only", label: "individual_only" }
+                          { value: "group_and_individual", label: "Групповой и индивидуальный" },
+                          { value: "individual_only", label: "Только индивидуальный" }
                         ]}
                       />
                     </label>
@@ -524,136 +820,347 @@ export default function AdminServicesPage() {
                   <section className="admin-services-step" aria-hidden={stepIndex !== 1}>
                     <h3>Описание услуги</h3>
                     <label>
-                      Teaser
+                      Краткий анонс
                       <textarea
-                        rows={3}
+                        rows={4}
                         value={editor.teaser}
                         onChange={(event) => setEditor((prev) => ({ ...prev, teaser: event.target.value }))}
+                        placeholder="Короткое описание для карточек и шапки услуги"
                       />
                     </label>
+
                     <label>
-                      Duration
+                      Длительность
                       <input
                         value={editor.duration}
                         onChange={(event) => setEditor((prev) => ({ ...prev, duration: event.target.value }))}
+                        placeholder="60 минут"
                       />
                     </label>
+
                     <label>
-                      Age restriction
+                      Возрастное ограничение
                       <input
                         value={editor.age_restriction}
                         onChange={(event) => setEditor((prev) => ({ ...prev, age_restriction: event.target.value }))}
+                        placeholder="18+"
                       />
                     </label>
                   </section>
 
                   <section className="admin-services-step" aria-hidden={stepIndex !== 2}>
-                    <h3>Контент и стоимость</h3>
-                    <label>
-                      Pricing (JSON)
-                      <textarea
-                        rows={7}
-                        value={editor.pricing_text}
-                        onChange={(event) => setEditor((prev) => ({ ...prev, pricing_text: event.target.value }))}
+                    <h3>Стоимость</h3>
+
+                    <label className="inline">
+                      <input
+                        type="checkbox"
+                        checked={editor.pricing_group_enabled}
+                        onChange={(event) =>
+                          setEditor((prev) => ({ ...prev, pricing_group_enabled: event.target.checked }))
+                        }
                       />
+                      Включить групповую цену
                     </label>
-                    <label>
-                      About (1 строка = 1 пункт)
-                      <textarea
-                        rows={5}
-                        value={editor.about_text}
-                        onChange={(event) => setEditor((prev) => ({ ...prev, about_text: event.target.value }))}
+                    {editor.pricing_group_enabled ? (
+                      <div className="admin-pricing-grid">
+                        <label>
+                          Подпись
+                          <input
+                            value={editor.pricing_group_label}
+                            onChange={(event) =>
+                              setEditor((prev) => ({ ...prev, pricing_group_label: event.target.value }))
+                            }
+                          />
+                        </label>
+                        <label>
+                          Групповая цена (за человека)
+                          <input
+                            type="number"
+                            min={1}
+                            value={editor.pricing_group_price}
+                            onChange={(event) =>
+                              setEditor((prev) => ({ ...prev, pricing_group_price: event.target.value }))
+                            }
+                          />
+                        </label>
+                        <label>
+                          Текст кнопки
+                          <input
+                            value={editor.pricing_group_cta}
+                            onChange={(event) =>
+                              setEditor((prev) => ({ ...prev, pricing_group_cta: event.target.value }))
+                            }
+                          />
+                        </label>
+                      </div>
+                    ) : null}
+
+                    <label className="inline">
+                      <input
+                        type="checkbox"
+                        checked={editor.pricing_individual_enabled}
+                        onChange={(event) =>
+                          setEditor((prev) => ({ ...prev, pricing_individual_enabled: event.target.checked }))
+                        }
                       />
+                      Включить индивидуальную цену
                     </label>
-                    <label>
-                      Suitable_for (1 строка = 1 пункт)
-                      <textarea
-                        rows={5}
-                        value={editor.suitable_for_text}
-                        onChange={(event) => setEditor((prev) => ({ ...prev, suitable_for_text: event.target.value }))}
+                    {editor.pricing_individual_enabled ? (
+                      <div className="admin-pricing-grid">
+                        <label>
+                          Подпись
+                          <input
+                            value={editor.pricing_individual_label}
+                            onChange={(event) =>
+                              setEditor((prev) => ({ ...prev, pricing_individual_label: event.target.value }))
+                            }
+                          />
+                        </label>
+                        <label>
+                          Индивидуальная цена
+                          <input
+                            type="number"
+                            min={1}
+                            value={editor.pricing_individual_price}
+                            onChange={(event) =>
+                              setEditor((prev) => ({ ...prev, pricing_individual_price: event.target.value }))
+                            }
+                          />
+                        </label>
+                        <label>
+                          Текст кнопки
+                          <input
+                            value={editor.pricing_individual_cta}
+                            onChange={(event) =>
+                              setEditor((prev) => ({ ...prev, pricing_individual_cta: event.target.value }))
+                            }
+                          />
+                        </label>
+                      </div>
+                    ) : null}
+
+                    <label className="inline">
+                      <input
+                        type="checkbox"
+                        checked={editor.pricing_fixed_enabled}
+                        onChange={(event) =>
+                          setEditor((prev) => ({ ...prev, pricing_fixed_enabled: event.target.checked }))
+                        }
                       />
+                      Включить фиксированную цену
                     </label>
+                    {editor.pricing_fixed_enabled ? (
+                      <div className="admin-pricing-grid">
+                        <label>
+                          Подпись
+                          <input
+                            value={editor.pricing_fixed_label}
+                            onChange={(event) =>
+                              setEditor((prev) => ({ ...prev, pricing_fixed_label: event.target.value }))
+                            }
+                          />
+                        </label>
+                        <label>
+                          Фиксированная цена
+                          <input
+                            type="number"
+                            min={1}
+                            value={editor.pricing_fixed_price}
+                            onChange={(event) =>
+                              setEditor((prev) => ({ ...prev, pricing_fixed_price: event.target.value }))
+                            }
+                          />
+                        </label>
+                        <label>
+                          Текст кнопки
+                          <input
+                            value={editor.pricing_fixed_cta}
+                            onChange={(event) =>
+                              setEditor((prev) => ({ ...prev, pricing_fixed_cta: event.target.value }))
+                            }
+                          />
+                        </label>
+                      </div>
+                    ) : null}
+
+                    <label className="inline">
+                      <input
+                        type="checkbox"
+                        checked={editor.pricing_extra_enabled}
+                        onChange={(event) =>
+                          setEditor((prev) => ({ ...prev, pricing_extra_enabled: event.target.checked }))
+                        }
+                      />
+                      Включить дополнительную опцию
+                    </label>
+                    {editor.pricing_extra_enabled ? (
+                      <div className="admin-pricing-grid">
+                        <label>
+                          Подпись
+                          <input
+                            value={editor.pricing_extra_label}
+                            onChange={(event) =>
+                              setEditor((prev) => ({ ...prev, pricing_extra_label: event.target.value }))
+                            }
+                          />
+                        </label>
+                        <label>
+                          Стоимость доп. опции
+                          <input
+                            type="number"
+                            min={1}
+                            value={editor.pricing_extra_price}
+                            onChange={(event) =>
+                              setEditor((prev) => ({ ...prev, pricing_extra_price: event.target.value }))
+                            }
+                          />
+                        </label>
+                      </div>
+                    ) : null}
                   </section>
 
                   <section className="admin-services-step" aria-hidden={stepIndex !== 3}>
-                    <h3>Условия и ведущий</h3>
+                    <h3>Содержимое страницы</h3>
+
+                    <ListEditor
+                      label="О практике"
+                      value={editor.about_items}
+                      onChange={(next) => setEditor((prev) => ({ ...prev, about_items: next }))}
+                      placeholder="Текст пункта"
+                      multiline
+                    />
+
+                    <ListEditor
+                      label="Практика подойдёт, если"
+                      value={editor.suitable_for_items}
+                      onChange={(next) => setEditor((prev) => ({ ...prev, suitable_for_items: next }))}
+                      placeholder="Текст пункта"
+                    />
+
+                    <ListEditor
+                      label="Важно"
+                      value={editor.important_items}
+                      onChange={(next) => setEditor((prev) => ({ ...prev, important_items: next }))}
+                      placeholder="Текст пункта"
+                    />
+
+                    <ListEditor
+                      label="Форма одежды"
+                      value={editor.dress_code_items}
+                      onChange={(next) => setEditor((prev) => ({ ...prev, dress_code_items: next }))}
+                      placeholder="Текст пункта"
+                    />
+
+                    <ListEditor
+                      label="Противопоказания"
+                      value={editor.contraindications_items}
+                      onChange={(next) => setEditor((prev) => ({ ...prev, contraindications_items: next }))}
+                      placeholder="Текст пункта"
+                    />
+
                     <label>
-                      Important (1 строка = 1 пункт)
-                      <textarea
-                        rows={4}
-                        value={editor.important_text}
-                        onChange={(event) => setEditor((prev) => ({ ...prev, important_text: event.target.value }))}
-                      />
-                    </label>
-                    <label>
-                      Dress code
-                      <textarea
-                        rows={4}
-                        value={editor.dress_code_text}
-                        onChange={(event) => setEditor((prev) => ({ ...prev, dress_code_text: event.target.value }))}
-                      />
-                    </label>
-                    <label>
-                      Contraindications
-                      <textarea
-                        rows={4}
-                        value={editor.contraindications_text}
-                        onChange={(event) =>
-                          setEditor((prev) => ({ ...prev, contraindications_text: event.target.value }))
-                        }
-                      />
-                    </label>
-                    <label>
-                      Host name
+                      Ведущий
                       <input
                         value={editor.host_name}
                         onChange={(event) => setEditor((prev) => ({ ...prev, host_name: event.target.value }))}
+                        placeholder="Имя и роль"
                       />
                     </label>
+
                     <label>
-                      Host bio
+                      О ведущем
                       <textarea
-                        rows={3}
+                        rows={4}
                         value={editor.host_bio}
                         onChange={(event) => setEditor((prev) => ({ ...prev, host_bio: event.target.value }))}
+                        placeholder="Короткое био"
                       />
                     </label>
                   </section>
 
                   <section className="admin-services-step" aria-hidden={stepIndex !== 4}>
-                    <h3>Медиа и публикация</h3>
-                    <label>
-                      Upload media
+                    <h3>Медиа</h3>
+
+                    <div className="admin-media-add-row">
                       <input
                         type="file"
                         accept="image/*,video/*"
-                        onChange={(event) => onUploadServiceMedia(event.target.files?.[0])}
+                        onChange={(event) => uploadMediaFile(event.target.files?.[0])}
                       />
-                      <small className="muted">{uploading ? "Загрузка..." : "Файл сохранится в uploads/services."}</small>
-                    </label>
-                    <label>
-                      Media paths (1 строка = 1 путь)
-                      <textarea
-                        rows={6}
-                        value={editor.media_text}
-                        onChange={(event) => setEditor((prev) => ({ ...prev, media_text: event.target.value }))}
+                      <small className="muted">{uploading ? "Загрузка..." : "Можно загружать фото и видео"}</small>
+                    </div>
+
+                    <div className="admin-media-path-row">
+                      <input
+                        value={mediaPathDraft}
+                        onChange={(event) => setMediaPathDraft(event.target.value)}
+                        placeholder="Или вставьте путь к файлу вручную"
                       />
-                    </label>
+                      <button type="button" className="admin-ghost-btn" onClick={addMediaPath}>
+                        Добавить путь
+                      </button>
+                    </div>
+
+                    {asArray(editor.media_items).length === 0 ? (
+                      <p className="muted">Файлы пока не добавлены.</p>
+                    ) : (
+                      <div className="admin-services-media-grid">
+                        {asArray(editor.media_items).map((path, index) => (
+                          <article key={`${path}-${index}`} className="admin-services-media-card">
+                            <div className="admin-services-media-preview">
+                              {isVideoPath(path) ? (
+                                <video src={toMediaUrl(path)} muted loop playsInline controls />
+                              ) : (
+                                <img src={toMediaUrl(path)} alt={`Медиа ${index + 1}`} loading="lazy" />
+                              )}
+                            </div>
+                            <p>{path}</p>
+                            <div className="admin-services-media-actions">
+                              <label>
+                                <input
+                                  type="file"
+                                  accept="image/*,video/*"
+                                  onChange={(event) => uploadMediaFile(event.target.files?.[0], { replaceIndex: index })}
+                                />
+                                <span>
+                                  {uploadingReplaceIndex === index && uploading ? "Загрузка..." : "Заменить"}
+                                </span>
+                              </label>
+                              <button type="button" onClick={() => moveMediaItem(index, -1)} disabled={index === 0}>
+                                Вверх
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => moveMediaItem(index, 1)}
+                                disabled={index === asArray(editor.media_items).length - 1}
+                              >
+                                Вниз
+                              </button>
+                              <button type="button" className="danger" onClick={() => removeMediaItem(index)}>
+                                Удалить
+                              </button>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+
                     <label className="inline">
                       <input
                         type="checkbox"
                         checked={editor.is_draft}
                         onChange={(event) => setEditor((prev) => ({ ...prev, is_draft: event.target.checked }))}
                       />
-                      Draft
+                      Черновик (не показывать как финальную услугу)
                     </label>
+
                     <label className="inline">
                       <input
                         type="checkbox"
                         checked={editor.is_active}
                         onChange={(event) => setEditor((prev) => ({ ...prev, is_active: event.target.checked }))}
                       />
-                      Active
+                      Показывать на сайте
                     </label>
                   </section>
                 </div>
@@ -674,7 +1181,7 @@ export default function AdminServicesPage() {
                   </button>
                 ) : (
                   <button className="btn-main" type="submit">
-                    Сохранить
+                    Сохранить услугу
                   </button>
                 )}
               </div>

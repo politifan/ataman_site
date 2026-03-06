@@ -3460,6 +3460,8 @@ a {
   gap: 0.55rem;
   padding: 0.75rem;
   min-width: 0;
+  align-content: start;
+  align-items: start;
 }
 
 .admin-services-step h3 {

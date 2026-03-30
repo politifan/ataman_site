@@ -121,11 +121,22 @@ def ensure_runtime_settings(db: Session) -> None:
         ("telegram_chat_ids", "", False),
     ]
 
-    existing = set(db.scalars(select(Setting.key)).all())
+    existing = {
+        row.key
+        for row in db.query(Setting).all()
+    }
+    pending = {
+        obj.key
+        for obj in db.new
+        if isinstance(obj, Setting) and getattr(obj, "key", None)
+    }
+    existing.update(pending)
+
     for key, value, is_public in defaults:
         if key in existing:
             continue
         db.add(Setting(key=key, value=value, is_public=is_public))
+        existing.add(key)
 
 
 def load_public_setting_values(db: Session, keys: Iterable[str]) -> dict[str, str]:

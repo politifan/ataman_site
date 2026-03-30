@@ -44,10 +44,15 @@ def main() -> None:
         else:
             # Preserve admin-edited settings on redeploy; only create missing keys from defaults.
             seed_site(db, overwrite=False)
+            # Reconcile JSON source-of-truth into existing DB so new services and slots
+            # are added on redeploy without requiring a full reset.
+            service_map = seed_services(db)
+            seed_schedule(db, service_map)
+            seed_press_videos(db)
             apply_runtime_content_fixes(db)
             db.commit()
             backfill_gift_certificate_validity(db)
-            print("Database initialized. Seed skipped (services already exist).")
+            print("Database initialized. Existing content reconciled.")
     finally:
         db.close()
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +17,7 @@ from ..certificates import (
 )
 from ..config import settings
 from ..deps import get_db_session, require_admin
-from ..models import Booking, Contact, GalleryItem, GiftCertificate, ScheduleEvent, Service, Setting
+from ..models import Booking, Contact, GalleryItem, GiftCertificate, PressVideo, ScheduleEvent, Service, Setting
 from ..schemas import (
     AdminDashboardStatsResponse,
     BookingAdminResponse,
@@ -29,6 +29,9 @@ from ..schemas import (
     GalleryAdminCreate,
     GalleryAdminResponse,
     GalleryAdminUpdate,
+    PressVideoAdminCreate,
+    PressVideoAdminResponse,
+    PressVideoAdminUpdate,
     ScheduleAdminCreate,
     ScheduleAdminResponse,
     ScheduleAdminUpdate,
@@ -41,6 +44,12 @@ from ..schemas import (
 )
 
 router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(require_admin)])
+
+
+def _is_expired(value: datetime) -> bool:
+    if value.tzinfo is None:
+        return value < datetime.utcnow()
+    return value < datetime.now(timezone.utc)
 
 
 def _resolve_media_root(raw_path: str) -> Path | None:
@@ -183,6 +192,7 @@ def admin_list_schedule(db: Session = Depends(get_db_session)) -> list[ScheduleA
                 current_participants=item.current_participants,
                 is_individual=item.is_individual,
                 is_active=item.is_active,
+                is_expired=_is_expired(item.end_time),
                 created_at=item.created_at,
                 updated_at=item.updated_at,
             )
@@ -210,6 +220,7 @@ def admin_create_schedule(payload: ScheduleAdminCreate, db: Session = Depends(ge
         current_participants=row.current_participants,
         is_individual=row.is_individual,
         is_active=row.is_active,
+        is_expired=_is_expired(row.end_time),
         created_at=row.created_at,
         updated_at=row.updated_at,
     )
@@ -244,6 +255,7 @@ def admin_update_schedule(
         current_participants=row.current_participants,
         is_individual=row.is_individual,
         is_active=row.is_active,
+        is_expired=_is_expired(row.end_time),
         created_at=row.created_at,
         updated_at=row.updated_at,
     )
@@ -290,6 +302,52 @@ def admin_delete_gallery(item_id: int, db: Session = Depends(get_db_session)) ->
     row = db.get(GalleryItem, item_id)
     if not row:
         raise HTTPException(status_code=404, detail="Элемент галереи не найден.")
+    db.delete(row)
+    db.commit()
+    return {"ok": True}
+
+
+@router.get("/press-videos", response_model=list[PressVideoAdminResponse])
+def admin_list_press_videos(db: Session = Depends(get_db_session)) -> list[PressVideo]:
+    query = select(PressVideo).order_by(PressVideo.sort_order.asc(), PressVideo.id.desc())
+    return db.scalars(query).all()
+
+
+@router.post("/press-videos", response_model=PressVideoAdminResponse)
+def admin_create_press_video(payload: PressVideoAdminCreate, db: Session = Depends(get_db_session)) -> PressVideo:
+    if not ((payload.video_path and payload.video_path.strip()) or (payload.external_url and payload.external_url.strip())):
+        raise HTTPException(status_code=422, detail="Укажите видеофайл или внешнюю ссылку.")
+    row = PressVideo(**payload.model_dump())
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+@router.put("/press-videos/{video_id}", response_model=PressVideoAdminResponse)
+def admin_update_press_video(
+    video_id: int,
+    payload: PressVideoAdminUpdate,
+    db: Session = Depends(get_db_session),
+) -> PressVideo:
+    row = db.get(PressVideo, video_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Видео не найдено.")
+    if not ((payload.video_path and payload.video_path.strip()) or (payload.external_url and payload.external_url.strip())):
+        raise HTTPException(status_code=422, detail="Укажите видеофайл или внешнюю ссылку.")
+
+    for key, value in payload.model_dump().items():
+        setattr(row, key, value)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+@router.delete("/press-videos/{video_id}")
+def admin_delete_press_video(video_id: int, db: Session = Depends(get_db_session)) -> dict[str, bool]:
+    row = db.get(PressVideo, video_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Видео не найдено.")
     db.delete(row)
     db.commit()
     return {"ok": True}
@@ -557,7 +615,7 @@ async def admin_upload_file(
     if not media_root:
         raise HTTPException(status_code=500, detail="MEDIA_ROOT не найден на сервере.")
 
-    allowed_targets = {"gallery", "services", "general", "icons"}
+    allowed_targets = {"gallery", "services", "general", "icons", "videos"}
     if target not in allowed_targets:
         raise HTTPException(status_code=422, detail="Недопустимый target для загрузки.")
 
@@ -567,9 +625,12 @@ async def admin_upload_file(
         raise HTTPException(status_code=422, detail="Недопустимый формат файла.")
 
     content = await file.read()
-    max_size = 30 * 1024 * 1024
+    max_size = 300 * 1024 * 1024 if target == "videos" else 30 * 1024 * 1024
     if len(content) > max_size:
-        raise HTTPException(status_code=422, detail="Файл слишком большой (макс. 30MB).")
+        raise HTTPException(
+            status_code=422,
+            detail=f"Файл слишком большой (макс. {300 if target == 'videos' else 30}MB).",
+        )
 
     relative_dir = Path("uploads") / target
     save_dir = media_root / relative_dir
@@ -603,6 +664,7 @@ def _service_to_admin(service: Service) -> ServiceAdminResponse:
         "category": service.category,
         "category_label": service.category_label,
         "format_mode": service.format_mode or "group_and_individual",
+        "payment_mode": service.payment_mode or "group_only",
         "teaser": service.teaser,
         "duration": service.duration,
         "pricing": as_dict(service.pricing),

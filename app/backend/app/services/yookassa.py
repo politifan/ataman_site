@@ -11,7 +11,7 @@ from uuid import uuid4
 import httpx
 from fastapi import HTTPException
 
-from ..config import settings
+from .runtime_settings import RuntimePaymentSettings
 
 YOOKASSA_API_BASE = "https://api.yookassa.ru/v3"
 
@@ -26,14 +26,15 @@ class YookassaPaymentResult:
 
 
 class YookassaClient:
-    def __init__(self) -> None:
-        if not settings.yookassa_enabled:
+    def __init__(self, runtime: RuntimePaymentSettings) -> None:
+        if not runtime.enabled:
             raise HTTPException(
                 status_code=503,
                 detail="Онлайн-оплата временно недоступна. Попробуйте позже или свяжитесь с нами.",
             )
-        self.shop_id = settings.yookassa_shop_id or ""
-        self.secret_key = settings.yookassa_secret_key or ""
+        self.runtime = runtime
+        self.shop_id = runtime.shop_id
+        self.secret_key = runtime.secret_key
         token = base64.b64encode(f"{self.shop_id}:{self.secret_key}".encode("utf-8")).decode("utf-8")
         self.auth_header = f"Basic {token}"
 
@@ -60,7 +61,14 @@ class YookassaClient:
             )
         return response.json()
 
-    def create_payment(self, *, booking_id: int, amount: Decimal, description: str) -> YookassaPaymentResult:
+    def create_payment(
+        self,
+        *,
+        booking_id: int,
+        amount: Decimal,
+        description: str,
+        customer_email: str | None = None,
+    ) -> YookassaPaymentResult:
         body = {
             "amount": {
                 "value": f"{amount:.2f}",
@@ -69,13 +77,32 @@ class YookassaClient:
             "capture": True,
             "confirmation": {
                 "type": "redirect",
-                "return_url": settings.yookassa_return_url,
+                "return_url": self.runtime.return_url,
             },
             "description": description,
             "metadata": {
                 "booking_id": str(booking_id),
             },
         }
+        if customer_email:
+            body["receipt"] = {
+                "customer": {
+                    "email": customer_email,
+                },
+                "items": [
+                    {
+                        "description": description,
+                        "quantity": "1.00",
+                        "amount": {
+                            "value": f"{amount:.2f}",
+                            "currency": "RUB",
+                        },
+                        "vat_code": self.runtime.vat_code,
+                        "payment_mode": self.runtime.receipt_payment_mode,
+                        "payment_subject": self.runtime.receipt_payment_subject,
+                    }
+                ],
+            }
         payload = self._request("POST", "/payments", payload=body)
         return YookassaPaymentResult(
             payment_id=payload["id"],
@@ -96,15 +123,15 @@ class YookassaClient:
         )
 
 
-def verify_legacy_signature(raw_body: bytes, signature: str | None) -> bool:
+def verify_legacy_signature(raw_body: bytes, signature: str | None, secret: str | None) -> bool:
     """Совместимость со старой подписью X-Payment-Sha1-Hash."""
-    if not settings.yookassa_webhook_secret:
+    if not secret:
         return True
     if not signature:
         return False
 
     expected = hmac.new(
-        key=settings.yookassa_webhook_secret.encode("utf-8"),
+        key=secret.encode("utf-8"),
         msg=raw_body,
         digestmod=hashlib.sha1,
     ).hexdigest()

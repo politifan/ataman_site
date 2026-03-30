@@ -188,7 +188,7 @@ export default function ServicePage() {
         window.location.href = response.confirmation_url;
         return;
       }
-      setSuccess("Заявка создана. Ссылка на оплату пока недоступна.");
+      setSuccess(response.message || "Заявка создана.");
       setForm(initialForm);
     } catch (err) {
       setError(err.message || "Не удалось отправить заявку.");
@@ -215,6 +215,13 @@ export default function ServicePage() {
   const canBookGroup = supportsGroup && groupBookingEvents.length > 0;
   const canBookIndividual = supportsIndividual && individualBookingEvents.length > 0;
   const activeModeEvents = bookingMode === "individual" ? individualEvents : groupEvents;
+  const submitLabel = (() => {
+    if (sending) return "Отправка...";
+    if (!selectedEvent) return "Отправить заявку";
+    if (service.payment_mode === "always") return "Перейти к оплате";
+    if (!selectedEvent.is_individual && service.payment_mode !== "manual") return "Перейти к оплате";
+    return "Отправить заявку";
+  })();
 
   return (
     <div className="page-service">
@@ -523,7 +530,7 @@ export default function ServicePage() {
                   type="submit"
                   disabled={sending || !selectedScheduleId || !selectedEvent || selectedEvent.available_spots <= 0}
                 >
-                  {sending ? "Отправка..." : "Отправить заявку"}
+                  {submitLabel}
                 </button>
                 {success ? <p className="ok">{success}</p> : null}
                 {error ? <p className="err">{error}</p> : null}

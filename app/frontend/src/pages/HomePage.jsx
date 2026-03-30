@@ -647,9 +647,11 @@ export default function HomePage() {
               </a>
               <nav className="mystic-header-nav">
                 <a href="#services">Каталог</a>
+                <Link to="/psychologist">Психолог</Link>
                 <Link to="/certificates">Сертификат</Link>
                 <Link to="/schedule">Расписание</Link>
                 <Link to="/gallery">Галерея</Link>
+                <Link to="/press">О нас в СМИ</Link>
                 <Link to="/contacts">Контакты</Link>
               </nav>
           <a
@@ -905,22 +907,18 @@ export default function HomePage() {
               <article key={item.id} className="mystic-schedule-card">
                 <div className="mystic-schedule-main">
                   <h4>{autoRu(item.service_title || "")}</h4>
-                  <p>{item.is_individual ? "Индивидуальный формат по согласованию" : formatDateTime(item.start_time)}</p>
+                  <p>{`${formatDateTime(item.start_time)}${item.is_individual ? " • индивидуально" : ""}`}</p>
                 </div>
 
                 <div className="mystic-schedule-side">
-                  {item.is_individual ? (
-                    <a href={contactHref} {...(contactIsExternal ? { target: "_blank", rel: "noreferrer" } : {})}>
-                      Написать в Telegram
-                    </a>
-                  ) : (
-                    <>
-                      <span className={item.available_spots > 0 ? "open" : "closed"}>
-                        Мест: {item.available_spots}/{item.max_participants}
-                      </span>
-                      <Link to={`/services/${item.service_slug}?event=${item.id}#service-booking`}>Записаться</Link>
-                    </>
-                  )}
+                  <>
+                    <span className={item.available_spots > 0 ? "open" : "closed"}>
+                      {item.is_individual
+                        ? "Индивидуальный слот открыт"
+                        : `Мест: ${item.available_spots}/${item.max_participants}`}
+                    </span>
+                    <Link to={`/services/${item.service_slug}?event=${item.id}#service-booking`}>Записаться</Link>
+                  </>
                 </div>
               </article>
             ))}
@@ -962,7 +960,9 @@ export default function HomePage() {
           <div className="mystic-footer-col">
             <h4>Навигация</h4>
             <Link to="/services">Услуги</Link>
+            <Link to="/psychologist">Психолог</Link>
             <Link to="/gallery">Галерея</Link>
+            <Link to="/press">О нас в СМИ</Link>
             <Link to="/schedule">Расписание</Link>
             <Link to="/contacts">Контакты</Link>
           </div>

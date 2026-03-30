@@ -5,6 +5,7 @@ import ServicesPage from "./pages/ServicesPage";
 import ServicePage from "./pages/ServicePage";
 import SchedulePage from "./pages/SchedulePage";
 import GalleryPage from "./pages/GalleryPage";
+import PressPage from "./pages/PressPage";
 import ContactsPage from "./pages/ContactsPage";
 import LegalPage from "./pages/LegalPage";
 import PaymentStatePage from "./pages/PaymentStatePage";
@@ -15,6 +16,7 @@ import AdminDashboardPage from "./admin/AdminDashboardPage";
 import AdminServicesPage from "./admin/AdminServicesPage";
 import AdminSchedulePage from "./admin/AdminSchedulePage";
 import AdminGalleryPage from "./admin/AdminGalleryPage";
+import AdminPressPage from "./admin/AdminPressPage";
 import AdminBookingsPage from "./admin/AdminBookingsPage";
 import AdminContactsPage from "./admin/AdminContactsPage";
 import AdminSettingsPage from "./admin/AdminSettingsPage";
@@ -83,6 +85,8 @@ export default function App() {
         <Route path="/services/:slug" element={<ServicePage />} />
         <Route path="/schedule" element={<SchedulePage />} />
         <Route path="/gallery" element={<GalleryPage />} />
+        <Route path="/press" element={<PressPage />} />
+        <Route path="/psychologist" element={<Navigate to="/services/psychologist-consultation" replace />} />
         <Route path="/contacts" element={<ContactsPage />} />
         <Route path="/certificates" element={<CertificatePurchasePage />} />
         <Route path="/certificates/:code" element={<CertificatePublicPage />} />
@@ -99,6 +103,7 @@ export default function App() {
         <Route path="/service.php" element={<LegacyServiceRedirect />} />
         <Route path="/schedule.php" element={<LegacyRedirect to="/schedule" />} />
         <Route path="/gallery.php" element={<LegacyRedirect to="/gallery" />} />
+        <Route path="/press.php" element={<LegacyRedirect to="/press" />} />
         <Route path="/contacts.php" element={<LegacyRedirect to="/contacts" />} />
         <Route path="/contact.php" element={<LegacyRedirect to="/contacts" />} />
         <Route path="/booking.php" element={<LegacyRedirect to="/schedule" />} />
@@ -113,6 +118,7 @@ export default function App() {
           <Route path="services" element={<AdminServicesPage />} />
           <Route path="schedule" element={<AdminSchedulePage />} />
           <Route path="gallery" element={<AdminGalleryPage />} />
+          <Route path="press" element={<AdminPressPage />} />
           <Route path="bookings" element={<AdminBookingsPage />} />
           <Route path="contacts" element={<AdminContactsPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />

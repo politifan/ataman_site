@@ -139,6 +139,10 @@ export function getGallery(category) {
   return request(`/api/gallery${query}`);
 }
 
+export function getPressVideos() {
+  return request("/api/press-videos");
+}
+
 export function getLegalPages() {
   return request("/api/legal");
 }
@@ -326,6 +330,30 @@ export function adminUpdateGallery(id, payload) {
 
 export function adminDeleteGallery(id) {
   return adminRequest(`/api/admin/gallery/${id}`, {
+    method: "DELETE"
+  });
+}
+
+export function adminListPressVideos() {
+  return adminRequest("/api/admin/press-videos");
+}
+
+export function adminCreatePressVideo(payload) {
+  return adminRequest("/api/admin/press-videos", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function adminUpdatePressVideo(id, payload) {
+  return adminRequest(`/api/admin/press-videos/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function adminDeletePressVideo(id) {
+  return adminRequest(`/api/admin/press-videos/${id}`, {
     method: "DELETE"
   });
 }

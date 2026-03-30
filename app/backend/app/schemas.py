@@ -91,6 +91,7 @@ class ServicePublic(BaseModel):
     category: str | None = None
     category_label: str | None = None
     format_mode: str
+    payment_mode: str
     teaser: str | None = None
     duration: str | None = None
     pricing: dict[str, Any]
@@ -118,6 +119,7 @@ class SchedulePublic(BaseModel):
     available_spots: int
     is_individual: bool
     is_active: bool
+    is_expired: bool = False
 
 
 class PaymentStatusResponse(BaseModel):
@@ -133,6 +135,7 @@ class ServiceAdminBase(BaseModel):
     category: str | None = Field(default=None, max_length=64)
     category_label: str | None = Field(default=None, max_length=128)
     format_mode: str = Field(default="group_and_individual", pattern="^(group_and_individual|individual_only)$")
+    payment_mode: str = Field(default="group_only", pattern="^(group_only|always|manual)$")
     teaser: str | None = None
     duration: str | None = Field(default=None, max_length=64)
     pricing: dict[str, Any] = Field(default_factory=dict)
@@ -216,6 +219,7 @@ class ScheduleAdminResponse(ScheduleAdminBase):
     updated_at: datetime
     service_title: str | None = None
     service_slug: str | None = None
+    is_expired: bool = False
 
 
 class GalleryAdminBase(BaseModel):
@@ -269,6 +273,47 @@ class GalleryPublic(BaseModel):
     category: str | None = None
     sort_order: int
     is_active: bool
+
+
+class PressVideoPublic(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    description: str | None = None
+    source_name: str | None = None
+    video_path: str | None = None
+    poster_path: str | None = None
+    external_url: str | None = None
+    sort_order: int
+    is_active: bool
+
+
+class PressVideoAdminBase(BaseModel):
+    title: str = Field(min_length=1, max_length=255)
+    description: str | None = None
+    source_name: str | None = Field(default=None, max_length=255)
+    video_path: str | None = Field(default=None, max_length=512)
+    poster_path: str | None = Field(default=None, max_length=512)
+    external_url: str | None = Field(default=None, max_length=1024)
+    sort_order: int = 0
+    is_active: bool = True
+
+
+class PressVideoAdminCreate(PressVideoAdminBase):
+    pass
+
+
+class PressVideoAdminUpdate(PressVideoAdminBase):
+    pass
+
+
+class PressVideoAdminResponse(PressVideoAdminBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
 
 
 class LegalPageResponse(BaseModel):

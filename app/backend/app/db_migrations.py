@@ -8,6 +8,21 @@ from .certificates import DEFAULT_VALIDITY_MODE, calculate_certificate_expires_a
 from .models import GiftCertificate
 
 
+def ensure_service_payment_mode_schema(engine: Engine) -> None:
+    inspector = inspect(engine)
+    if "services" not in inspector.get_table_names():
+        return
+
+    existing_columns = {column["name"] for column in inspector.get_columns("services")}
+    if "payment_mode" in existing_columns:
+        return
+
+    with engine.begin() as connection:
+        connection.execute(
+            text("ALTER TABLE services ADD COLUMN payment_mode VARCHAR(32) NOT NULL DEFAULT 'group_only'")
+        )
+
+
 def ensure_gift_certificate_validity_schema(engine: Engine) -> None:
     inspector = inspect(engine)
     if "gift_certificates" not in inspector.get_table_names():

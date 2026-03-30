@@ -6,7 +6,8 @@ from datetime import datetime
 from pathlib import Path
 
 from app.db import SessionLocal
-from app.models import Booking, Contact, GalleryItem, GiftCertificate, Payment, PaymentLog, ScheduleEvent, Service, Setting
+from app.models import Booking, Contact, GalleryItem, GiftCertificate, Payment, PaymentLog, PressVideo, ScheduleEvent, Service, Setting
+from app.services.runtime_settings import ensure_runtime_settings
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
@@ -42,6 +43,7 @@ def seed_site(db, *, overwrite: bool = True) -> None:
 
     analytics = site.get("analytics") or {}
     upsert_setting(db, "metrika_id", str(analytics.get("metrika_id") or "101427191"), overwrite=overwrite)
+    ensure_runtime_settings(db)
 
 
 def seed_services(db) -> dict[str, Service]:
@@ -58,6 +60,7 @@ def seed_services(db) -> dict[str, Service]:
                 "category",
                 "category_label",
                 "format_mode",
+                "payment_mode",
                 "teaser",
                 "duration",
                 "pricing",
@@ -72,6 +75,7 @@ def seed_services(db) -> dict[str, Service]:
                 "is_draft",
             ]
         }
+        clean_payload["payment_mode"] = payload.get("payment_mode") or "group_only"
         clean_payload["is_active"] = True
         if row:
             for key, value in clean_payload.items():
@@ -107,6 +111,26 @@ def seed_schedule(db, service_by_slug: dict[str, Service]) -> None:
                 setattr(row, key, value)
         else:
             db.add(ScheduleEvent(id=payload["id"], **values))
+
+
+def seed_press_videos(db) -> None:
+    path = DATA_DIR / "press_videos.json"
+    if not path.exists() or db.query(PressVideo).count() > 0:
+        return
+
+    for payload in load_json(path):
+        db.add(
+            PressVideo(
+                title=str(payload.get("title") or "").strip() or "Видео",
+                description=(payload.get("description") or "").strip() or None,
+                source_name=(payload.get("source_name") or "").strip() or None,
+                video_path=(payload.get("video_path") or "").strip() or None,
+                poster_path=(payload.get("poster_path") or "").strip() or None,
+                external_url=(payload.get("external_url") or "").strip() or None,
+                sort_order=int(payload.get("sort_order", 0)),
+                is_active=bool(payload.get("is_active", True)),
+            )
+        )
 
 
 def seed_gallery_assets(db, service_by_slug: dict[str, Service]) -> None:
@@ -174,6 +198,7 @@ def maybe_reset(db, reset: bool) -> None:
     db.query(Contact).delete()
     db.query(Service).delete()
     db.query(GalleryItem).delete()
+    db.query(PressVideo).delete()
     db.query(GiftCertificate).delete()
     db.query(Setting).delete()
 
@@ -190,6 +215,7 @@ def main() -> None:
         service_map = seed_services(db)
         seed_schedule(db, service_map)
         seed_gallery_assets(db, service_map)
+        seed_press_videos(db)
         db.commit()
         print("Seed completed.")
     finally:

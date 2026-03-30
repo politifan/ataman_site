@@ -5068,6 +5068,83 @@ body {
   border-color: rgba(240, 247, 255, 0.26);
 }
 
+.press-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.press-card {
+  display: grid;
+  gap: 18px;
+}
+
+.press-player {
+  border-radius: 22px;
+  overflow: hidden;
+  background: rgba(20, 32, 78, 0.08);
+  min-height: 220px;
+}
+
+.press-player video,
+.admin-video-preview video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.press-external-link,
+.press-video-placeholder {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  color: #35527d;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.press-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.press-copy h2 {
+  margin: 0;
+  color: #28405d;
+}
+
+.press-copy p {
+  margin: 0;
+}
+
+.press-source {
+  color: #6d7f95;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.press-link-inline {
+  color: #234f88;
+  font-weight: 600;
+}
+
+.press-empty {
+  text-align: center;
+}
+
+.admin-press-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-video-preview {
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(20, 32, 78, 0.06);
+}
+
 @media (max-width: 980px) {
   .page-common-head {
     flex-direction: column;
@@ -5116,7 +5193,8 @@ body {
 
   .admin-toolbar-bookings,
   .admin-toolbar-contacts,
-  .admin-settings-create-grid {
+  .admin-settings-create-grid,
+  .admin-press-form-grid {
     grid-template-columns: 1fr;
   }
 }

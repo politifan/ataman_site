@@ -11,12 +11,17 @@ from sqlalchemy import select
 
 from .config import settings
 from .db import Base, SessionLocal, engine
-from .db_migrations import backfill_gift_certificate_validity, ensure_gift_certificate_validity_schema
+from .db_migrations import (
+    backfill_gift_certificate_validity,
+    ensure_gift_certificate_validity_schema,
+    ensure_service_payment_mode_schema,
+)
 from .models import Service
 from .routers.admin import router as admin_router
 from .routers.auth import router as auth_router
 from .routers.payments import router as payments_router
 from .routers.public import router as public_router
+from .services.runtime_settings import ensure_runtime_settings, resolve_site_url
 from .security import ensure_bootstrap_admin
 
 
@@ -84,7 +89,11 @@ def create_app() -> FastAPI:
 
     @app.get("/robots.txt", include_in_schema=False)
     def robots_txt() -> Response:
-        base = settings.site_url.rstrip("/")
+        db = SessionLocal()
+        try:
+            base = resolve_site_url(db)
+        finally:
+            db.close()
         body = "\n".join(
             [
                 "User-agent: *",
@@ -101,23 +110,9 @@ def create_app() -> FastAPI:
 
     @app.get("/sitemap.xml", include_in_schema=False)
     def sitemap_xml() -> Response:
-        base = settings.site_url.rstrip("/")
-        now = datetime.now(timezone.utc).date().isoformat()
-        static_urls = [
-            "/",
-            "/services",
-            "/schedule",
-            "/gallery",
-            "/contacts",
-            "/legal/privacy",
-            "/legal/personal-data",
-            "/legal/terms",
-            "/legal/offer",
-            "/legal/marketing",
-        ]
-
         db = SessionLocal()
         try:
+            base = resolve_site_url(db)
             service_urls = [
                 f"/services/{slug}"
                 for slug in db.scalars(
@@ -126,6 +121,22 @@ def create_app() -> FastAPI:
             ]
         finally:
             db.close()
+
+        now = datetime.now(timezone.utc).date().isoformat()
+        static_urls = [
+            "/",
+            "/services",
+            "/psychologist",
+            "/schedule",
+            "/gallery",
+            "/press",
+            "/contacts",
+            "/legal/privacy",
+            "/legal/personal-data",
+            "/legal/terms",
+            "/legal/offer",
+            "/legal/marketing",
+        ]
 
         all_urls = static_urls + service_urls
         url_nodes = "\n".join(
@@ -157,10 +168,13 @@ def create_app() -> FastAPI:
 
     # Local DB bootstrap (SQLite or any DB URL): create tables if missing.
     Base.metadata.create_all(bind=engine)
+    ensure_service_payment_mode_schema(engine)
     ensure_gift_certificate_validity_schema(engine)
     db = SessionLocal()
     try:
         ensure_bootstrap_admin(db)
+        ensure_runtime_settings(db)
+        db.commit()
         backfill_gift_certificate_validity(db)
     finally:
         db.close()

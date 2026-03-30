@@ -1,15 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import { getSchedule, getSite } from "../api";
-
-function normalizeContactHref(value) {
-  if (!value) return "#";
-  if (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("tel:") || value.startsWith("mailto:")) {
-    return value;
-  }
-  if (value.startsWith("@")) return `https://t.me/${value.slice(1)}`;
-  return value;
-}
+import { getSchedule } from "../api";
 
 function formatDateTime(value) {
   const date = new Date(value);
@@ -21,7 +12,6 @@ function formatDateTime(value) {
 
 export default function SchedulePage() {
   const [items, setItems] = useState([]);
-  const [site, setSite] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -29,9 +19,7 @@ export default function SchedulePage() {
     async function load() {
       setLoading(true);
       try {
-        const [scheduleData, siteData] = await Promise.all([getSchedule(), getSite()]);
-        setItems(scheduleData);
-        setSite(siteData);
+        setItems(await getSchedule());
       } catch (err) {
         setError(err.message || "Не удалось загрузить расписание.");
       } finally {
@@ -61,8 +49,6 @@ export default function SchedulePage() {
   if (loading) return <div className="state-page">Загрузка...</div>;
   if (error) return <div className="state-page">Ошибка: {error}</div>;
 
-  const telegramHref = normalizeContactHref(site?.contacts?.telegram || "");
-
   return (
     <div className="page-common">
       <div className="container">
@@ -87,18 +73,10 @@ export default function SchedulePage() {
                     <p>{formatDateTime(event.start_time)}</p>
                     <span>
                       {event.is_individual
-                        ? "Индивидуальный формат"
+                        ? "Индивидуальный слот доступен онлайн"
                         : `Свободно мест: ${event.available_spots}/${event.max_participants}`}
                     </span>
-                    {!event.is_individual ? (
-                      <Link to={`/services/${group.slug}?event=${event.id}#service-booking`}>Записаться</Link>
-                    ) : telegramHref !== "#" ? (
-                      <a href={telegramHref} target="_blank" rel="noreferrer">
-                        Telegram
-                      </a>
-                    ) : (
-                      <span className="muted">Свяжитесь с нами для уточнения времени</span>
-                    )}
+                    <Link to={`/services/${group.slug}?event=${event.id}#service-booking`}>Записаться</Link>
                   </div>
                 ))}
               </div>

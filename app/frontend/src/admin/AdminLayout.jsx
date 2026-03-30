@@ -89,6 +89,12 @@ export default function AdminLayout() {
         description: "Добавляйте визуальный контент, сортируйте категории и управляйте отображением."
       };
     }
+    if (location.pathname.includes("/admin/press")) {
+      return {
+        title: "О нас в СМИ",
+        description: "Загружайте видео, добавляйте подписи и управляйте публикацией материалов."
+      };
+    }
     return {
       title: "Управление услугами",
       description: "Редактируйте карточки практик, описание, формат и медиа-контент."
@@ -183,6 +189,7 @@ export default function AdminLayout() {
           <NavLink to="/admin/services">Услуги</NavLink>
           <NavLink to="/admin/schedule">Расписание</NavLink>
           <NavLink to="/admin/gallery">Галерея</NavLink>
+          <NavLink to="/admin/press">О нас в СМИ</NavLink>
           <NavLink to="/admin/bookings">Записи</NavLink>
           <NavLink to="/admin/contacts">Сообщения</NavLink>
           <NavLink to="/admin/certificates">Сертификаты</NavLink>

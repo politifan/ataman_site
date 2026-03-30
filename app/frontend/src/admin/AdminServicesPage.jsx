@@ -15,6 +15,7 @@ const basePayload = {
   category: "",
   category_label: "",
   format_mode: "group_and_individual",
+  payment_mode: "group_only",
   teaser: "",
   duration: "",
   pricing: {},
@@ -109,6 +110,12 @@ function slugify(value) {
 
 function formatModeLabel(value) {
   return value === "individual_only" ? "Только индивидуально" : "Групповой и индивидуальный";
+}
+
+function formatPaymentModeLabel(value) {
+  if (value === "always") return "Онлайн-оплата для любой записи";
+  if (value === "manual") return "Без онлайн-оплаты";
+  return "Оплата только там, где включён автоплатёж";
 }
 
 function asArray(value) {
@@ -231,6 +238,7 @@ function toPayload(editor) {
     category: editor.category.trim() || null,
     category_label: editor.category_label.trim() || null,
     format_mode: editor.format_mode,
+    payment_mode: editor.payment_mode,
     teaser: editor.teaser.trim() || null,
     duration: editor.duration.trim() || null,
     pricing,
@@ -679,6 +687,7 @@ export default function AdminServicesPage() {
                 <th>Название</th>
                 <th>Адрес</th>
                 <th>Формат</th>
+                <th>Оплата</th>
                 <th>Статус</th>
                 <th></th>
               </tr>
@@ -690,6 +699,7 @@ export default function AdminServicesPage() {
                   <td>{row.title}</td>
                   <td>{row.slug}</td>
                   <td>{formatModeLabel(row.format_mode)}</td>
+                  <td>{formatPaymentModeLabel(row.payment_mode)}</td>
                   <td>{row.is_active ? "Активна" : "Скрыта"}</td>
                   <td className="admin-actions-inline">
                     <button type="button" onClick={() => openEdit(row)}>
@@ -715,6 +725,7 @@ export default function AdminServicesPage() {
                 <p>{row.slug}</p>
                 <div className="admin-tags">
                   <span>{formatModeLabel(row.format_mode)}</span>
+                  <span>{formatPaymentModeLabel(row.payment_mode)}</span>
                   <span>{row.category_label || row.category || "Без категории"}</span>
                   <span>{row.is_active ? "Активна" : "Скрыта"}</span>
                 </div>
@@ -868,6 +879,19 @@ export default function AdminServicesPage() {
                     aria-hidden={isEditing ? "false" : stepIndex !== 2}
                   >
                     <h3>Стоимость</h3>
+
+                    <label>
+                      Режим онлайн-оплаты
+                      <AdminSelect
+                        value={editor.payment_mode}
+                        onChange={(nextValue) => setEditor((prev) => ({ ...prev, payment_mode: nextValue }))}
+                        options={[
+                          { value: "group_only", label: "Оплата только там, где включён автоплатёж" },
+                          { value: "always", label: "Всегда вести на оплату после записи" },
+                          { value: "manual", label: "Только заявка без онлайн-оплаты" }
+                        ]}
+                      />
+                    </label>
 
                     <label className="inline">
                       <input

@@ -6,10 +6,10 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from ..config import settings
 from ..deps import get_db_session
 from ..models import Booking, Payment, PaymentLog
 from ..schemas import PaymentStatusResponse, PaymentWebhookEnvelope
+from ..services.runtime_settings import resolve_payment_settings, resolve_site_url
 from ..services.yookassa import YookassaClient, safe_json_loads, verify_legacy_signature
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
@@ -56,8 +56,8 @@ def _apply_payment_state(
     )
 
 
-def _build_redirect(payment_id: str, status: str) -> str | None:
-    base = settings.yookassa_return_url.rstrip("/")
+def _build_redirect(payment_id: str, status: str, *, site_url: str) -> str | None:
+    base = site_url.rstrip("/")
     if status == "succeeded":
         return f"{base}/payment/success?payment_id={payment_id}"
     if status == "waiting_for_capture":
@@ -79,7 +79,8 @@ def check_payment_status(provider_payment_id: str, db: Session = Depends(get_db_
     if not payment:
         raise HTTPException(status_code=404, detail="Платеж не найден.")
 
-    yk = YookassaClient()
+    runtime = resolve_payment_settings(db)
+    yk = YookassaClient(runtime)
     result = yk.get_payment(provider_payment_id)
 
     _apply_payment_state(
@@ -98,7 +99,7 @@ def check_payment_status(provider_payment_id: str, db: Session = Depends(get_db_
         payment_id=provider_payment_id,
         status=result.status,
         booking_status=payment.booking.status,
-        redirect_url=_build_redirect(provider_payment_id, result.status),
+        redirect_url=_build_redirect(provider_payment_id, result.status, site_url=resolve_site_url(db)),
     )
 
 
@@ -109,7 +110,8 @@ async def yookassa_webhook(
     db: Session = Depends(get_db_session),
 ) -> dict[str, bool]:
     raw_body = await request.body()
-    if not verify_legacy_signature(raw_body, x_payment_sha1_hash):
+    runtime = resolve_payment_settings(db)
+    if not verify_legacy_signature(raw_body, x_payment_sha1_hash, runtime.webhook_secret):
         raise HTTPException(status_code=401, detail="Невалидная подпись webhook.")
 
     payload = safe_json_loads(raw_body)

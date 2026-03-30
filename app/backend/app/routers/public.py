@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
 
@@ -13,13 +13,14 @@ from sqlalchemy.orm import Session, joinedload
 
 from ..certificates import DEFAULT_VALIDITY_MODE
 from ..deps import get_db_session
-from ..models import Booking, Contact, GalleryItem, GiftCertificate, Payment, ScheduleEvent, Service, Setting
+from ..models import Booking, Contact, GalleryItem, GiftCertificate, Payment, PressVideo, ScheduleEvent, Service, Setting
 from ..schemas import (
     BookingCreate,
     BookingCreateResponse,
     ContactCreate,
     ContactResponse,
     GalleryPublic,
+    PressVideoPublic,
     GiftCertificatePublicResponse,
     GiftCertificatePurchaseRequest,
     GiftCertificatePurchaseResponse,
@@ -28,6 +29,8 @@ from ..schemas import (
     ServicePublic,
     SiteResponse,
 )
+from ..services.notifications import notify_booking_created, notify_contact_created
+from ..services.runtime_settings import resolve_payment_settings
 from ..services.yookassa import YookassaClient
 
 router = APIRouter(prefix="/api", tags=["public"])
@@ -150,6 +153,7 @@ def _service_to_public(service: Service) -> ServicePublic:
         "category": service.category,
         "category_label": service.category_label,
         "format_mode": service.format_mode,
+        "payment_mode": service.payment_mode or "group_only",
         "teaser": service.teaser,
         "duration": service.duration,
         "pricing": as_dict(service.pricing),
@@ -169,6 +173,11 @@ def _service_to_public(service: Service) -> ServicePublic:
 
 def _schedule_to_public(event: ScheduleEvent) -> SchedulePublic:
     available_spots = max(0, event.max_participants - event.current_participants)
+    end_time = event.end_time
+    if end_time.tzinfo is None:
+        is_expired = end_time < datetime.utcnow()
+    else:
+        is_expired = end_time < datetime.now(timezone.utc)
     return SchedulePublic(
         id=event.id,
         service_id=event.service_id,
@@ -181,6 +190,7 @@ def _schedule_to_public(event: ScheduleEvent) -> SchedulePublic:
         available_spots=available_spots,
         is_individual=event.is_individual,
         is_active=event.is_active,
+        is_expired=is_expired,
     )
 
 
@@ -200,6 +210,21 @@ def _extract_group_price(service: Service, event: ScheduleEvent) -> Decimal:
         raise HTTPException(status_code=422, detail="Для услуги не настроена стоимость.")
 
     return Decimal(str(value))
+
+
+def _requires_online_payment(service: Service, event: ScheduleEvent) -> bool:
+    payment_mode = (service.payment_mode or "group_only").strip()
+    if payment_mode == "manual":
+        return False
+    if payment_mode == "always":
+        return True
+    return not event.is_individual
+
+
+def _format_event_label(event: ScheduleEvent) -> str:
+    if event.start_time.tzinfo is None:
+        return event.start_time.strftime("%d.%m.%Y %H:%M")
+    return event.start_time.astimezone().strftime("%d.%m.%Y %H:%M")
 
 
 def _certificate_public_url(code: str) -> str:
@@ -260,7 +285,11 @@ def get_service(slug: str, db: Session = Depends(get_db_session)) -> ServicePubl
 
 
 @router.get("/schedule", response_model=list[SchedulePublic])
-def list_schedule(service_slug: str | None = None, db: Session = Depends(get_db_session)) -> list[SchedulePublic]:
+def list_schedule(
+    service_slug: str | None = None,
+    include_past: bool = False,
+    db: Session = Depends(get_db_session),
+) -> list[SchedulePublic]:
     query = (
         select(ScheduleEvent)
         .join(Service)
@@ -270,6 +299,8 @@ def list_schedule(service_slug: str | None = None, db: Session = Depends(get_db_
     )
     if service_slug:
         query = query.where(Service.slug == service_slug)
+    if not include_past:
+        query = query.where(ScheduleEvent.end_time >= datetime.now(timezone.utc))
     rows = db.scalars(query).all()
     return [_schedule_to_public(item) for item in rows]
 
@@ -290,6 +321,20 @@ def list_gallery(
     if category:
         query = query.where(GalleryItem.category == category)
     query = query.order_by(GalleryItem.sort_order.asc(), GalleryItem.id.desc()).limit(limit)
+    return db.scalars(query).all()
+
+
+@router.get("/press-videos", response_model=list[PressVideoPublic])
+def list_press_videos(
+    limit: int = Query(default=120, ge=1, le=500),
+    db: Session = Depends(get_db_session),
+) -> list[PressVideo]:
+    query = (
+        select(PressVideo)
+        .where(PressVideo.is_active.is_(True))
+        .order_by(PressVideo.sort_order.asc(), PressVideo.id.desc())
+        .limit(limit)
+    )
     return db.scalars(query).all()
 
 
@@ -360,6 +405,7 @@ def create_contact(payload: ContactCreate, db: Session = Depends(get_db_session)
     db.add(row)
     db.commit()
     db.refresh(row)
+    notify_contact_created(db, row)
     return ContactResponse(
         ok=True,
         id=row.id,
@@ -401,7 +447,9 @@ def create_booking(payload: BookingCreate, db: Session = Depends(get_db_session)
     if event.current_participants >= event.max_participants:
         raise HTTPException(status_code=409, detail="Свободных мест больше нет.")
 
-    if event.is_individual:
+    requires_payment = _requires_online_payment(event.service, event)
+
+    if not requires_payment:
         amount = _extract_group_price(event.service, event)
         booking = Booking(
             schedule_event_id=event.id,
@@ -416,13 +464,20 @@ def create_booking(payload: BookingCreate, db: Session = Depends(get_db_session)
         db.add(booking)
         db.commit()
         db.refresh(booking)
+        notify_booking_created(
+            db,
+            booking,
+            service_title=event.service.title,
+            event_label=_format_event_label(event),
+            is_individual=bool(event.is_individual),
+        )
         return BookingCreateResponse(
             ok=True,
             booking_id=booking.id,
             payment_id=None,
             payment_status="not_required",
             confirmation_url=None,
-            message="Заявка на индивидуальную практику создана. Администратор свяжется с вами для подтверждения.",
+            message="Заявка создана. Администратор свяжется с вами для подтверждения времени и деталей.",
         )
 
     amount = _extract_group_price(event.service, event)
@@ -440,11 +495,12 @@ def create_booking(payload: BookingCreate, db: Session = Depends(get_db_session)
     db.add(booking)
     db.flush()
 
-    yk = YookassaClient()
+    yk = YookassaClient(resolve_payment_settings(db))
     payment_result = yk.create_payment(
         booking_id=booking.id,
         amount=amount,
         description=f"Оплата: {event.service.title} ({event.start_time:%d.%m.%Y %H:%M})",
+        customer_email=str(payload.email),
     )
 
     payment = Payment(
@@ -467,6 +523,13 @@ def create_booking(payload: BookingCreate, db: Session = Depends(get_db_session)
 
     db.commit()
     db.refresh(booking)
+    notify_booking_created(
+        db,
+        booking,
+        service_title=event.service.title,
+        event_label=_format_event_label(event),
+        is_individual=bool(event.is_individual),
+    )
 
     return BookingCreateResponse(
         ok=True,

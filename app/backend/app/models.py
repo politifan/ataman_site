@@ -65,6 +65,7 @@ class Service(TimestampMixin, Base):
     category: Mapped[str | None] = mapped_column(String(64), nullable=True)
     category_label: Mapped[str | None] = mapped_column(String(128), nullable=True)
     format_mode: Mapped[str] = mapped_column(String(32), default="group_and_individual", nullable=False)
+    payment_mode: Mapped[str] = mapped_column(String(32), default="group_only", nullable=False)
     teaser: Mapped[str | None] = mapped_column(Text, nullable=True)
     duration: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
@@ -193,6 +194,23 @@ class GalleryItem(TimestampMixin, Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     image_path: Mapped[str] = mapped_column(String(512), nullable=False)
     category: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
+class PressVideo(TimestampMixin, Base):
+    __tablename__ = "press_videos"
+    __table_args__ = (
+        Index("ix_press_videos_active_sort", "is_active", "sort_order"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    video_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    poster_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    external_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 

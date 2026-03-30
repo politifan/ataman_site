@@ -1,10 +1,15 @@
 from __future__ import annotations
 
-from app.db_migrations import backfill_gift_certificate_validity, ensure_gift_certificate_validity_schema
+from app.db_migrations import (
+    backfill_gift_certificate_validity,
+    ensure_gift_certificate_validity_schema,
+    ensure_service_payment_mode_schema,
+)
 from app.db import Base, SessionLocal, engine
 from app.security import ensure_bootstrap_admin
+from app.services.runtime_settings import ensure_runtime_settings
 from app.models import Service
-from seed_from_json import seed_gallery_assets, seed_schedule, seed_services, seed_site
+from seed_from_json import seed_gallery_assets, seed_press_videos, seed_schedule, seed_services, seed_site
 
 
 def apply_runtime_content_fixes(db) -> None:
@@ -16,11 +21,13 @@ def apply_runtime_content_fixes(db) -> None:
 
 def main() -> None:
     Base.metadata.create_all(bind=engine)
+    ensure_service_payment_mode_schema(engine)
     ensure_gift_certificate_validity_schema(engine)
 
     db = SessionLocal()
     try:
         _, created = ensure_bootstrap_admin(db)
+        ensure_runtime_settings(db)
         if created:
             print("Bootstrap admin user created from .env")
 
@@ -30,6 +37,7 @@ def main() -> None:
             service_map = seed_services(db)
             seed_schedule(db, service_map)
             seed_gallery_assets(db, service_map)
+            seed_press_videos(db)
             db.commit()
             backfill_gift_certificate_validity(db)
             print("Database initialized and seeded.")

@@ -60,6 +60,30 @@ if [ "$BUILD_FRONTEND" = "1" ]; then
     exit 1
   fi
 
+  # Shared hosting often has strict virtual-memory limits. Vite/Rollup may
+  # instantiate tiny Wasm helpers, but V8's default maximum Wasm memory is huge
+  # and can fail before the build starts doing meaningful work.
+  add_node_option() {
+    local option="$1"
+    case " ${NODE_OPTIONS:-} " in
+      *" ${option%%=*}="*) return 0 ;;
+    esac
+    local next_options="${NODE_OPTIONS:-} $option"
+    if NODE_OPTIONS="$next_options" node -e "" >/dev/null 2>&1; then
+      export NODE_OPTIONS="$next_options"
+    else
+      echo "Skipping unsupported NODE_OPTIONS flag: $option"
+    fi
+  }
+
+  if node --v8-options 2>/dev/null | grep -q -- "--wasm-max-mem-pages"; then
+    add_node_option "--wasm-max-mem-pages=1024"
+  fi
+  add_node_option "--max-old-space-size=256"
+  NODE_OPTIONS="${NODE_OPTIONS#"${NODE_OPTIONS%%[![:space:]]*}"}"
+  export NODE_OPTIONS
+  echo "NODE_OPTIONS=$NODE_OPTIONS"
+
   (
     cd app/frontend
     if ! npm ci --no-audit --no-fund; then

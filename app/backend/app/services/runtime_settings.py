@@ -59,6 +59,7 @@ class TelegramNotificationSettings:
     enabled: bool
     bot_token: str
     chat_ids: list[str]
+    proxy_url: str | None = None
 
 
 def _settings_map(db: Session) -> dict[str, str]:
@@ -105,6 +106,7 @@ def resolve_telegram_notification_settings(db: Session) -> TelegramNotificationS
         enabled=enabled and bool(bot_token) and bool(chat_ids),
         bot_token=bot_token,
         chat_ids=chat_ids,
+        proxy_url=(values.get("telegram_proxy_url") or env_settings.telegram_proxy_url or "").strip() or None,
     )
 
 
@@ -124,6 +126,7 @@ def ensure_runtime_settings(db: Session) -> None:
         ("telegram_notifications_enabled", "1" if env_settings.telegram_notifications_enabled else "0", False),
         ("telegram_bot_token", env_settings.telegram_bot_token, False),
         ("telegram_chat_ids", env_settings.telegram_chat_ids, False),
+        ("telegram_proxy_url", env_settings.telegram_proxy_url, False),
     ]
 
     existing = {

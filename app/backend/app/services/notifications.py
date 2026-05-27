@@ -11,14 +11,14 @@ from .runtime_settings import resolve_telegram_notification_settings
 logger = logging.getLogger(__name__)
 
 
-def _post_telegram_message(bot_token: str, chat_id: str, text: str) -> None:
+def _post_telegram_message(bot_token: str, chat_id: str, text: str, proxy_url: str | None = None) -> None:
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {
         "chat_id": chat_id,
         "text": text,
     }
 
-    with httpx.Client(timeout=10.0) as client:
+    with httpx.Client(timeout=10.0, proxy=proxy_url) as client:
         response = client.post(url, json=payload)
         response.raise_for_status()
 
@@ -31,7 +31,7 @@ def send_telegram_message(db: Session, text: str) -> bool:
     delivered = False
     for chat_id in runtime.chat_ids:
         try:
-            _post_telegram_message(runtime.bot_token, chat_id, text)
+            _post_telegram_message(runtime.bot_token, chat_id, text, runtime.proxy_url)
             delivered = True
         except Exception:
             logger.exception("Failed to send Telegram notification to chat %s", chat_id)

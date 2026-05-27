@@ -57,6 +57,7 @@ class Settings:
     telegram_notifications_enabled: bool = _env_bool("TELEGRAM_NOTIFICATIONS_ENABLED", False)
     telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
     telegram_chat_ids: str = os.getenv("TELEGRAM_CHAT_IDS", os.getenv("TELEGRAM_CHAT_ID", ""))
+    telegram_proxy_url: str = os.getenv("TELEGRAM_PROXY_URL", "")
 
     @property
     def cors_origins_list(self) -> list[str]:

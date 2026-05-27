@@ -86,7 +86,7 @@ export default function App() {
         <Route path="/schedule" element={<SchedulePage />} />
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/press" element={<PressPage />} />
-        <Route path="/psychologist" element={<Navigate to="/services/psychologist-consultation" replace />} />
+        <Route path="/psychologist" element={<ServicePage slugOverride="psychologist-consultation" pageVariant="psychologist" />} />
         <Route path="/contacts" element={<ContactsPage />} />
         <Route path="/certificates" element={<CertificatePurchasePage />} />
         <Route path="/certificates/:code" element={<CertificatePublicPage />} />

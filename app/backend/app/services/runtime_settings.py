@@ -93,9 +93,14 @@ def resolve_payment_settings(db: Session) -> RuntimePaymentSettings:
 
 def resolve_telegram_notification_settings(db: Session) -> TelegramNotificationSettings:
     values = _settings_map(db)
-    bot_token = (values.get("telegram_bot_token") or "").strip()
-    chat_ids = _split_chat_ids(values.get("telegram_chat_ids") or values.get("telegram_chat_id"))
-    enabled = _parse_bool(values.get("telegram_notifications_enabled"), bool(bot_token and chat_ids))
+    bot_token = (values.get("telegram_bot_token") or env_settings.telegram_bot_token or "").strip()
+    chat_ids = _split_chat_ids(
+        values.get("telegram_chat_ids") or values.get("telegram_chat_id") or env_settings.telegram_chat_ids
+    )
+    enabled = _parse_bool(
+        values.get("telegram_notifications_enabled"),
+        env_settings.telegram_notifications_enabled or bool(bot_token and chat_ids),
+    )
     return TelegramNotificationSettings(
         enabled=enabled and bool(bot_token) and bool(chat_ids),
         bot_token=bot_token,
@@ -116,9 +121,9 @@ def ensure_runtime_settings(db: Session) -> None:
         ("payment_vat_code", "1", False),
         ("payment_receipt_mode", "full_prepayment", False),
         ("payment_receipt_subject", "service", False),
-        ("telegram_notifications_enabled", "0", False),
-        ("telegram_bot_token", "", False),
-        ("telegram_chat_ids", "", False),
+        ("telegram_notifications_enabled", "1" if env_settings.telegram_notifications_enabled else "0", False),
+        ("telegram_bot_token", env_settings.telegram_bot_token, False),
+        ("telegram_chat_ids", env_settings.telegram_chat_ids, False),
     ]
 
     existing = {

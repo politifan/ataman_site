@@ -64,8 +64,9 @@ function InfoList({ title, items, icon }) {
   );
 }
 
-export default function ServicePage() {
-  const { slug } = useParams();
+export default function ServicePage({ slugOverride = "", pageVariant = "service" }) {
+  const params = useParams();
+  const slug = slugOverride || params.slug;
   const location = useLocation();
   const [service, setService] = useState(null);
   const [schedule, setSchedule] = useState([]);
@@ -215,6 +216,7 @@ export default function ServicePage() {
   const canBookGroup = supportsGroup && groupBookingEvents.length > 0;
   const canBookIndividual = supportsIndividual && individualBookingEvents.length > 0;
   const activeModeEvents = bookingMode === "individual" ? individualEvents : groupEvents;
+  const isPsychologistPage = pageVariant === "psychologist";
   const submitLabel = (() => {
     if (sending) return "Отправка...";
     if (!selectedEvent) return "Отправить заявку";
@@ -231,7 +233,7 @@ export default function ServicePage() {
             ← На главную
           </Link>
           <div className="service-top-buttons">
-            <a href="#service-details">О практике</a>
+            <a href="#service-details">{isPsychologistPage ? "О специалисте" : "О практике"}</a>
             <a href="#service-media">Фото</a>
             <a href="#service-booking">Запись</a>
           </div>
@@ -281,7 +283,7 @@ export default function ServicePage() {
         <section id="service-details" className="section service-layout">
           <article className="service-main">
             <div className="service-copy-head">
-              <h2>О ПРАКТИКЕ</h2>
+              <h2>{isPsychologistPage ? "О СПЕЦИАЛИСТЕ И КОНСУЛЬТАЦИИ" : "О ПРАКТИКЕ"}</h2>
             </div>
             {service.about?.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
@@ -304,7 +306,7 @@ export default function ServicePage() {
 
             {hasHost ? (
               <div className="service-host-card">
-                <p className="service-host-kicker">Проводник практики</p>
+                <p className="service-host-kicker">{isPsychologistPage ? "Специалист" : "Проводник практики"}</p>
                 {service.host?.name ? <h3>{service.host.name}</h3> : null}
                 {service.host?.bio ? <p>{service.host.bio}</p> : null}
               </div>

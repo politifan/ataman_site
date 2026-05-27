@@ -29,7 +29,7 @@ from ..schemas import (
     ServicePublic,
     SiteResponse,
 )
-from ..services.notifications import notify_booking_created, notify_contact_created
+from ..services.notifications import notify_booking_created, notify_certificate_purchase_created, notify_contact_created
 from ..services.runtime_settings import resolve_payment_settings
 from ..services.yookassa import YookassaClient
 
@@ -444,6 +444,8 @@ def create_booking(payload: BookingCreate, db: Session = Depends(get_db_session)
         raise HTTPException(status_code=404, detail="Событие расписания не найдено.")
     if not event.is_active:
         raise HTTPException(status_code=409, detail="Событие неактивно.")
+    if _schedule_to_public(event).is_expired:
+        raise HTTPException(status_code=409, detail="Событие уже прошло, запись закрыта.")
     if event.current_participants >= event.max_participants:
         raise HTTPException(status_code=409, detail="Свободных мест больше нет.")
 
@@ -568,6 +570,7 @@ def purchase_certificate(
     db.add(row)
     db.commit()
     db.refresh(row)
+    notify_certificate_purchase_created(db, row)
     return GiftCertificatePurchaseResponse(
         ok=True,
         certificate_id=row.id,

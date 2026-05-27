@@ -44,7 +44,7 @@ class Settings:
 
     yookassa_shop_id: str | None = os.getenv("YOOKASSA_SHOP_ID")
     yookassa_secret_key: str | None = os.getenv("YOOKASSA_SECRET_KEY")
-    yookassa_return_url: str = os.getenv("YOOKASSA_RETURN_URL", "http://localhost:5173/")
+    yookassa_return_url: str = os.getenv("YOOKASSA_RETURN_URL", f"{site_url.rstrip('/')}/payment-callback.php")
     yookassa_webhook_secret: str | None = os.getenv("YOOKASSA_WEBHOOK_SECRET")
 
     admin_token: str | None = os.getenv("ADMIN_TOKEN")
@@ -53,6 +53,10 @@ class Settings:
     admin_bootstrap_username: str = os.getenv("ADMIN_BOOTSTRAP_USERNAME", "admin")
     admin_bootstrap_password: str = os.getenv("ADMIN_BOOTSTRAP_PASSWORD", "change_me_now")
     admin_bootstrap_role: str = os.getenv("ADMIN_BOOTSTRAP_ROLE", "admin")
+
+    telegram_notifications_enabled: bool = _env_bool("TELEGRAM_NOTIFICATIONS_ENABLED", False)
+    telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    telegram_chat_ids: str = os.getenv("TELEGRAM_CHAT_IDS", os.getenv("TELEGRAM_CHAT_ID", ""))
 
     @property
     def cors_origins_list(self) -> list[str]:

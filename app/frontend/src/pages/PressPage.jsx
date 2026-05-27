@@ -6,6 +6,10 @@ function isExternal(value = "") {
   return /^https?:\/\//i.test(String(value || "").trim());
 }
 
+function isDirectVideo(value = "") {
+  return /\.(mp4|webm|mov)(\?.*)?$/i.test(String(value || "").trim());
+}
+
 export default function PressPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,13 +60,14 @@ export default function PressPage() {
               const videoSrc = item.video_path ? toMediaUrl(item.video_path) : "";
               const posterSrc = item.poster_path ? toMediaUrl(item.poster_path) : "";
               const hasExternal = isExternal(item.external_url);
+              const externalVideoSrc = hasExternal && isDirectVideo(item.external_url) ? item.external_url : "";
 
               return (
                 <article key={item.id} className="page-common-panel press-card">
                   <div className="press-player">
-                    {videoSrc ? (
+                    {videoSrc || externalVideoSrc ? (
                       <video controls preload="metadata" poster={posterSrc || undefined}>
-                        <source src={videoSrc} />
+                        <source src={videoSrc || externalVideoSrc} />
                       </video>
                     ) : hasExternal ? (
                       <a href={item.external_url} target="_blank" rel="noreferrer" className="press-external-link">

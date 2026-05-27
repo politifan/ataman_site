@@ -27,7 +27,19 @@ npm run dev
 
 По умолчанию frontend обращается к `http://localhost:8000`.  
 Для изменения API-адреса используйте переменную `VITE_API_BASE`.
-Админка доступна по маршруту `http://localhost:5173/admin` (используется `X-Admin-Token`).
+Админка доступна по маршруту `http://localhost:5173/admin`.
+
+## Домен и уведомления
+Для работы на текущем домене задайте в `backend/.env`:
+```bash
+SITE_URL=https://spiritualst.ru
+CORS_ORIGINS=https://spiritualst.ru
+YOOKASSA_RETURN_URL=https://spiritualst.ru/payment-callback.php
+```
+
+Эти же значения можно изменить в админке в разделе `Настройки`: ключи `site_url`, `yookassa_return_url`, `telegram_notifications_enabled`, `telegram_bot_token`, `telegram_chat_ids`.
+
+Telegram-бот отправляет уведомления о новых онлайн-записях, сообщениях из формы контактов и заявках на сертификаты. Для включения задайте токен бота, chat id администратора и `telegram_notifications_enabled=1`.
 
 При необходимости принудительно переинициализировать данные:
 ```bash

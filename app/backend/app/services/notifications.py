@@ -5,7 +5,7 @@ import logging
 import httpx
 from sqlalchemy.orm import Session
 
-from ..models import Booking, Contact
+from ..models import Booking, Contact, GiftCertificate
 from .runtime_settings import resolve_telegram_notification_settings
 
 logger = logging.getLogger(__name__)
@@ -74,4 +74,22 @@ def notify_booking_created(
     if booking.comment:
         parts.append("Комментарий:")
         parts.append(booking.comment)
+    return send_telegram_message(db, "\n".join(parts))
+
+
+def notify_certificate_purchase_created(db: Session, certificate: GiftCertificate) -> bool:
+    parts = [
+        "Новая заявка на сертификат с сайта «Атман»",
+        f"Сертификат: #{certificate.id}",
+        f"Код: {certificate.code}",
+        f"Сумма: {certificate.amount} руб.",
+        f"Покупатель: {certificate.buyer_name}",
+        f"Телефон: {certificate.buyer_phone or 'не указан'}",
+        f"Email: {certificate.buyer_email}",
+    ]
+    if certificate.recipient_name:
+        parts.append(f"Получатель: {certificate.recipient_name}")
+    if certificate.note:
+        parts.append("Комментарий:")
+        parts.append(certificate.note)
     return send_telegram_message(db, "\n".join(parts))

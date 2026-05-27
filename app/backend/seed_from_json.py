@@ -76,6 +76,7 @@ def seed_services(db) -> dict[str, Service]:
             ]
         }
         clean_payload["payment_mode"] = payload.get("payment_mode") or "group_only"
+        clean_payload["is_draft"] = bool(payload.get("is_draft", False))
         clean_payload["is_active"] = True
         if row:
             for key, value in clean_payload.items():

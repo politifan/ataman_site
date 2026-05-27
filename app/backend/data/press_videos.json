@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "title": "Репортаж о студии Атман",
+    "description": "Демонстрационный материал для раздела «О нас в СМИ». Замените ссылку на реальный ТВ-сюжет или загрузите видео через админку.",
+    "source_name": "ТВ / онлайн-СМИ",
+    "video_path": "",
+    "poster_path": "glavnaya.jpg",
+    "external_url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "sort_order": 10,
+    "is_active": true
+  },
+  {
+    "title": "Видео с мероприятия студии",
+    "description": "Карточка для будущих видео с практик, городских событий и открытых встреч.",
+    "source_name": "Студия Атман",
+    "video_path": "",
+    "poster_path": "foto_dlya_uslug/main/3.JPG",
+    "external_url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "sort_order": 20,
+    "is_active": true
+  }
+]

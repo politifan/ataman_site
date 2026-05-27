@@ -97,10 +97,10 @@ def resolve_telegram_notification_settings(db: Session) -> TelegramNotificationS
     chat_ids = _split_chat_ids(
         values.get("telegram_chat_ids") or values.get("telegram_chat_id") or env_settings.telegram_chat_ids
     )
-    enabled = _parse_bool(
-        values.get("telegram_notifications_enabled"),
-        env_settings.telegram_notifications_enabled or bool(bot_token and chat_ids),
-    )
+    if env_settings.telegram_notifications_enabled:
+        enabled = True
+    else:
+        enabled = _parse_bool(values.get("telegram_notifications_enabled"), bool(bot_token and chat_ids))
     return TelegramNotificationSettings(
         enabled=enabled and bool(bot_token) and bool(chat_ids),
         bot_token=bot_token,

@@ -1,8 +1,9 @@
 [
   {
-    "title": "Репортаж о студии Атман",
-    "description": "Демонстрационный материал для раздела «О нас в СМИ». Замените ссылку на реальный ТВ-сюжет или загрузите видео через админку.",
-    "source_name": "ТВ / онлайн-СМИ",
+    "title": "Городской репортаж: пространство звука и восстановления",
+    "legacy_titles": ["Репортаж о студии Атман"],
+    "description": "Короткий сюжет о студии, атмосфере залов и практиках, которые помогают замедлиться, восстановить силы и вернуться к себе.",
+    "source_name": "Городское ТВ",
     "video_path": "",
     "poster_path": "glavnaya.jpg",
     "external_url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
@@ -10,13 +11,44 @@
     "is_active": true
   },
   {
-    "title": "Видео с мероприятия студии",
-    "description": "Карточка для будущих видео с практик, городских событий и открытых встреч.",
+    "title": "Интервью с Анной Андреевой о звукотерапии",
+    "description": "Разговор о том, как работают вибрации гонга, поющих чаш и бубна, кому подходят такие практики и почему важна бережная настройка процесса.",
+    "source_name": "Интервью",
+    "video_path": "",
+    "poster_path": "foto_dlya_uslug/main/img_6437_1.jpg",
+    "external_url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "sort_order": 20,
+    "is_active": true
+  },
+  {
+    "title": "Открытая практика: гонг-медитация и поющие чаши",
+    "description": "Видео с фрагментами групповой практики: подготовка пространства, звучание инструментов и спокойная камерная атмосфера студии.",
     "source_name": "Студия Атман",
+    "video_path": "",
+    "poster_path": "foto_dlya_uslug/gong_meditatsiya_s_chashami/IMG_6133.JPG",
+    "external_url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "sort_order": 30,
+    "is_active": true
+  },
+  {
+    "title": "Событие в студии: мягкие телесные практики",
+    "legacy_titles": ["Видео с мероприятия студии"],
+    "description": "Материал о камерных встречах, где участники знакомятся с телесными и медитативными направлениями в безопасном формате.",
+    "source_name": "Видео с мероприятия",
     "video_path": "",
     "poster_path": "foto_dlya_uslug/main/3.JPG",
     "external_url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    "sort_order": 20,
+    "sort_order": 40,
+    "is_active": true
+  },
+  {
+    "title": "Психология и восстановление: как выбрать бережный формат",
+    "description": "Экспертный материал о психологической поддержке, работе с тревогой и сочетании разговорных консультаций с практиками восстановления.",
+    "source_name": "Экспертный комментарий",
+    "video_path": "",
+    "poster_path": "foto_dlya_uslug/main/img_7302_1_1.jpg",
+    "external_url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "sort_order": 50,
     "is_active": true
   }
 ]

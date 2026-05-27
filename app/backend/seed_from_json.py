@@ -116,21 +116,32 @@ def seed_schedule(db, service_by_slug: dict[str, Service]) -> None:
 
 def seed_press_videos(db) -> None:
     path = DATA_DIR / "press_videos.json"
-    if not path.exists() or db.query(PressVideo).count() > 0:
+    if not path.exists():
         return
 
     for payload in load_json(path):
+        title = str(payload.get("title") or "").strip() or "Видео"
+        row = db.query(PressVideo).filter(PressVideo.title == title).one_or_none()
+        if not row:
+            legacy_titles = [str(item).strip() for item in payload.get("legacy_titles", []) if str(item).strip()]
+            if legacy_titles:
+                row = db.query(PressVideo).filter(PressVideo.title.in_(legacy_titles)).one_or_none()
+        values = {
+            "title": title,
+            "description": (payload.get("description") or "").strip() or None,
+            "source_name": (payload.get("source_name") or "").strip() or None,
+            "video_path": (payload.get("video_path") or "").strip() or None,
+            "poster_path": (payload.get("poster_path") or "").strip() or None,
+            "external_url": (payload.get("external_url") or "").strip() or None,
+            "sort_order": int(payload.get("sort_order", 0)),
+            "is_active": bool(payload.get("is_active", True)),
+        }
+        if row:
+            for key, value in values.items():
+                setattr(row, key, value)
+            continue
         db.add(
-            PressVideo(
-                title=str(payload.get("title") or "").strip() or "Видео",
-                description=(payload.get("description") or "").strip() or None,
-                source_name=(payload.get("source_name") or "").strip() or None,
-                video_path=(payload.get("video_path") or "").strip() or None,
-                poster_path=(payload.get("poster_path") or "").strip() or None,
-                external_url=(payload.get("external_url") or "").strip() or None,
-                sort_order=int(payload.get("sort_order", 0)),
-                is_active=bool(payload.get("is_active", True)),
-            )
+            PressVideo(**values)
         )
 
 

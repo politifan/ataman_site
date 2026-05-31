@@ -13,16 +13,13 @@ cd "$APP_DIR"
 
 source "$VENV_ACTIVATE"
 
-# Load backend env vars into shell environment for init scripts.
-if [ -f "$APP_DIR/app/backend/.env" ]; then
-  set -a
-  source "$APP_DIR/app/backend/.env"
-  set +a
-fi
-
-# Re-apply CLI override after loading .env so .env cannot silently disable build.
-if [ -n "$CLI_BUILD_FRONTEND" ]; then
-  BUILD_FRONTEND="$CLI_BUILD_FRONTEND"
+# Read only the deploy-specific option. Python loads backend/.env with dotenv,
+# while sourcing the whole file in bash breaks values that contain spaces.
+if [ -z "$CLI_BUILD_FRONTEND" ] && [ -f "$APP_DIR/app/backend/.env" ]; then
+  ENV_BUILD_FRONTEND="$(sed -n 's/^BUILD_FRONTEND=//p' "$APP_DIR/app/backend/.env" | tail -n 1)"
+  if [ -n "$ENV_BUILD_FRONTEND" ]; then
+    BUILD_FRONTEND="$ENV_BUILD_FRONTEND"
+  fi
 fi
 BUILD_FRONTEND="${BUILD_FRONTEND//$'\r'/}"
 
@@ -99,6 +96,18 @@ fi
 
 # Trigger Passenger restart
 touch "$RESTART_FILE"
+
+# Keep callback buttons operational after deploy. This command loads token,
+# webhook secret and proxy settings through Python dotenv/runtime settings.
+if (
+  cd app/backend
+  python configure_telegram_webhook.py
+); then
+  echo "Telegram webhook configured."
+else
+  echo "WARNING: Telegram webhook was not configured. Check TELEGRAM_WEBHOOK_SECRET and run:"
+  echo "  cd app/backend && python configure_telegram_webhook.py"
+fi
 
 python -c "import sys; print('Python:', sys.version)"
 echo "Touched restart file: $RESTART_FILE"

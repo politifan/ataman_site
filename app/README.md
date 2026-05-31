@@ -53,15 +53,30 @@ TELEGRAM_WEBHOOK_SECRET=длинная_случайная_строка
 ```
 
 В значениях `MANUAL_PAYMENT_*` используйте `_` вместо пробелов. При показе реквизитов сайт автоматически заменит подчёркивания на обычные пробелы.
-
-После деплоя зарегистрируйте Telegram webhook:
+Для `TELEGRAM_WEBHOOK_SECRET` сгенерируйте отдельное значение без пробелов:
 ```bash
-curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook" \
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+После деплоя зарегистрируйте Telegram webhook из каталога `backend`. Скрипт автоматически использует `TELEGRAM_PROXY_URL`, если он задан:
+```bash
+python configure_telegram_webhook.py
+```
+
+Для повторной диагностики без изменения webhook:
+```bash
+python configure_telegram_webhook.py --status-only
+```
+
+Альтернативный ручной вызов:
+```bash
+curl --proxy "${TELEGRAM_PROXY_URL}" \
+  -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook" \
   -d "url=https://spiritualst.ru/api/telegram/webhook" \
   -d "secret_token=${TELEGRAM_WEBHOOK_SECRET}"
 ```
 
-Если сервер обращается к Telegram только через SOCKS-прокси, добавьте к команде `curl` аргумент `--proxy "${TELEGRAM_PROXY_URL}"`. После изменения `.env` перезапустите приложение: при старте оно добавит колонку резерва мест и недостающие настройки в БД автоматически.
+После изменения `.env` перезапустите приложение: при старте оно добавит колонку резерва мест и недостающие настройки в БД автоматически.
 
 Переменные `YOOKASSA_*` оставлены в `.env.example` только для совместимости со старыми платежами. Для новых записей на услуги они не используются.
 

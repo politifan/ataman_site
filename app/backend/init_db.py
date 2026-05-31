@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from app.db_migrations import (
     backfill_gift_certificate_validity,
+    ensure_booking_manual_payment_schema,
     ensure_gift_certificate_validity_schema,
     ensure_service_payment_mode_schema,
 )
@@ -22,6 +23,7 @@ def apply_runtime_content_fixes(db) -> None:
 def main() -> None:
     Base.metadata.create_all(bind=engine)
     ensure_service_payment_mode_schema(engine)
+    ensure_booking_manual_payment_schema(engine)
     ensure_gift_certificate_validity_schema(engine)
 
     db = SessionLocal()

@@ -9,6 +9,7 @@ import PressPage from "./pages/PressPage";
 import ContactsPage from "./pages/ContactsPage";
 import LegalPage from "./pages/LegalPage";
 import PaymentStatePage from "./pages/PaymentStatePage";
+import ManualPaymentPage from "./pages/ManualPaymentPage";
 import CertificatePurchasePage from "./pages/CertificatePurchasePage";
 import CertificatePublicPage from "./pages/CertificatePublicPage";
 import AdminLayout from "./admin/AdminLayout";
@@ -92,6 +93,7 @@ export default function App() {
         <Route path="/certificates/:code" element={<CertificatePublicPage />} />
         <Route path="/legal" element={<Navigate to="/legal/privacy" replace />} />
         <Route path="/legal/:slug" element={<LegalPage />} />
+        <Route path="/payment/manual" element={<ManualPaymentPage />} />
         <Route path="/payment/:state" element={<PaymentStatePage />} />
 
         <Route path="/privacy.php" element={<LegacyRedirect to="/legal/privacy" />} />

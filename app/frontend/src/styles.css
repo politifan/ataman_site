@@ -5521,6 +5521,195 @@ body {
   color: #d8e7eb;
 }
 
+.page-manual-payment {
+  background:
+    linear-gradient(135deg, rgba(8, 20, 48, 0.97), rgba(29, 72, 84, 0.95)),
+    #071730;
+}
+
+.manual-payment-head {
+  display: grid;
+  gap: 10px;
+  max-width: 760px;
+  padding: 32px 0 24px;
+}
+
+.manual-payment-head p,
+.manual-payment-head h1,
+.manual-payment-head span {
+  margin: 0;
+}
+
+.manual-payment-head p {
+  color: #f3d58f;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.manual-payment-head h1 {
+  color: #fff6df;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2.8rem, 7vw, 5.4rem);
+  line-height: 0.94;
+}
+
+.manual-payment-head span {
+  color: #dbe8ed;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.manual-payment-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.manual-payment-card,
+.manual-payment-summary {
+  border-radius: 8px;
+  border: 1px solid rgba(233, 245, 255, 0.2);
+}
+
+.manual-payment-card {
+  min-height: 360px;
+  display: grid;
+  align-content: space-between;
+  gap: 28px;
+  padding: 28px;
+  background:
+    linear-gradient(135deg, rgba(239, 211, 146, 0.18), rgba(116, 194, 184, 0.12)),
+    rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+}
+
+.manual-payment-card-top,
+.manual-payment-recipient {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.manual-payment-card-top span,
+.manual-payment-card-top strong,
+.manual-payment-card-number small,
+.manual-payment-card-number strong,
+.manual-payment-recipient small,
+.manual-payment-recipient strong {
+  color: #fff6df;
+}
+
+.manual-payment-card-top span,
+.manual-payment-card-number small,
+.manual-payment-recipient small {
+  color: #a9d8d2;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.manual-payment-card-top strong {
+  font-size: 1.4rem;
+}
+
+.manual-payment-card-number {
+  display: grid;
+  gap: 12px;
+}
+
+.manual-payment-card-number strong {
+  overflow-wrap: anywhere;
+  font-size: clamp(1.55rem, 4.5vw, 3rem);
+  line-height: 1;
+}
+
+.manual-payment-card-number button {
+  width: fit-content;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 246, 223, 0.3);
+  border-radius: 8px;
+  color: #fff6df;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.manual-payment-recipient strong {
+  text-align: right;
+}
+
+.manual-payment-summary {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.manual-payment-status {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-left: 3px solid #f3d58f;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.manual-payment-status p,
+.manual-payment-status span,
+.manual-payment-instructions {
+  margin: 0;
+}
+
+.manual-payment-status p {
+  color: #fff6df;
+  font-weight: 900;
+}
+
+.manual-payment-status span,
+.manual-payment-instructions {
+  color: #dbe8ed;
+  line-height: 1.5;
+}
+
+.manual-payment-status.is-success {
+  border-left-color: #91d6a6;
+}
+
+.manual-payment-status.is-failed {
+  border-left-color: #e99898;
+}
+
+.manual-payment-summary dl {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.manual-payment-summary dl div {
+  display: grid;
+  gap: 4px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(233, 245, 255, 0.14);
+}
+
+.manual-payment-summary dt {
+  color: #a9d8d2;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.manual-payment-summary dd {
+  margin: 0;
+  color: #fff6df;
+  font-weight: 800;
+}
+
 .admin-press-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5544,7 +5733,8 @@ body {
   .press-hero-stats,
   .press-intro,
   .press-latest-strip,
-  .page-press .press-grid {
+  .page-press .press-grid,
+  .manual-payment-layout {
     grid-template-columns: 1fr;
   }
 

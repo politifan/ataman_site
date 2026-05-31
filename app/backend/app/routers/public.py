@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from ..certificates import DEFAULT_VALIDITY_MODE
 from ..deps import get_db_session
-from ..models import Booking, Contact, GalleryItem, GiftCertificate, Payment, PressVideo, ScheduleEvent, Service, Setting
+from ..models import Booking, Contact, GalleryItem, GiftCertificate, PressVideo, ScheduleEvent, Service, Setting
 from ..schemas import (
     BookingCreate,
     BookingCreateResponse,
@@ -25,13 +25,20 @@ from ..schemas import (
     GiftCertificatePurchaseRequest,
     GiftCertificatePurchaseResponse,
     LegalPageResponse,
+    ManualPaymentPublicResponse,
+    ManualTransferReportRequest,
+    ManualTransferReportResponse,
     SchedulePublic,
     ServicePublic,
     SiteResponse,
 )
-from ..services.notifications import notify_booking_created, notify_certificate_purchase_created, notify_contact_created
-from ..services.runtime_settings import resolve_payment_settings
-from ..services.yookassa import YookassaClient
+from ..services.notifications import (
+    notify_booking_created,
+    notify_certificate_purchase_created,
+    notify_contact_created,
+    notify_manual_transfer_reported,
+)
+from ..services.runtime_settings import resolve_manual_payment_settings
 
 router = APIRouter(prefix="/api", tags=["public"])
 
@@ -238,6 +245,21 @@ def _generate_certificate_code(db: Session) -> str:
         if not exists:
             return code
     raise HTTPException(status_code=500, detail="Не удалось сгенерировать уникальный код сертификата.")
+
+
+def _manual_payment_url(booking_id: int, token: str) -> str:
+    return f"/payment/manual?booking_id={booking_id}&token={token}"
+
+
+def _require_manual_payment_booking(db: Session, booking_id: int, token: str) -> Booking:
+    booking = db.scalar(
+        select(Booking)
+        .options(joinedload(Booking.schedule_event).joinedload(ScheduleEvent.service))
+        .where(Booking.id == booking_id)
+    )
+    if not booking or not booking.payment_id or not secrets.compare_digest(booking.payment_id, token):
+        raise HTTPException(status_code=404, detail="Заявка на оплату не найдена.")
+    return booking
 
 
 @router.get("/health")
@@ -483,6 +505,13 @@ def create_booking(payload: BookingCreate, db: Session = Depends(get_db_session)
         )
 
     amount = _extract_group_price(event.service, event)
+    manual_payment = resolve_manual_payment_settings(db)
+    if not manual_payment.enabled:
+        raise HTTPException(
+            status_code=503,
+            detail="Реквизиты для перевода временно не настроены. Свяжитесь с администратором.",
+        )
+    payment_reference = f"ATM-{secrets.token_hex(12).upper()}"
 
     booking = Booking(
         schedule_event_id=event.id,
@@ -490,56 +519,100 @@ def create_booking(payload: BookingCreate, db: Session = Depends(get_db_session)
         phone=payload.phone.strip(),
         email=str(payload.email),
         comment=(payload.comment or "").strip() or None,
-        status="pending",
-        payment_status="pending",
+        status="waiting_payment",
+        payment_status="awaiting_transfer",
+        payment_id=payment_reference,
         payment_amount=amount,
+        slot_reserved=True,
     )
     db.add(booking)
     db.flush()
-
-    yk = YookassaClient(resolve_payment_settings(db))
-    payment_result = yk.create_payment(
-        booking_id=booking.id,
-        amount=amount,
-        description=f"Оплата: {event.service.title} ({event.start_time:%d.%m.%Y %H:%M})",
-        customer_email=str(payload.email),
-    )
-
-    payment = Payment(
-        booking_id=booking.id,
-        provider="yookassa",
-        provider_payment_id=payment_result.payment_id,
-        amount=amount,
-        currency="RUB",
-        status=payment_result.status,
-        payment_method=payment_result.payment_method,
-        confirmation_url=payment_result.confirmation_url,
-        raw_payload=payment_result.payload,
-    )
-    db.add(payment)
-
-    booking.payment_id = payment_result.payment_id
-    booking.payment_status = payment_result.status
-    booking.payment_confirmation_url = payment_result.confirmation_url
-    booking.status = "waiting_payment"
+    confirmation_url = _manual_payment_url(booking.id, payment_reference)
+    booking.payment_confirmation_url = confirmation_url
+    event.current_participants += 1
 
     db.commit()
     db.refresh(booking)
-    notify_booking_created(
-        db,
-        booking,
-        service_title=event.service.title,
-        event_label=_format_event_label(event),
-        is_individual=bool(event.is_individual),
-    )
 
     return BookingCreateResponse(
         ok=True,
         booking_id=booking.id,
-        payment_id=payment_result.payment_id,
-        payment_status=payment_result.status,
-        confirmation_url=payment_result.confirmation_url,
-        message="Бронь создана. Перенаправляем на оплату.",
+        payment_id=payment_reference,
+        payment_status=booking.payment_status,
+        confirmation_url=confirmation_url,
+        message="Место зарезервировано. Переведите оплату по реквизитам и сообщите о переводе.",
+    )
+
+
+@router.get("/manual-payments/{booking_id}", response_model=ManualPaymentPublicResponse)
+def get_manual_payment(
+    booking_id: int,
+    token: str,
+    db: Session = Depends(get_db_session),
+) -> ManualPaymentPublicResponse:
+    booking = _require_manual_payment_booking(db, booking_id, token)
+    event = booking.schedule_event
+    manual_payment = resolve_manual_payment_settings(db)
+    if not manual_payment.enabled:
+        raise HTTPException(status_code=503, detail="Реквизиты для перевода временно не настроены.")
+    return ManualPaymentPublicResponse(
+        booking_id=booking.id,
+        reference=booking.payment_id or "",
+        service_title=event.service.title,
+        event_start_time=event.start_time,
+        amount=booking.payment_amount or Decimal("0"),
+        bank=manual_payment.bank,
+        card_number=manual_payment.card_number,
+        recipient=manual_payment.recipient,
+        instructions=manual_payment.instructions,
+        booking_status=booking.status,
+        payment_status=booking.payment_status,
+    )
+
+
+@router.post("/manual-payments/{booking_id}/reported", response_model=ManualTransferReportResponse)
+def report_manual_transfer(
+    booking_id: int,
+    payload: ManualTransferReportRequest,
+    db: Session = Depends(get_db_session),
+) -> ManualTransferReportResponse:
+    booking = _require_manual_payment_booking(db, booking_id, payload.token)
+    if booking.payment_status == "manual_confirmed":
+        return ManualTransferReportResponse(
+            ok=True,
+            booking_status=booking.status,
+            payment_status=booking.payment_status,
+            message="Перевод уже подтверждён администратором.",
+        )
+    if booking.payment_status == "manual_rejected":
+        raise HTTPException(status_code=409, detail="Перевод отклонён. Свяжитесь с администратором.")
+    if booking.payment_status == "waiting_manual_confirmation":
+        return ManualTransferReportResponse(
+            ok=True,
+            booking_status=booking.status,
+            payment_status=booking.payment_status,
+            message="Сообщение о переводе уже отправлено. Ожидайте подтверждения администратора.",
+        )
+
+    delivered = notify_manual_transfer_reported(
+        db,
+        booking,
+        service_title=booking.schedule_event.service.title,
+        event_label=_format_event_label(booking.schedule_event),
+    )
+    if not delivered:
+        raise HTTPException(
+            status_code=503,
+            detail="Не удалось уведомить администратора. Попробуйте ещё раз через несколько минут.",
+        )
+    booking.payment_status = "waiting_manual_confirmation"
+    db.commit()
+    db.refresh(booking)
+    return ManualTransferReportResponse(
+        ok=True,
+        booking_status=booking.status,
+        payment_status=booking.payment_status,
+        message="Спасибо! Администратор проверит перевод и подтвердит запись.",
     )
 
 
@@ -611,7 +684,8 @@ def migration_status() -> dict[str, list[str]]:
     return {
         "completed_now": [
             "FastAPI + SQLAlchemy (MySQL/SQLite)",
-            "ЮKassa create/check/webhook",
+            "Ручные переводы по реквизитам с подтверждением в Telegram",
+            "Legacy YooKassa create/check/webhook для старых платежей",
             "Public API: site/services/schedule/gallery/legal/contacts",
             "Admin API: dashboard/services/schedule/gallery/bookings/contacts/settings/upload",
             "Gift certificates: public purchase/view + admin issue/redeem",

@@ -92,6 +92,7 @@ def _serialize_booking(row: Booking) -> BookingAdminResponse:
         payment_amount=row.payment_amount,
         payment_confirmation_url=row.payment_confirmation_url,
         paid_at=row.paid_at,
+        slot_reserved=bool(row.slot_reserved),
         created_at=row.created_at,
         updated_at=row.updated_at,
     )
@@ -412,19 +413,36 @@ def admin_update_booking_status(
     new_status = payload.status
     event = row.schedule_event
 
-    if old_status != "confirmed" and new_status == "confirmed" and event:
+    if new_status == "confirmed" and not row.slot_reserved and event:
         if event.current_participants >= event.max_participants:
             raise HTTPException(status_code=409, detail="Невозможно подтвердить: мест больше нет.")
         event.current_participants += 1
+        row.slot_reserved = True
 
-    if old_status == "confirmed" and new_status != "confirmed" and event and event.current_participants > 0:
+    if (
+        row.slot_reserved
+        and event
+        and event.current_participants > 0
+        and (
+            (old_status == "confirmed" and new_status != "confirmed")
+            or new_status == "cancelled"
+        )
+    ):
         event.current_participants -= 1
+        row.slot_reserved = False
 
     row.status = new_status
-    if new_status == "confirmed" and row.payment_status in {"pending", "waiting_payment"}:
-        row.payment_status = "paid"
+    if new_status == "confirmed":
+        if row.payment_status in {"awaiting_transfer", "waiting_manual_confirmation"}:
+            row.payment_status = "manual_confirmed"
+            row.paid_at = datetime.now(timezone.utc)
+        elif row.payment_status in {"pending", "waiting_payment"}:
+            row.payment_status = "paid"
     if new_status == "cancelled" and row.payment_status != "paid":
-        row.payment_status = "failed"
+        if row.payment_status in {"awaiting_transfer", "waiting_manual_confirmation"}:
+            row.payment_status = "manual_rejected"
+        else:
+            row.payment_status = "failed"
 
     db.commit()
     db.refresh(row)
@@ -438,7 +456,7 @@ def admin_delete_booking(booking_id: int, db: Session = Depends(get_db_session))
         raise HTTPException(status_code=404, detail="Бронирование не найдено.")
 
     event = row.schedule_event
-    if row.status == "confirmed" and event and event.current_participants > 0:
+    if row.slot_reserved and event and event.current_participants > 0:
         event.current_participants -= 1
 
     db.delete(row)

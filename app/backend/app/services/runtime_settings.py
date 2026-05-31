@@ -60,6 +60,19 @@ class TelegramNotificationSettings:
     bot_token: str
     chat_ids: list[str]
     proxy_url: str | None = None
+    webhook_secret: str | None = None
+
+
+@dataclass(frozen=True)
+class ManualPaymentSettings:
+    bank: str
+    card_number: str
+    recipient: str
+    instructions: str
+
+    @property
+    def enabled(self) -> bool:
+        return bool(self.card_number and self.recipient)
 
 
 def _settings_map(db: Session) -> dict[str, str]:
@@ -107,6 +120,20 @@ def resolve_telegram_notification_settings(db: Session) -> TelegramNotificationS
         bot_token=bot_token,
         chat_ids=chat_ids,
         proxy_url=(values.get("telegram_proxy_url") or env_settings.telegram_proxy_url or "").strip() or None,
+        webhook_secret=(values.get("telegram_webhook_secret") or env_settings.telegram_webhook_secret or "").strip()
+        or None,
+    )
+
+
+def resolve_manual_payment_settings(db: Session) -> ManualPaymentSettings:
+    values = _settings_map(db)
+    return ManualPaymentSettings(
+        bank=(values.get("manual_payment_bank") or env_settings.manual_payment_bank or "").strip(),
+        card_number=(values.get("manual_payment_card_number") or env_settings.manual_payment_card_number or "").strip(),
+        recipient=(values.get("manual_payment_recipient") or env_settings.manual_payment_recipient or "").strip(),
+        instructions=(
+            values.get("manual_payment_instructions") or env_settings.manual_payment_instructions or ""
+        ).strip(),
     )
 
 
@@ -127,6 +154,11 @@ def ensure_runtime_settings(db: Session) -> None:
         ("telegram_bot_token", env_settings.telegram_bot_token, False),
         ("telegram_chat_ids", env_settings.telegram_chat_ids, False),
         ("telegram_proxy_url", env_settings.telegram_proxy_url, False),
+        ("telegram_webhook_secret", env_settings.telegram_webhook_secret, False),
+        ("manual_payment_bank", env_settings.manual_payment_bank, False),
+        ("manual_payment_card_number", env_settings.manual_payment_card_number, False),
+        ("manual_payment_recipient", env_settings.manual_payment_recipient, False),
+        ("manual_payment_instructions", env_settings.manual_payment_instructions, False),
     ]
 
     existing = {

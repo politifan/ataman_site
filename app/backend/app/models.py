@@ -140,6 +140,7 @@ class Booking(TimestampMixin, Base):
     payment_amount: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     payment_confirmation_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    slot_reserved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     schedule_event: Mapped["ScheduleEvent"] = relationship(back_populates="bookings")
     payment: Mapped["Payment"] = relationship(back_populates="booking", uselist=False)

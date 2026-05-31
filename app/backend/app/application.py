@@ -13,6 +13,7 @@ from .config import settings
 from .db import Base, SessionLocal, engine
 from .db_migrations import (
     backfill_gift_certificate_validity,
+    ensure_booking_manual_payment_schema,
     ensure_gift_certificate_validity_schema,
     ensure_service_payment_mode_schema,
 )
@@ -21,6 +22,7 @@ from .routers.admin import router as admin_router
 from .routers.auth import router as auth_router
 from .routers.payments import router as payments_router
 from .routers.public import router as public_router
+from .routers.telegram import router as telegram_router
 from .services.runtime_settings import ensure_runtime_settings, resolve_site_url
 from .security import ensure_bootstrap_admin
 
@@ -48,7 +50,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
         version="0.2.0",
-        description="Перенос сайта Атман: FastAPI + MySQL + ЮKassa + admin API.",
+        description="Сайт Атман: FastAPI + MySQL + ручное подтверждение переводов + admin API.",
     )
 
     app.add_middleware(
@@ -86,6 +88,7 @@ def create_app() -> FastAPI:
     app.include_router(payments_router)
     app.include_router(auth_router)
     app.include_router(admin_router)
+    app.include_router(telegram_router)
 
     @app.get("/robots.txt", include_in_schema=False)
     def robots_txt() -> Response:
@@ -169,6 +172,7 @@ def create_app() -> FastAPI:
     # Local DB bootstrap (SQLite or any DB URL): create tables if missing.
     Base.metadata.create_all(bind=engine)
     ensure_service_payment_mode_schema(engine)
+    ensure_booking_manual_payment_schema(engine)
     ensure_gift_certificate_validity_schema(engine)
     db = SessionLocal()
     try:

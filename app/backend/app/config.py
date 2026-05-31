@@ -58,6 +58,15 @@ class Settings:
     telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
     telegram_chat_ids: str = os.getenv("TELEGRAM_CHAT_IDS", os.getenv("TELEGRAM_CHAT_ID", ""))
     telegram_proxy_url: str = os.getenv("TELEGRAM_PROXY_URL", "")
+    telegram_webhook_secret: str = os.getenv("TELEGRAM_WEBHOOK_SECRET", "")
+
+    manual_payment_bank: str = os.getenv("MANUAL_PAYMENT_BANK", "Банк получателя")
+    manual_payment_card_number: str = os.getenv("MANUAL_PAYMENT_CARD_NUMBER", "")
+    manual_payment_recipient: str = os.getenv("MANUAL_PAYMENT_RECIPIENT", "")
+    manual_payment_instructions: str = os.getenv(
+        "MANUAL_PAYMENT_INSTRUCTIONS",
+        "Переведите точную сумму и нажмите кнопку «Я перевёл». Администратор проверит поступление.",
+    )
 
     @property
     def cors_origins_list(self) -> list[str]:

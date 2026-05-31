@@ -165,6 +165,17 @@ export function submitBooking(payload) {
   });
 }
 
+export function getManualPayment(bookingId, token) {
+  return request(`/api/manual-payments/${encodeURIComponent(bookingId)}?token=${encodeURIComponent(token)}`);
+}
+
+export function reportManualTransfer(bookingId, token) {
+  return request(`/api/manual-payments/${encodeURIComponent(bookingId)}/reported`, {
+    method: "POST",
+    body: JSON.stringify({ token })
+  });
+}
+
 export function purchaseCertificate(payload) {
   return request("/api/certificate-purchase", {
     method: "POST",

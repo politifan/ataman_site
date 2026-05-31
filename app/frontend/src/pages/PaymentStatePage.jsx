@@ -81,7 +81,7 @@ export default function PaymentStatePage() {
     <div className="page-common page-payment-state">
       <div className="container">
         <section className="page-common-panel payment-state-card">
-          <p>Платеж ЮKassa</p>
+          <p>Архивный статус оплаты</p>
           <h1>{meta.title}</h1>
           <span>{meta.text}</span>
 

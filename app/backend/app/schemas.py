@@ -34,6 +34,31 @@ class BookingCreateResponse(BaseModel):
     message: str
 
 
+class ManualPaymentPublicResponse(BaseModel):
+    booking_id: int
+    reference: str
+    service_title: str
+    event_start_time: datetime
+    amount: Decimal
+    bank: str
+    card_number: str
+    recipient: str
+    instructions: str
+    booking_status: str
+    payment_status: str
+
+
+class ManualTransferReportRequest(BaseModel):
+    token: str = Field(min_length=8, max_length=128)
+
+
+class ManualTransferReportResponse(BaseModel):
+    ok: bool
+    booking_status: str
+    payment_status: str
+    message: str
+
+
 class GiftCertificatePurchaseRequest(BaseModel):
     amount: Decimal = Field(ge=500, le=1000000)
     recipient_name: str | None = Field(default=None, max_length=120)
@@ -341,6 +366,7 @@ class BookingAdminResponse(BaseModel):
     payment_amount: Decimal | None = None
     payment_confirmation_url: str | None = None
     paid_at: datetime | None = None
+    slot_reserved: bool = False
     created_at: datetime
     updated_at: datetime
 

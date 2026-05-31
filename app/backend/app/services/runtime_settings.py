@@ -36,6 +36,10 @@ def _split_chat_ids(raw_value: str | None) -> list[str]:
     return [item.strip() for item in values.split(",") if item.strip()]
 
 
+def _decode_manual_payment_text(raw_value: str | None) -> str:
+    return str(raw_value or "").replace("_", " ").strip()
+
+
 @dataclass(frozen=True)
 class RuntimePaymentSettings:
     shop_id: str
@@ -128,12 +132,16 @@ def resolve_telegram_notification_settings(db: Session) -> TelegramNotificationS
 def resolve_manual_payment_settings(db: Session) -> ManualPaymentSettings:
     values = _settings_map(db)
     return ManualPaymentSettings(
-        bank=(values.get("manual_payment_bank") or env_settings.manual_payment_bank or "").strip(),
-        card_number=(values.get("manual_payment_card_number") or env_settings.manual_payment_card_number or "").strip(),
-        recipient=(values.get("manual_payment_recipient") or env_settings.manual_payment_recipient or "").strip(),
-        instructions=(
+        bank=_decode_manual_payment_text(values.get("manual_payment_bank") or env_settings.manual_payment_bank),
+        card_number=_decode_manual_payment_text(
+            values.get("manual_payment_card_number") or env_settings.manual_payment_card_number
+        ),
+        recipient=_decode_manual_payment_text(
+            values.get("manual_payment_recipient") or env_settings.manual_payment_recipient
+        ),
+        instructions=_decode_manual_payment_text(
             values.get("manual_payment_instructions") or env_settings.manual_payment_instructions or ""
-        ).strip(),
+        ),
     )
 
 

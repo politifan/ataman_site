@@ -45,12 +45,14 @@ Telegram-бот отправляет уведомления о новых онл
 
 Заполните в `backend/.env`:
 ```bash
-MANUAL_PAYMENT_BANK=Название банка
-MANUAL_PAYMENT_CARD_NUMBER=0000 0000 0000 0000
-MANUAL_PAYMENT_RECIPIENT=Имя Отчество Ф.
-MANUAL_PAYMENT_INSTRUCTIONS=Переведите точную сумму и нажмите кнопку «Я перевёл».
+MANUAL_PAYMENT_BANK=Название_банка
+MANUAL_PAYMENT_CARD_NUMBER=0000_0000_0000_0000
+MANUAL_PAYMENT_RECIPIENT=Имя_Отчество_Ф.
+MANUAL_PAYMENT_INSTRUCTIONS=Переведите_точную_сумму_и_нажмите_кнопку_Я_перевёл.
 TELEGRAM_WEBHOOK_SECRET=длинная_случайная_строка
 ```
+
+В значениях `MANUAL_PAYMENT_*` используйте `_` вместо пробелов. При показе реквизитов сайт автоматически заменит подчёркивания на обычные пробелы.
 
 После деплоя зарегистрируйте Telegram webhook:
 ```bash

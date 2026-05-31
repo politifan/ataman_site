@@ -11,7 +11,12 @@ from sqlalchemy.orm import Session, joinedload
 
 from ..deps import get_db_session
 from ..models import Booking, ScheduleEvent
-from ..services.notifications import answer_telegram_callback, edit_telegram_message
+from ..services.notifications import (
+    answer_telegram_callback,
+    edit_telegram_message,
+    remove_telegram_inline_keyboard,
+    render_manual_transfer_message,
+)
 from ..services.runtime_settings import resolve_telegram_notification_settings
 
 router = APIRouter(prefix="/api/telegram", tags=["telegram"])
@@ -26,6 +31,12 @@ def _parse_manual_payment_callback(raw_value: str) -> tuple[str, int] | None:
         return parts[1], int(parts[2])
     except ValueError:
         return None
+
+
+def _format_event_label(event: ScheduleEvent) -> str:
+    if event.start_time.tzinfo is None:
+        return event.start_time.strftime("%d.%m.%Y %H:%M")
+    return event.start_time.astimezone().strftime("%d.%m.%Y %H:%M")
 
 
 @router.post("/webhook")
@@ -108,17 +119,34 @@ def telegram_webhook(
             result_text = "Перевод отклонён. Резерв снят."
 
     db.commit()
+    db.refresh(booking)
 
+    message_id = message.get("message_id")
+    if isinstance(message_id, int):
+        updated_text = render_manual_transfer_message(
+            booking,
+            service_title=event.service.title,
+            event_label=_format_event_label(event),
+            outcome=result_text,
+        )
+        try:
+            edit_telegram_message(
+                db,
+                chat_id,
+                message_id,
+                updated_text,
+                reply_markup={"inline_keyboard": []},
+                parse_mode="MarkdownV2",
+            )
+        except Exception:
+            logger.exception("Failed to edit Telegram message for booking %s", booking.id)
+            try:
+                remove_telegram_inline_keyboard(db, chat_id, message_id)
+            except Exception:
+                logger.exception("Failed to remove Telegram buttons for booking %s", booking.id)
     if callback_id:
         try:
             answer_telegram_callback(db, callback_id, result_text)
         except Exception:
             logger.exception("Failed to answer Telegram callback for booking %s", booking.id)
-    message_id = message.get("message_id")
-    if isinstance(message_id, int):
-        original_text = str(message.get("text") or "").strip()
-        try:
-            edit_telegram_message(db, chat_id, message_id, f"{original_text}\n\n{result_text}")
-        except Exception:
-            logger.exception("Failed to edit Telegram message for booking %s", booking.id)
     return {"ok": True}

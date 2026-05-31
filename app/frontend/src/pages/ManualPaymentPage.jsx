@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { getManualPayment, reportManualTransfer } from "../api";
 
@@ -31,7 +31,7 @@ function paymentState(status) {
   if (status === "waiting_manual_confirmation") {
     return {
       label: "Ожидаем проверку",
-      text: "Сообщение отправлено администратору. После проверки статус обновится автоматически.",
+      text: "Не закрывайте страницу. Статус обновится автоматически, проверка может занять до 10 минут.",
       tone: "waiting"
     };
   }
@@ -51,6 +51,8 @@ export default function ManualPaymentPage() {
   const [sending, setSending] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
+  const [waitingModalOpen, setWaitingModalOpen] = useState(false);
+  const waitingNoticeShown = useRef(false);
 
   useEffect(() => {
     let timer = null;
@@ -62,18 +64,20 @@ export default function ManualPaymentPage() {
         setLoading(false);
         return;
       }
+      let shouldContinuePolling = true;
       try {
         const result = await getManualPayment(bookingId, token);
         if (cancelled) return;
         setPayment(result);
         setError("");
-        if (!["manual_confirmed", "manual_rejected"].includes(result.payment_status)) {
-          timer = window.setTimeout(load, 7000);
-        }
+        shouldContinuePolling = !["manual_confirmed", "manual_rejected"].includes(result.payment_status);
       } catch (err) {
         if (!cancelled) setError(err.message || "Не удалось загрузить реквизиты.");
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          if (shouldContinuePolling) timer = window.setTimeout(load, 3000);
+        }
       }
     }
 
@@ -83,6 +87,16 @@ export default function ManualPaymentPage() {
       if (timer) window.clearTimeout(timer);
     };
   }, [bookingId, token]);
+
+  useEffect(() => {
+    if (payment?.payment_status === "waiting_manual_confirmation" && !waitingNoticeShown.current) {
+      waitingNoticeShown.current = true;
+      setWaitingModalOpen(true);
+    }
+    if (["manual_confirmed", "manual_rejected"].includes(payment?.payment_status)) {
+      setWaitingModalOpen(false);
+    }
+  }, [payment?.payment_status]);
 
   const state = useMemo(() => paymentState(payment?.payment_status), [payment?.payment_status]);
 
@@ -176,6 +190,21 @@ export default function ManualPaymentPage() {
           </aside>
         </section>
       </div>
+      {waitingModalOpen ? (
+        <div className="manual-payment-modal" role="dialog" aria-modal="true" aria-labelledby="manual-payment-modal-title">
+          <section className="manual-payment-modal-panel">
+            <p>Проверка перевода</p>
+            <h2 id="manual-payment-modal-title">Не закрывайте эту страницу</h2>
+            <span>
+              Администратор проверяет поступление перевода. Обычно это занимает несколько минут, но иногда ожидание
+              может занять до 10 минут. Статус записи обновится здесь автоматически.
+            </span>
+            <button className="btn-main" type="button" onClick={() => setWaitingModalOpen(false)}>
+              Понятно, жду подтверждения
+            </button>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }

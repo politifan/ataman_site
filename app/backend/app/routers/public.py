@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Query
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
@@ -548,8 +548,11 @@ def create_booking(payload: BookingCreate, db: Session = Depends(get_db_session)
 def get_manual_payment(
     booking_id: int,
     token: str,
+    response: Response,
     db: Session = Depends(get_db_session),
 ) -> ManualPaymentPublicResponse:
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
     booking = _require_manual_payment_booking(db, booking_id, token)
     event = booking.schedule_event
     manual_payment = resolve_manual_payment_settings(db)

@@ -166,7 +166,11 @@ export function submitBooking(payload) {
 }
 
 export function getManualPayment(bookingId, token) {
-  return request(`/api/manual-payments/${encodeURIComponent(bookingId)}?token=${encodeURIComponent(token)}`);
+  const cacheBuster = Date.now();
+  return request(
+    `/api/manual-payments/${encodeURIComponent(bookingId)}?token=${encodeURIComponent(token)}&_=${cacheBuster}`,
+    { cache: "no-store" }
+  );
 }
 
 export function reportManualTransfer(bookingId, token) {

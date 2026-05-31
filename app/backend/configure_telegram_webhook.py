@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import datetime, timezone
 
 from app.db import SessionLocal
 from app.services.runtime_settings import resolve_telegram_notification_settings
@@ -9,12 +10,18 @@ from app.services.telegram_webhook import get_telegram_webhook_info, register_te
 
 
 def _print_info(info: dict, *, proxy_enabled: bool) -> None:
+    last_error_date = info.get("last_error_date")
     print("Telegram webhook status")
     print("url =", info.get("url") or "<not configured>")
     print("proxy =", "configured" if proxy_enabled else "not configured")
     print("pending_update_count =", info.get("pending_update_count", 0))
-    print("last_error_date =", info.get("last_error_date") or "<none>")
+    print("last_error_date =", last_error_date or "<none>")
+    if last_error_date:
+        error_time = datetime.fromtimestamp(int(last_error_date), tz=timezone.utc)
+        print("last_error_utc =", error_time.isoformat())
     print("last_error_message =", info.get("last_error_message") or "<none>")
+    if last_error_date:
+        print("note = last_error fields are historical and remain visible until a newer delivery error occurs")
 
 
 def main() -> None:

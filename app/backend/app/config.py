@@ -40,7 +40,7 @@ class Settings:
     database_url: str = os.getenv("DATABASE_URL", f"sqlite:///{(BASE_DIR / 'data' / 'site.db').as_posix()}")
 
     media_root: str = os.getenv("MEDIA_ROOT", "../../media_assets")
-    site_url: str = os.getenv("SITE_URL", "https://spiritualst.ru")
+    site_url: str = os.getenv("SITE_URL", "https://atmanvlg3.ru")
 
     yookassa_shop_id: str | None = os.getenv("YOOKASSA_SHOP_ID")
     yookassa_secret_key: str | None = os.getenv("YOOKASSA_SECRET_KEY")

@@ -9,6 +9,11 @@ from sqlalchemy.orm import Session
 from ..config import settings as env_settings
 from ..models import Setting
 
+LEGACY_SITE_URLS = {
+    "https://spiritualst.ru",
+    "https://atman-studio.ru",
+}
+
 
 def _parse_bool(value: str | None, default: bool) -> bool:
     if value is None:
@@ -185,6 +190,16 @@ def ensure_runtime_settings(db: Session) -> None:
             continue
         db.add(Setting(key=key, value=value, is_public=is_public))
         existing.add(key)
+
+    site_url = db.scalar(select(Setting).where(Setting.key == "site_url"))
+    if site_url and (site_url.value or "").strip().rstrip("/") in LEGACY_SITE_URLS:
+        site_url.value = env_settings.site_url.rstrip("/")
+
+    yookassa_return_url = db.scalar(select(Setting).where(Setting.key == "yookassa_return_url"))
+    if yookassa_return_url and (yookassa_return_url.value or "").strip() in {
+        f"{site_url}/payment-callback.php" for site_url in LEGACY_SITE_URLS
+    }:
+        yookassa_return_url.value = env_settings.yookassa_return_url
 
 
 def load_public_setting_values(db: Session, keys: Iterable[str]) -> dict[str, str]:

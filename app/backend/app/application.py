@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -52,6 +52,21 @@ def create_app() -> FastAPI:
         version="0.2.0",
         description="Сайт Атман: FastAPI + MySQL + ручное подтверждение переводов + admin API.",
     )
+
+    @app.middleware("http")
+    async def redirect_legacy_domains(request: Request, call_next):
+        if request.url.hostname in {
+            "spiritualst.ru",
+            "www.spiritualst.ru",
+            "atman-studio.ru",
+            "www.atman-studio.ru",
+        }:
+            query = f"?{request.url.query}" if request.url.query else ""
+            return RedirectResponse(
+                url=f"https://atmanvlg3.ru{request.url.path}{query}",
+                status_code=308,
+            )
+        return await call_next(request)
 
     app.add_middleware(
         CORSMiddleware,

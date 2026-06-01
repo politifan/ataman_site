@@ -32,11 +32,21 @@ npm run dev
 ## Домен и уведомления
 Для работы на текущем домене задайте в `backend/.env`:
 ```bash
-SITE_URL=https://spiritualst.ru
-CORS_ORIGINS=https://spiritualst.ru
+SITE_URL=https://atmanvlg3.ru
+CORS_ORIGINS=https://atmanvlg3.ru
 ```
 
 Эти же значения можно изменить в админке в разделе `Настройки`: ключи `site_url`, `telegram_notifications_enabled`, `telegram_bot_token`, `telegram_chat_ids`.
+
+При переносе домена:
+1. Направьте `atmanvlg3.ru` на каталог проекта в панели хостинга.
+2. Выпустите SSL-сертификат для `atmanvlg3.ru`.
+3. Обновите `backend/.env`.
+4. Запустите `./deploy.sh` из корня проекта.
+5. Выполните `cd app/backend && python configure_telegram_webhook.py`.
+6. Проверьте `https://atmanvlg3.ru/` и `https://atmanvlg3.ru/api/telegram/webhook`.
+
+При старте backend автоматически заменяет сохранённые runtime-адреса `spiritualst.ru` и `atman-studio.ru` на значение `SITE_URL`.
 
 Telegram-бот отправляет уведомления о новых онлайн-записях, сообщениях из формы контактов и заявках на сертификаты. Для включения задайте токен бота, chat id администратора и `telegram_notifications_enabled=1`.
 
@@ -72,7 +82,7 @@ python configure_telegram_webhook.py --status-only
 ```bash
 curl --proxy "${TELEGRAM_PROXY_URL}" \
   -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook" \
-  -d "url=https://spiritualst.ru/api/telegram/webhook" \
+  -d "url=https://atmanvlg3.ru/api/telegram/webhook" \
   -d "secret_token=${TELEGRAM_WEBHOOK_SECRET}"
 ```
 

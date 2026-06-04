@@ -83,6 +83,9 @@ if [ "$BUILD_FRONTEND" = "1" ]; then
 
   (
     cd app/frontend
+    if [ -n "${VITE_API_BASE:-}" ]; then
+      echo "VITE_API_BASE is set but ignored by production frontend; API requests use the current site origin."
+    fi
     if ! npm ci --no-audit --no-fund; then
       echo "npm ci failed, fallback to npm install..."
       rm -rf node_modules

@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || (import.meta.env.DEV ? "http://localhost:8000" : "");
+const API_BASE = import.meta.env.DEV ? (import.meta.env.VITE_API_BASE || "http://localhost:8000") : "";
 const DEFAULT_ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN || "";
 const ADMIN_AUTH_STORAGE_KEY = "atman_admin_auth";
 const ADMIN_TOKEN_STORAGE_KEY = "atman_admin_token";

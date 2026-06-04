@@ -97,8 +97,10 @@ else
   echo "Frontend build skipped. BUILD_FRONTEND is not '1' (actual: $BUILD_FRONTEND)."
 fi
 
-# Trigger Passenger restart
-touch "$RESTART_FILE"
+# Trigger Passenger restart. Some shared-hosting Passenger setups watch only
+# tmp/restart.txt, while others reload after touching passenger_wsgi.py.
+mkdir -p "${APP_DIR}/tmp"
+touch "${APP_DIR}/tmp/restart.txt" "$RESTART_FILE"
 
 # Keep callback buttons operational after deploy. This command loads token,
 # webhook secret and proxy settings through Python dotenv/runtime settings.
@@ -114,3 +116,4 @@ fi
 
 python -c "import sys; print('Python:', sys.version)"
 echo "Touched restart file: $RESTART_FILE"
+echo "Touched Passenger restart marker: ${APP_DIR}/tmp/restart.txt"

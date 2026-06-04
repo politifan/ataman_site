@@ -90,6 +90,23 @@ curl --proxy "${TELEGRAM_PROXY_URL}" \
 
 Переменные `YOOKASSA_*` оставлены в `.env.example` только для совместимости со старыми платежами. Для новых записей на услуги они не используются.
 
+## Медиафайлы
+Картинки сайта должны лежать в каталоге `media_assets` на уровне корня проекта:
+```bash
+/var/www/u3115521/data/www/atmanvlg3.ru/media_assets
+```
+
+Если каталог лежит в другом месте, задайте абсолютный путь в `app/backend/.env`:
+```bash
+MEDIA_ROOT=/var/www/u3115521/data/www/atmanvlg3.ru/media_assets
+```
+
+После деплоя проверьте:
+```bash
+curl https://atmanvlg3.ru/api/media-health
+curl -I https://atmanvlg3.ru/media/glavnaya.jpg
+```
+
 При необходимости принудительно переинициализировать данные:
 ```bash
 cd app/backend

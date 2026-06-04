@@ -38,6 +38,7 @@ def _resolve_media_root(raw_path: str) -> Path | None:
         here.parent.parent,   # app/backend
         here.parent.parent.parent,  # app
         here.parent.parent.parent.parent,  # project root
+        here.parent.parent.parent.parent.parent,  # parent of project root
     ]
     for root in search_roots:
         resolved = (root / candidate).resolve()
@@ -104,6 +105,17 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(admin_router)
     app.include_router(telegram_router)
+
+    @app.get("/api/media-health")
+    def media_health() -> dict[str, object]:
+        resolved = _resolve_media_root(settings.media_root)
+        sample = resolved / "glavnaya.jpg" if resolved else None
+        return {
+            "configured": settings.media_root,
+            "resolved": str(resolved) if resolved else None,
+            "exists": bool(resolved and resolved.exists()),
+            "sample_glavnaya_exists": bool(sample and sample.exists()),
+        }
 
     @app.get("/robots.txt", include_in_schema=False)
     def robots_txt() -> Response:

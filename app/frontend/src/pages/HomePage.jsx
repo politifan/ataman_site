@@ -647,7 +647,7 @@ export default function HomePage() {
               </a>
               <nav className="mystic-header-nav">
                 <a href="#services">Каталог</a>
-                <Link to="/psychologist">Психолог</Link>
+                <a href="https://psyvlg6.ru/">Психолог</a>
                 <Link to="/certificates">Сертификат</Link>
                 <Link to="/schedule">Расписание</Link>
                 <Link to="/gallery">Галерея</Link>
@@ -960,7 +960,7 @@ export default function HomePage() {
           <div className="mystic-footer-col">
             <h4>Навигация</h4>
             <Link to="/services">Услуги</Link>
-            <Link to="/psychologist">Психолог</Link>
+            <a href="https://psyvlg6.ru/">Психолог</a>
             <Link to="/gallery">Галерея</Link>
             <Link to="/press">О нас в СМИ</Link>
             <Link to="/schedule">Расписание</Link>

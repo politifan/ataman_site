@@ -24,9 +24,19 @@ import AdminSettingsPage from "./admin/AdminSettingsPage";
 import AdminCertificatesPage from "./admin/AdminCertificatesPage";
 import { getSite } from "./api";
 
+const PSYCHOLOGIST_URL = "https://psyvlg6.ru/";
+
 function LegacyRedirect({ to }) {
   const location = useLocation();
   return <Navigate to={`${to}${location.search || ""}`} replace />;
+}
+
+function ExternalRedirect({ to }) {
+  useEffect(() => {
+    window.location.replace(to);
+  }, [to]);
+
+  return null;
 }
 
 function LegacyServiceRedirect() {
@@ -87,7 +97,7 @@ export default function App() {
         <Route path="/schedule" element={<SchedulePage />} />
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/press" element={<PressPage />} />
-        <Route path="/psychologist" element={<ServicePage slugOverride="psychologist-consultation" pageVariant="psychologist" />} />
+        <Route path="/psychologist" element={<ExternalRedirect to={PSYCHOLOGIST_URL} />} />
         <Route path="/contacts" element={<ContactsPage />} />
         <Route path="/certificates" element={<CertificatePurchasePage />} />
         <Route path="/certificates/:code" element={<CertificatePublicPage />} />
